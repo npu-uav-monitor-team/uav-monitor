@@ -7,54 +7,59 @@
             </button>
         </div>
         <div class="map-container">
-            <l-map ref="map" v-model:zoom="zoom" :center="center" :options="mapOptions">
-                <l-tile-layer :url="url" :attribution="attribution" :opacity="0.7"></l-tile-layer>
-                <l-polyline
-                    v-for="(path, index) in flightPaths"
-                    :key="index"
-                    :lat-lngs="path.points"
-                    :color="path.color"
-                    :weight="4"
-                    :opacity="0.8"
-                />
-                <l-circle-marker
-                    v-for="aircraft in allAircraft"
-                    :key="aircraft.id"
-                    :lat-lng="[aircraft.lat, aircraft.lng]"
-                    :radius="6"
-                    :color="aircraft.color"
-                    :fillColor="aircraft.color"
-                    fillOpacity="0.8"
-                    @mouseover="showAircraftInfo(aircraft, $event)"
-                    @mouseout="closeAircraftInfo"
-                >
-                    <l-tooltip :options="{ permanent: false, direction: 'right', offset: [10, 0] }">
-                        <div class="aircraft-tooltip">
-                            <h4>{{ aircraft.name }}</h4>
-                            <p>类型: {{ aircraft.type }}</p>
-                            <p>速度: {{ aircraft.speed }} km/h</p>
-                            <p>高度: {{ aircraft.altitude }} m</p>
-                            <p>距离: {{ aircraft.distance }} km</p>
-                        </div>
-                    </l-tooltip>
-                </l-circle-marker>
-                <l-marker
-                    v-for="aircraft in allAircraft"
-                    :key="'arrow-' + aircraft.id"
-                    :lat-lng="[aircraft.lat, aircraft.lng]"
-                    :icon="getArrowIcon(aircraft)"
-                    :z-index-offset="-1000"
-                    @mouseover="showAircraftInfo(aircraft, $event)"
-                    @mouseout="closeAircraftInfo"
-                />
-                <l-circle
-                    :lat-lng="noFlyZone.center"
-                    :radius="noFlyZone.radius"
-                    color="red"
-                    fillColor="#f03"
-                    fillOpacity="0.2"
-                />
-            </l-map>
+            <template v-if="isOnline">
+                <l-map ref="map" v-model:zoom="zoom" :center="center" :options="mapOptions">
+                    <l-tile-layer :url="url" :attribution="attribution" :opacity="0.7"></l-tile-layer>
+                    <l-polyline
+                        v-for="(path, index) in flightPaths"
+                        :key="index"
+                        :lat-lngs="path.points"
+                        :color="path.color"
+                        :weight="4"
+                        :opacity="0.8"
+                    />
+                    <l-circle-marker
+                        v-for="aircraft in allAircraft"
+                        :key="aircraft.id"
+                        :lat-lng="[aircraft.lat, aircraft.lng]"
+                        :radius="6"
+                        :color="aircraft.color"
+                        :fillColor="aircraft.color"
+                        fillOpacity="0.8"
+                        @mouseover="showAircraftInfo(aircraft, $event)"
+                        @mouseout="closeAircraftInfo"
+                    >
+                        <l-tooltip :options="{ permanent: false, direction: 'right', offset: [10, 0] }">
+                            <div class="aircraft-tooltip">
+                                <h4>{{ aircraft.name }}</h4>
+                                <p>类型: {{ aircraft.type }}</p>
+                                <p>速度: {{ aircraft.speed }} km/h</p>
+                                <p>高度: {{ aircraft.altitude }} m</p>
+                                <p>距离: {{ aircraft.distance }} km</p>
+                            </div>
+                        </l-tooltip>
+                    </l-circle-marker>
+                    <l-marker
+                        v-for="aircraft in allAircraft"
+                        :key="'arrow-' + aircraft.id"
+                        :lat-lng="[aircraft.lat, aircraft.lng]"
+                        :icon="getArrowIcon(aircraft)"
+                        :z-index-offset="-1000"
+                        @mouseover="showAircraftInfo(aircraft, $event)"
+                        @mouseout="closeAircraftInfo"
+                    />
+                    <l-circle
+                        :lat-lng="noFlyZone.center"
+                        :radius="noFlyZone.radius"
+                        color="red"
+                        fillColor="#f03"
+                        fillOpacity="0.2"
+                    />
+                </l-map>
+            </template>
+            <div v-else class="offline-map">
+                <img :src="offlineMapUrl" alt="Offline Map" class="offline-map-image" />
+            </div>
         </div>
         
         <div class="floating-panel threat-list" :class="{ 'panel-hidden': !showThreatList }">
@@ -97,7 +102,7 @@
         </div>
         
         <div class="floating-panel all-aircraft-list" :class="{ 'panel-hidden': !showAllAircraftList }">
-            <h2>全部飞行物列表
+            <h2>部飞行物列表
                 <button @click="toggleAllAircraftList" class="toggle-btn">{{
                         showAllAircraftList ? '隐藏' : '显示'
                     }}
@@ -191,18 +196,18 @@
 
 <script setup>
     import 'leaflet/dist/leaflet.css'
-    import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip } from '@vue-leaflet/vue-leaflet'
+    import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip, LImageOverlay } from '@vue-leaflet/vue-leaflet'
     import L from 'leaflet'
     
-    import { onMounted, ref } from "vue";
+    import { onMounted, ref, onUnmounted, watch } from "vue";
     import { useRouter } from "vue-router";
     
     const router = useRouter()
     
     const map = ref()
     
-    const zoom = ref(15) // 增加缩放级别以显示更小的区域
-    const center = ref([34.2286, 108.9291]) // 西北工业大学长安校区的坐标
+    const zoom = ref(15) // 保持不变
+    const center = ref([22.7087, 114.3671]) // 更新为深圳市坪山区的坐标
     const url = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     const attribution = ref('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
     const mapOptions = ref({
@@ -375,6 +380,27 @@
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
     
+    // 将 isOnline 的初始化移到这里
+    const isOnline = ref(navigator.onLine);
+    const offlineMapUrl = ref('/src/assets/map.png'); // 确保这是正确的路径
+
+    // 修改这里：调整离线地图的边界，整体缩小 1.3 倍
+    const originalCenter = [22.7087, 114.3671]; // 原始中心点
+    const originalWidth = 114.4671 - 114.2671;
+    const originalHeight = 22.7587 - 22.6587;
+    const scaleFactor = 1.3;
+
+    const offlineMapBounds = ref([
+      [
+        originalCenter[0] - (originalHeight / 2) / scaleFactor,
+        originalCenter[1] - (originalWidth / 2) / scaleFactor
+      ],
+      [
+        originalCenter[0] + (originalHeight / 2) / scaleFactor,
+        originalCenter[1] + (originalWidth / 2) / scaleFactor
+      ]
+    ]);
+    
     const goToControlCenter = async () => {
         await router.push('/control-center')
     }
@@ -458,10 +484,45 @@
         showAllAircraftList.value = !showAllAircraftList.value
     }
     
+    function updateOnlineStatus() {
+        isOnline.value = navigator.onLine;
+    }
+    
+    function initializeMap() {
+        if (!isOnline.value) {
+            // 如果离线，立即设置离线地图
+            nextTick(() => {
+                if (map.value && map.value.leafletObject) {
+                    map.value.leafletObject.fitBounds(offlineMapBounds.value);
+                }
+            });
+        }
+    }
+    
+    // 监听 isOnline 的变化
+    watch(isOnline, (newValue) => {
+        if (newValue) {
+            // 如果重新连接，可以在这里添加在线地图的逻辑
+        } else {
+            // 如果断开连接，设置离线地图
+            initializeMap();
+        }
+    });
+    
     onMounted(() => {
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // 初始化地图
+        initializeMap();
+        
         allAircraft.value.forEach((aircraft) => {
-            const startPoint = [aircraft.lat, aircraft.lng];
-            const path = generateRandomPath(startPoint, 30); // 增加点的数量以创建更长的路径
+            // 更新初始位置为深圳市坪山区附近的随机位置
+            const startPoint = [
+                22.7087 + (Math.random() - 0.5) * 0.02,
+                114.3671 + (Math.random() - 0.5) * 0.02
+            ];
+            const path = generateRandomPath(startPoint, 30);
             flightPaths.value.push({
                 id: aircraft.id,
                 points: path,
@@ -473,11 +534,25 @@
             aircraft.lng = lastPoint[1];
         });
         
-        // 添加禁飞区
+        // 更新禁飞区位置
         noFlyZone.value = {
-            center: [34.2286, 108.9291], // 使用地图中心作为禁飞区中心
-            radius: 500 // 半径500米
+            center: [22.7087, 114.3671], // 使用坪山区中心作为禁飞区中心
+            radius: 500 // 半径保持500米不变
         };
+        
+        // 更新地图中心和缩放级别以适应离线地图
+        center.value = originalCenter;
+        
+        // 如果离线，调整缩放级别以适应离线地图
+        if (!isOnline.value) {
+            const mapElement = map.value.leafletObject;
+            mapElement.fitBounds(offlineMapBounds.value);
+        }
+    })
+    
+    onUnmounted(() => {
+        window.removeEventListener('online', updateOnlineStatus);
+        window.removeEventListener('offline', updateOnlineStatus);
     })
 </script>
 
@@ -527,7 +602,9 @@
     .map-container {
         flex: 1;
         position: relative;
-        z-index: 1; /* 确保地图在底层 */
+        z-index: 1;
+        width: 100%;
+        height: 100%;
     }
     
     .floating-panel {
@@ -832,7 +909,67 @@
         margin: 10px 0;
     }
     */
+    
+    .offline-map {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+        overflow: hidden; /* 防止图片溢出容器 */
+    }
+    
+    .offline-map-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 改为 cover 以填充整个容器 */
+    }
+    
+    .threat-list table th:nth-child(5),
+    .threat-list table td:nth-child(5) {
+        width: 60px; /* 调整这个值以适应两个字的宽度 */
+        min-width: 60px;
+        max-width: 60px;
+        text-align: center;
+    }
+    
+    .threat-list table th,
+    .threat-list table td {
+        padding: 8px 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .threat-list table th:nth-child(1),
+    .threat-list table td:nth-child(1) {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        text-align: center;
+    }
+    
+    .threat-list table th:nth-child(2),
+    .threat-list table td:nth-child(2) {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        text-align: center;
+    }
+    
+    /* ... 为其他列添加类似的规则 ... */
 </style>
+
+
+
+
+
+
+
+
+
+
 
 
 
