@@ -21,26 +21,25 @@
     
     let hls = null;
     const videoPlayer = ref();
-    const selectedCamera = ref('full_screen_video.mp4')
+    const selectedCamera = ref('http://localhost:8585/hls/playlist.m3u8')
     const cameras = [
-        {id: 1, name: '摄像头 1', src: 'full_screen_video.mp4'},
-        {id: 2, name: '摄像头 2', src: 'full_screen_video_2.mp4'},
-        {id: 3, name: '摄像头 3', src: 'full_screen_video_3.mp4'},
+        {id: 1, name: '摄像头 1', src: 'http://localhost:8585/hls/playlist.m3u8'},
+        {id: 2, name: '摄像头 2', src: 'http://localhost:8585/hls/playlist.m3u8'},
+        {id: 3, name: '摄像头 3', src: 'http://localhost:8585/hls/playlist.m3u8'},
     ]
-    const getCameraUrl = () => {
-        return new URL(`../assets/${selectedCamera.value}`, import.meta.url).href
-    }
     const changeCamera = () => {
         refreshVideo();
     }
     const refreshVideo = () => {
-        const video = videoPlayer.value;
-        video.load();
-        video.play().catch(e => console.error('Error playing video:', e));
+        hls.loadSource(selectedCamera.value);
+        hls.attachMedia(videoPlayer.value);
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error(`HLS error: ${data.type} - ${data.details}`);
+        });
     }
     onMounted(() => {
         hls = new Hls();
-        hls.loadSource('http://localhost:8585/hls/playlist.m3u8');
+        hls.loadSource(selectedCamera.value);
         hls.attachMedia(videoPlayer.value);
         hls.on(Hls.Events.ERROR, (event, data) => {
             console.error(`HLS error: ${data.type} - ${data.details}`);
