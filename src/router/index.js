@@ -14,7 +14,7 @@ const routes = [
     {
         path: '/tracking',
         name: 'Tracking',
-        component: () => import('../views/Tracking.vue')
+        component: () => import('../views/TrackingCenter.vue')
     },
     {
         path: '/monitor-center',

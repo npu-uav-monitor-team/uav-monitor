@@ -2,10 +2,7 @@
     <div class="full-screen-view">
         <h2>全景视频监控</h2>
         <div class="video-container">
-            <video ref="videoPlayer" autoplay loop muted>
-                <source :src="getCameraUrl()" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+            <video ref="videoPlayer" controls width="100%"/>
         </div>
         <div class="controls">
             <select v-model="selectedCamera" @change="changeCamera">
@@ -19,9 +16,11 @@
 </template>
 
 <script setup>
-    import { onMounted, ref } from "vue";
+    import { onMounted, onUnmounted, ref } from "vue";
+    import Hls from 'hls.js';
+    
+    let hls = null;
     const videoPlayer = ref();
-    const name = ref('FullScreenView')
     const selectedCamera = ref('full_screen_video.mp4')
     const cameras = [
         {id: 1, name: '摄像头 1', src: 'full_screen_video.mp4'},
@@ -40,8 +39,19 @@
         video.play().catch(e => console.error('Error playing video:', e));
     }
     onMounted(() => {
-        refreshVideo();
+        hls = new Hls();
+        hls.loadSource('http://localhost:8585/hls/playlist.m3u8');
+        hls.attachMedia(videoPlayer.value);
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error(`HLS error: ${data.type} - ${data.details}`);
+        });
     })
+    
+    onUnmounted(() => {
+        if (hls) {
+            hls.destroy();
+        }
+    });
 </script>
 
 <style scoped>
