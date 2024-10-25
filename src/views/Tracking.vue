@@ -25,8 +25,10 @@
                     :color="aircraft.color"
                     :fillColor="aircraft.color"
                     fillOpacity="0.8"
+                    @mouseover="showAircraftInfo(aircraft, $event)"
+                    @mouseout="closeAircraftInfo"
                 >
-                    <l-tooltip :options="{ permanent: true, direction: 'right', offset: [10, 0] }">
+                    <l-tooltip :options="{ permanent: false, direction: 'right', offset: [10, 0] }">
                         <div class="aircraft-tooltip">
                             <h4>{{ aircraft.name }}</h4>
                             <p>类型: {{ aircraft.type }}</p>
@@ -42,6 +44,8 @@
                     :lat-lng="[aircraft.lat, aircraft.lng]"
                     :icon="getArrowIcon(aircraft)"
                     :z-index-offset="-1000"
+                    @mouseover="showAircraftInfo(aircraft, $event)"
+                    @mouseout="closeAircraftInfo"
                 />
                 <l-circle
                     :lat-lng="noFlyZone.center"
@@ -132,7 +136,8 @@
             </div>
         </div>
         
-        <!-- 添加左侧按钮组 -->
+        <!-- 注释掉或删除左侧按钮组 -->
+        <!--
         <div class="left-buttons">
             <button @click="showModal('zoomControl')" class="control-btn"><i class="fas fa-search"></i></button>
             <button @click="showModal('layerControl')" class="control-btn"><i class="fas fa-layer-group"></i></button>
@@ -141,38 +146,45 @@
             <button @click="showModal('commandCenter')" class="control-btn"><i class="fas fa-satellite-dish"></i>
             </button>
         </div>
+        -->
         
-        <!-- 添加模态框 -->
+        <!-- 注释掉或删除模态框 -->
+        <!--
         <div v-if="activeModal" class="modal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
                 <h2>{{ modalTitle }}</h2>
                 <div v-if="activeModal === 'zoomControl'">
-                    <!-- 缩放控制内容 -->
                     <button @click="zoomIn">放大</button>
                     <button @click="zoomOut">缩小</button>
                 </div>
                 <div v-else-if="activeModal === 'layerControl'">
-                    <!-- 图层控制内容 -->
                     <label><input type="checkbox" v-model="showSatelliteLayer"> 卫星图层</label>
                     <label><input type="checkbox" v-model="showTerrainLayer"> 地形图层</label>
                 </div>
                 <div v-else-if="activeModal === 'measureTool'">
-                    <!-- 测量工具内容 -->
                     <button @click="startMeasure">开始测量</button>
                     <button @click="endMeasure">结束测量</button>
                 </div>
                 <div v-else-if="activeModal === 'drawTool'">
-                    <!-- 绘制工具内容 -->
                     <button @click="startDrawing('polygon')">绘制多边形</button>
                     <button @click="startDrawing('line')">绘制线段</button>
                 </div>
                 <div v-else-if="activeModal === 'commandCenter'">
-                    <!-- 指挥中心内容 -->
                     <button @click="sendCommand('intercept')">拦截目标</button>
                     <button @click="sendCommand('patrol')">巡逻任务</button>
                 </div>
             </div>
+        </div>
+        -->
+        
+        <!-- Add this new element for the tooltip -->
+        <div v-if="selectedAircraft" class="aircraft-tooltip" :style="infoPosition">
+            <h4>{{ selectedAircraft.name }}</h4>
+            <p>类型: {{ selectedAircraft.type }}</p>
+            <p>速度: {{ selectedAircraft.speed }} km/h</p>
+            <p>高度: {{ selectedAircraft.altitude }} m</p>
+            <p>距离: {{ selectedAircraft.distance }} km</p>
         </div>
     </div>
 </template>
@@ -354,17 +366,14 @@
             color: 'green'
         },
     ])
-    const selectedAircraft = ref()
+    const selectedAircraft = ref(null);
+    const infoPosition = ref({ left: '0px', top: '0px' });
     const noFlyZone = ref({
         center: [34.2286, 108.9391], // 禁飞区中心坐标
         radius: 1000 // 禁飞区半径（米）
     })
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
-    const activeModal = ref()
-    const modalTitle = ref('')
-    const showSatelliteLayer = ref(false)
-    const showTerrainLayer = ref(false)
     
     const goToControlCenter = async () => {
         await router.push('/control-center')
@@ -381,8 +390,18 @@
                 return 'fas fa-question';
         }
     }
-    function showAircraftInfo(aircraft) {
+    function showAircraftInfo(aircraft, event) {
         selectedAircraft.value = aircraft;
+        // 计算tooltip的位置
+        const map = event.target._map;
+        const latLng = [aircraft.lat, aircraft.lng];
+        const point = map.latLngToContainerPoint(latLng);
+        
+        // 添加一些偏移，使tooltip显示在目标旁边
+        infoPosition.value = {
+            left: `${point.x + 15}px`,
+            top: `${point.y - 30}px`
+        };
     }
     function closeAircraftInfo() {
         selectedAircraft.value = null;
@@ -437,57 +456,6 @@
     }
     function toggleAllAircraftList() {
         showAllAircraftList.value = !showAllAircraftList.value
-    }
-    function showModal(modalType) {
-        activeModal.value = modalType;
-        switch (modalType) {
-            case 'zoomControl':
-                modalTitle.value = '缩放控制';
-                break;
-            case 'layerControl':
-                modalTitle.value = '图层控制';
-                break;
-            case 'measureTool':
-                modalTitle.value = '测量工具';
-                break;
-            case 'drawTool':
-                modalTitle.value = '绘制工具';
-                break;
-            case 'commandCenter':
-                modalTitle.value = '指挥中心';
-                break;
-        }
-    }
-    function closeModal() {
-        activeModal.value = null;
-    }
-    function zoomIn() {
-        // 实现放大功能
-        if (map.value) {
-            map.value.leafletObject.zoomIn();
-        }
-    }
-    function zoomOut() {
-        // 实现缩小功能
-        if (map.value) {
-            map.value.leafletObject.zoomOut();
-        }
-    }
-    function startMeasure() {
-        // 实现开始测量功能
-        console.log('开始测量');
-    }
-    function endMeasure() {
-        // 实现结束测量功能
-        console.log('结束测量');
-    }
-    function startDrawing(type) {
-        // 实现开始绘制功能
-        console.log('开始绘制', type);
-    }
-    function sendCommand(command) {
-        // 实现发送指令功能
-        console.log('发送指令', command);
     }
     
     onMounted(() => {
@@ -572,28 +540,26 @@
         transition: all 0.3s ease;
         box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         color: #ffffff;
-        z-index: 1000; /* 确保悬浮面板在地图上层 */
+        z-index: 1000;
+        width: calc(30% - 40px);
+        max-width: 500px;
     }
     
     .threat-list {
         top: 70px;
         right: 20px;
-        width: calc(30% - 40px);
-        max-width: 500px;
-        max-height: calc(50vh - 90px); /* 调整最大高度 */
+        height: calc(45% - 70px); /* 调整高度 */
     }
     
     .all-aircraft-list {
         bottom: 20px;
         right: 20px;
-        width: calc(30% - 40px);
-        max-width: 500px;
-        max-height: calc(50vh - 40px); /* 调整最大高度 */
+        height: calc(45% - 20px); /* 调整高度 */
     }
     
     .panel-hidden {
         width: auto;
-        height: auto;
+        height: auto !important; /* 使用 !important 确保隐藏时高度正确 */
         padding: 5px;
     }
     
@@ -646,11 +612,8 @@
     }
     
     .table-container {
-        flex: 1;
+        height: calc(100% - 50px); /* 调整表格容器高度 */
         overflow-y: auto;
-        max-height: calc(50vh - 100px);
-        background: rgba(0, 31, 63, 0.7); /* 为表格容器添加半透明背景 */
-        border-radius: 4px; /* 添加圆角 */
     }
     
     table {
@@ -733,6 +696,7 @@
     @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
     
     .aircraft-tooltip {
+        position: absolute; /* 改为absolute定位 */
         background: rgba(0, 31, 63, 0.85);
         border: 1px solid #00ffff;
         border-radius: 4px;
@@ -740,6 +704,8 @@
         font-size: 12px;
         color: #ffffff;
         max-width: 150px;
+        z-index: 1000;
+        pointer-events: none; /* 防止tooltip影响鼠标事件 */
     }
     
     .aircraft-tooltip h4 {
@@ -781,6 +747,8 @@
         overflow: hidden;
     }
     
+    /* 注释掉或删除左侧按钮组 */
+    /*
     .left-buttons {
         position: absolute;
         left: 20px;
@@ -863,4 +831,8 @@
         display: block;
         margin: 10px 0;
     }
+    */
 </style>
+
+
+
