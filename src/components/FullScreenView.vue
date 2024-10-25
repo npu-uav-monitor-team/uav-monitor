@@ -1,6 +1,6 @@
 <template>
     <div class="full-screen-view">
-        <h2>全景视频监控</h2>
+        <h2>光电设备视频</h2>
         <div class="video-container">
             <video ref="videoPlayer" autoplay loop muted>
                 <source :src="getCameraUrl()" type="video/mp4">
