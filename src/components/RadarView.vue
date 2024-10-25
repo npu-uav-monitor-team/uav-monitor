@@ -1,20 +1,48 @@
 <template>
   <div class="radar-view">
-    <div class="radar-container">
-      <h2>雷达监控图</h2>
-      <div class="radar-circle" v-for="i in 4" :key="i"></div>
-      <div class="radar-line"></div>
-      <div class="radar-cross-x"></div>
-      <div class="radar-cross-y"></div>
-      <div
-        class="radar-dot"
-        v-for="aircraft in illegalAircraft"
-        :key="aircraft.id"
-        :style="{ top: `${50 + aircraft.y}%`, left: `${50 + aircraft.x}%` }"
-        @mouseover="showDetails(aircraft)"
-        @mouseout="hideDetails"
-      >
-        {{ aircraft.id }}
+    <div class="radar-content">
+      <div class="screen-header">
+        <div class="device-selector">
+          <select v-model="selectedDeviceId" @change="loadDeviceData">
+            <option v-for="device in radarDevices" :key="device.id" :value="device.id">
+              {{ device.name }}
+            </option>
+          </select>
+        </div>
+        <div class="screen-controls">
+          <button @click="refresh">刷新</button>
+        </div>
+      </div>
+      <div class="device-display">
+        <div class="image-container">
+          <img src="@/assets/radar.gif" alt="Radar Display" class="device-image" />
+          <div class="device-label">
+            雷达设备 {{ selectedDeviceName }}
+          </div>
+          <!-- 修改设备状态指示器 -->
+          <div class="device-status">
+            <div class="status-group">
+              <span class="status-label">在线状态:</span>
+              <span :class="['status-indicator', { 'status-normal': isOnline, 'status-error': !isOnline }]">
+                {{ isOnline ? '在线' : '离线' }}
+              </span>
+            </div>
+            <div class="status-group">
+              <span class="status-label">故障状态:</span>
+              <span :class="['status-indicator', { 'status-normal': !hasFault, 'status-error': hasFault }]">
+                {{ hasFault ? '故障' : '正常' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device-controls">
+        <button @click="togglePower">开关机</button>
+        <button @click="toggleRadarWave">雷达波发射</button>
+        <button @click="resetToZero">归零</button>
+        <button @click="clearCurrent">清当前</button>
+        <button @click="track">跟踪</button>
+        <button @click="openSettings">详细设置</button>
       </div>
     </div>
     <div class="illegal-aircraft-list">
@@ -35,8 +63,8 @@
             v-for="aircraft in illegalAircraft"
             :key="aircraft.id"
             :class="{ 'highlighted': aircraft.id === activeTarget?.id }"
-            @mouseover="highlightDot(aircraft.id)"
-            @mouseout="unhighlightDot"
+            @mouseover="highlightAircraft(aircraft.id)"
+            @mouseout="unhighlightAircraft"
           >
             <td>{{ aircraft.id }}</td>
             <td>{{ aircraft.type }}</td>
@@ -48,97 +76,273 @@
         </tbody>
       </table>
     </div>
-    <div v-if="activeTarget" class="target-info" :style="infoPosition">
-      <p>目标编号: {{ activeTarget.id }}</p>
-      <p>类型: {{ activeTarget.type }}</p>
-      <p>当前距离: {{ activeTarget.distance.toFixed(2) }} km</p>
-      <p>方位角: {{ activeTarget.angle.toFixed(2) }}°</p>
-      <p>俯仰角: {{ activeTarget.elevation.toFixed(2) }}°</p>
-      <p>速度: {{ activeTarget.speed }} km/h</p>
+
+    <!-- 添加设置弹窗 -->
+    <div v-if="showSettings" class="settings-modal">
+      <div class="settings-content">
+        <h2>详细设置</h2>
+        <!-- 在这里添加设置选项 -->
+        <div class="setting-item">
+          <label for="range">扫描范围:</label>
+          <input type="range" id="range" v-model="scanRange" min="0" max="100">
+        </div>
+        <div class="setting-item">
+          <label for="mode">扫描模式:</label>
+          <select id="mode" v-model="scanMode">
+            <option value="normal">普通</option>
+            <option value="detailed">详细</option>
+            <option value="fast">快速</option>
+          </select>
+        </div>
+        <!-- 添加更多设置选项 -->
+        <button @click="closeSettings">关闭</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-    
-    import { ref } from "vue";
-    
-    const activeTarget= ref()
-        const infoPosition= ref({ top: '0px', left: '0px' })
-    const illegalAircraft= ref([
-        { id: 1, type: 'UAV', distance: 5.2, angle: 45, elevation: 15, speed: 80, x: 30, y: -20 },
-        { id: 2, type: 'Aircraft', distance: 10.5, angle: 120, elevation: 30, speed: 200, x: -25, y: 35 },
-        { id: 3, type: 'Helicopter', distance: 7.8, angle: 210, elevation: 20, speed: 150, x: -15, y: -40 },
-        { id: 4, type: 'UAV', distance: 3.5, angle: 75, elevation: 10, speed: 60, x: 40, y: 10 },
-        { id: 5, type: 'Aircraft', distance: 15.0, angle: 300, elevation: 35, speed: 250, x: -35, y: -15 },
-    ])
-    function showDetails(aircraft) {
-        activeTarget.value = aircraft;
-        infoPosition.value = {
-            top: `calc(${50 + aircraft.y}% + 10px)`,
-            left: `calc(${50 + aircraft.x}% + 10px)`
-        };
-    }
-    function hideDetails() {
-        activeTarget.value = null;
-    }
-    function highlightDot(id) {
-        const dot = document.querySelector(`.radar-dot:nth-child(${id + 4})`);
-        if (dot) {
-            dot.classList.add('highlighted');
-        }
-    }
-    function unhighlightDot() {
-        const dots = document.querySelectorAll('.radar-dot');
-        dots.forEach(dot => dot.classList.remove('highlighted'));
-    }
+import { ref, computed, onMounted } from 'vue';
+
+const selectedDeviceId = ref(null);
+const radarDevices = ref([]);
+const activeTarget = ref(null);
+const illegalAircraft = ref([
+  { id: 1, type: 'UAV', distance: 5.2, angle: 45, elevation: 15, speed: 80 },
+  { id: 2, type: 'Drone', distance: 3.7, angle: 120, elevation: 20, speed: 60 },
+  { id: 3, type: 'UAV', distance: 7.1, angle: 210, elevation: 10, speed: 90 },
+]);
+
+const selectedDeviceName = computed(() => {
+  const device = radarDevices.value.find(d => d.id === selectedDeviceId.value);
+  return device ? device.name : '';
+});
+
+// 添加设备状态相关的响应式变量
+const isOnline = ref(true);
+const hasFault = ref(false);
+
+onMounted(async () => {
+  // 模拟从API获取雷达设备列表
+  radarDevices.value = [
+    { id: 1, name: '雷达设备1' },
+    { id: 2, name: '雷达设备2' },
+    { id: 3, name: '雷达设备3' },
+  ];
+  selectedDeviceId.value = radarDevices.value[0].id;
+  
+  // 模拟每 10 秒更新一次设备状态
+  setInterval(() => {
+    isOnline.value = Math.random() > 0.2; // 80% 概率在线
+    hasFault.value = Math.random() > 0.8; // 20% 概率故障
+  }, 10000);
+});
+
+const loadDeviceData = (deviceId) => {
+  // 实现加载选定雷达设备数据的逻辑
+  console.log('载设备数据:', deviceId);
+};
+
+const refresh = () => {
+  console.log('刷新数据');
+};
+
+const startScan = () => {
+  console.log('开始扫描');
+};
+
+const stopScan = () => {
+  console.log('停止扫描');
+};
+
+const adjustRange = () => {
+  console.log('调整范围');
+};
+
+const switchMode = () => {
+  console.log('切换模式');
+};
+
+const highlightAircraft = (id) => {
+  activeTarget.value = illegalAircraft.value.find(aircraft => aircraft.id === id);
+};
+
+const unhighlightAircraft = () => {
+  activeTarget.value = null;
+};
+
+const showSettings = ref(false);
+const scanRange = ref(50);
+const scanMode = ref('normal');
+
+const togglePower = () => {
+  console.log('切换雷达电源');
+};
+
+const toggleRadarWave = () => {
+  console.log('切换雷达波发射');
+};
+
+const resetToZero = () => {
+  console.log('雷达归零');
+};
+
+const clearCurrent = () => {
+  console.log('清除当前数据');
+};
+
+const track = () => {
+  console.log('开始跟踪');
+};
+
+const openSettings = () => {
+  showSettings.value = true;
+};
+
+const closeSettings = () => {
+  showSettings.value = false;
+};
 </script>
 
 <style scoped>
 .radar-view {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%; /* 改为 100% 而不是 100vh */
-  background-color: #001f3f;
-  color: #00ffff;
-  padding: 10px; /* 添加一些内边距 */
-  box-sizing: border-box; /* 确保内边距不会增加总高度 */
 }
 
-.radar-container {
-  flex: 2; /* 保持雷达图的比例为 2/3 */
+.radar-content {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background-color: rgba(0, 31, 63, 0.8);
+  border-radius: 10px 10px 0 0;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #1e3a8a;
+}
+
+.device-selector {
+  display: flex;
+  gap: 15px;
+}
+
+.device-selector select {
+  background-color: #003366;
+  color: #00ffff;
+  border: 1px solid #00ffff;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.device-selector select:hover {
+  background-color: #004080;
+}
+
+.screen-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.screen-controls button,
+.device-controls button {
+  background-color: #003366;
+  color: #00ffff;
+  border: 1px solid #00ffff;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.screen-controls button:hover,
+.device-controls button:hover {
+  background-color: #004080;
+}
+
+.device-display {
+  flex-grow: 1;
   position: relative;
+  background-color: #0f172a;
+  border-radius: 5px;
   overflow: hidden;
-  aspect-ratio: 1 / 1;
-  max-height: 60vh; /* 限制最大高度 */
-  margin: auto;
-  background: rgba(0, 20, 40, 0.9);
-  border-radius: 50%;
-  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.device-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.device-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #00ffff;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 1.5em; /* 进一步增大字体大小 */
+  z-index: 10;
+}
+
+.device-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.device-controls button {
+  flex: 1;
+  white-space: nowrap;
+  font-size: 1.4em; /* 进一步增大按钮字体大小 */
+  padding: 10px 15px; /* 增加按钮内边距 */
 }
 
 .illegal-aircraft-list {
-  flex: 1; /* 保持列表的比例为 1/3 */
-  padding: 10px;
+  flex: 1;
+  padding: 20px; /* 增加内边距 */
+  background-color: rgba(0, 31, 63, 0.8);
+  border-radius: 0 0 10px 10px;
   overflow-y: auto;
-  max-height: 30vh; /* 限制最大高度 */
 }
 
 h2 {
+  color: #00ffff;
   text-align: center;
-  margin-bottom: 10px;
-  color: #ffffff;
-  font-size: 18px; /* 稍微减小字体大小 */
+  margin-bottom: 20px;
+  font-size: 1.8em; /* 进一步增大标题字体大小 */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px; /* 减小表格字体大小 */
+  font-size: 1.4em; /* 进一步增大表格字体大小 */
 }
 
 th, td {
-  padding: 5px; /* 减小单元格内边距 */
+  padding: 15px; /* 增加内边距以适应更大的字体 */
   text-align: left;
   border-bottom: 1px solid rgba(0, 255, 255, 0.3);
 }
@@ -148,127 +352,100 @@ th {
   color: #00ffff;
 }
 
-tbody tr:nth-child(even) {
-  background-color: rgba(0, 31, 63, 0.6);
-}
-
-/* 美化滚动条 */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 31, 63, 0.8);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 255, 0.5);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 255, 0.7);
-}
-
-/* 保持其他样式不变 */
-.radar-circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(0, 255, 0, 0.5);
-  border-radius: 50%;
-}
-
-.radar-circle:nth-child(1) { width: 20%; height: 20%; }
-.radar-circle:nth-child(2) { width: 40%; height: 40%; }
-.radar-circle:nth-child(3) { width: 60%; height: 60%; }
-.radar-circle:nth-child(4) { width: 80%; height: 80%; }
-
-.radar-line {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 50%; /* 将宽度恢复到 50%，使线延伸到雷达圆的边缘 */
-  height: 2px;
-  background-color: rgba(0, 255, 0, 0.7);
-  transform-origin: left center;
-  animation: radar-sweep 4s infinite linear;
-  box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-}
-
-.radar-cross-x, .radar-cross-y {
-  position: absolute;
-  background-color: rgba(0, 255, 0, 0.5);
-}
-
-.radar-cross-x {
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-}
-
-.radar-cross-y {
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-}
-
-.radar-dot {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background-color: red;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
-  box-shadow: 0 0 5px red;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.radar-dot:hover, .radar-dot.highlighted {
-  transform: scale(1.5);
-  background-color: #ff6600;
-  z-index: 10;
-}
-
-.illegal-aircraft-list tr.highlighted {
+tr.highlighted {
   background-color: rgba(255, 102, 0, 0.3);
 }
 
-.target-info {
-  position: absolute;
-  background: rgba(0, 31, 63, 0.9);
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-content {
+  background-color: #0f172a;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #00ffff;
+  width: 300px;
+}
+
+.setting-item {
+  margin-bottom: 15px;
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 5px;
+  color: #00ffff;
+}
+
+.setting-item input,
+.setting-item select {
+  width: 100%;
+  padding: 5px;
+  background-color: #1e293b;
+  color: #00ffff;
   border: 1px solid #00ffff;
   border-radius: 5px;
-  padding: 5px;
+}
+
+.settings-content button {
+  background-color: #003366;
   color: #00ffff;
-  font-size: 12px; /* 减小目标信息的字体大小 */
-  z-index: 10;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  border: 1px solid #00ffff;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 15px;
 }
 
-.target-info p {
-  margin: 5px 0;
+.settings-content button:hover {
+  background-color: #004080;
 }
 
-@keyframes radar-sweep {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.device-status {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
-/* 确保内容不会溢出视口 */
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
+.status-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-label {
+  color: #00ffff;
+  font-size: 1.3em; /* 增大状态标签字体大小 */
+}
+
+.status-indicator {
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 1.3em; /* 增大状态指示器字体大小 */
+  font-weight: bold;
+}
+
+.status-normal {
+  background-color: #00ff00;
+  color: #000000;
+}
+
+.status-error {
+  background-color: #ff0000;
+  color: #ffffff;
 }
 </style>

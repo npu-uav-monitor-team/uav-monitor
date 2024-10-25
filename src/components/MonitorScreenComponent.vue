@@ -5,7 +5,6 @@
                 <select v-model="selectedDeviceType" @change="loadDevices">
                     <option value="optical">光电设备</option>
                     <option value="video">视频设备（全景摄像头）</option>
-                    <option value="radar">雷达设备</option>
                 </select>
                 <select v-model="selectedDeviceId" @change="loadDeviceData">
                     <option v-for="device in devices" :key="device.id" :value="device.id">

@@ -90,6 +90,8 @@
     
     .left-panel {
         flex: 3;
+        display: flex;
+        flex-direction: column;
     }
     
     .right-panel {
