@@ -120,7 +120,7 @@
                     <div class="button-grid">
                         <button @click="toggleServo">{{ servoStatus ? '伺服关机' : '伺服开机' }}</button>
                         <button @click="toggleChannel">{{ channelType ? '红外通道' : '电视通道' }}</button>
-                        <button @click="resetOptoelectronic">���电归零</button>
+                        <button @click="resetOptoelectronic">电归零</button>
                         <button @click="toggleTargetColor">{{ targetColor ? '目标白' : '目标黑' }}</button>
                         <button @click="toggleTrackingMode">{{ trackingMode ? '质心' : '相关' }}</button>
                         <button @click="toggleInfrared">{{ infraredStatus ? '红外关机' : '红外开机' }}</button>
