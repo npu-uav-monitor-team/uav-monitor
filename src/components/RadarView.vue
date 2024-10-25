@@ -140,7 +140,7 @@ onMounted(async () => {
 
 const loadDeviceData = (deviceId) => {
   // 实现加载选定雷达设备数据的逻辑
-  console.log('载设备数据:', deviceId);
+  console.log('加载设备数据:', deviceId);
 };
 
 const refresh = () => {
@@ -224,14 +224,14 @@ const closeSettings = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #1e3a8a;
 }
 
 .device-selector {
   display: flex;
-  gap: 15px;
+  gap: 10px;
 }
 
 .device-selector select {
@@ -239,8 +239,7 @@ const closeSettings = () => {
   color: #00ffff;
   border: 1px solid #00ffff;
   border-radius: 5px;
-  padding: 10px 15px;
-  font-size: 1.2em;
+  padding: 5px 10px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -260,8 +259,7 @@ const closeSettings = () => {
   color: #00ffff;
   border: 1px solid #00ffff;
   border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 1.2em;
+  padding: 5px 10px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -299,9 +297,9 @@ const closeSettings = () => {
   left: 10px;
   background: rgba(15, 23, 42, 0.8);
   color: #00ffff;
-  padding: 8px 15px;
+  padding: 5px 10px;
   border-radius: 5px;
-  font-size: 1.5em; /* 进一步增大字体大小 */
+  font-size: 0.9em;
   z-index: 10;
 }
 
@@ -316,13 +314,11 @@ const closeSettings = () => {
 .device-controls button {
   flex: 1;
   white-space: nowrap;
-  font-size: 1.4em; /* 进一步增大按钮字体大小 */
-  padding: 10px 15px; /* 增加按钮内边距 */
 }
 
 .illegal-aircraft-list {
   flex: 1;
-  padding: 20px; /* 增加内边距 */
+  padding: 10px;
   background-color: rgba(0, 31, 63, 0.8);
   border-radius: 0 0 10px 10px;
   overflow-y: auto;
@@ -331,18 +327,16 @@ const closeSettings = () => {
 h2 {
   color: #00ffff;
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.8em; /* 进一步增大标题字体大小 */
+  margin-bottom: 10px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.4em; /* 进一步增大表格字体大小 */
 }
 
 th, td {
-  padding: 15px; /* 增加内边距以适应更大的字体 */
+  padding: 8px;
   text-align: left;
   border-bottom: 1px solid rgba(0, 255, 255, 0.3);
 }
@@ -429,13 +423,13 @@ tr.highlighted {
 
 .status-label {
   color: #00ffff;
-  font-size: 1.3em; /* 增大状态标签字体大小 */
+  font-size: 0.9em;
 }
 
 .status-indicator {
-  padding: 5px 12px;
-  border-radius: 5px;
-  font-size: 1.3em; /* 增大状态指示器字体大小 */
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.9em;
   font-weight: bold;
 }
 
