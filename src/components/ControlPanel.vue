@@ -125,10 +125,20 @@
                         <button @click="toggleTrackingMode">{{ trackingMode ? '质心' : '相关' }}</button>
                         <button @click="toggleInfrared">{{ infraredStatus ? '红外关机' : '红外开机' }}</button>
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
-                        <button>预留按钮</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
                         <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
                         <button @click="showSettings">详细设置</button>
+                        <div class="focus-wheel">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <circle cx="50" cy="50" r="45" fill="#005a8c"/>
+                                    <polygon points="50,10 40,30 60,30" fill="#00ffff" @click="adjustFocus('up')"/>
+                                    <polygon points="90,50 70,40 70,60" fill="#00ffff" @click="adjustFocus('right')"/>
+                                    <polygon points="50,90 60,70 40,70" fill="#00ffff" @click="adjustFocus('down')"/>
+                                    <polygon points="10,50 30,60 30,40" fill="#00ffff" @click="adjustFocus('left')"/>
+                                </g>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,7 +314,7 @@ function toggleAutoDefense() {
 
 function adjustFocus(direction) {
     // TODO: 实现调焦功能
-    console.log(`Adjusting focus: ${direction}`);
+    console.log(`调整焦距: ${direction}`);
 }
 
 function adjustBrightness(direction) {
@@ -679,4 +689,32 @@ button:hover, button.active {
   padding: 8px 20px;
   font-size: 14px;
 }
+
+.focus-wheel {
+  width: 100px;
+  height: 100px;
+  margin: 10px auto;
+}
+
+.focus-wheel svg {
+  width: 100%;
+  height: 100%;
+}
+
+.focus-wheel polygon {
+  cursor: pointer;
+  transition: fill 0.3s;
+}
+
+.focus-wheel polygon:hover {
+  fill: #007acc;
+}
+
+/* 调整按钮网格以适应新的轮盘 */
+.button-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: center;
+}
 </style>
+
