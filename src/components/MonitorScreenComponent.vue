@@ -3,7 +3,7 @@
         <div class="screen-header">
             <div class="device-selector">
                 <select v-model="selectedDeviceType" @change="loadDevices">
-                    <option value="optical">光电设备</option>
+                    <option value="optical">雷达设备</option>
                     <option value="video">视频设备（全景摄像头）</option>
                 </select>
                 <select v-model="selectedDeviceId" @change="loadDeviceData">
@@ -36,7 +36,7 @@
                      :class="['device-image', { 'large-image': isLarge }]"/>
                 <div v-if="isLarge" class="device-label">
                     {{
-                        currentContent.deviceType === 'optical' ? '光电设备' :
+                        currentContent.deviceType === 'optical' ? '雷达设备' :
                             currentContent.deviceType === 'video' ? '视频设备' :
                                 currentContent.deviceType === 'radar' ? '雷达设备' : ''
                     }}

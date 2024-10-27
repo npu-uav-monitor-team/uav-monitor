@@ -1,13 +1,13 @@
 <template>
     <div class="tracking-view">
         <div class="title-container">
-            <h1 class="main-title">态势监控中心</h1>
+            <h1 class="main-title">态势监控中心-深圳坪山测试场</h1>
             <button @click="goToControlCenter()" class="main-button">
                 指挥控制中心
             </button>
         </div>
         <div class="map-container">
-            <template v-if="isOnline">
+            <div v-if="isOnline">
                 <l-map ref="map" v-model:zoom="zoom" :center="center" :options="mapOptions">
                     <l-tile-layer :url="url" :attribution="attribution" :opacity="0.7"></l-tile-layer>
                     <l-polyline
@@ -56,9 +56,9 @@
                         fillOpacity="0.2"
                     />
                 </l-map>
-            </template>
+            </div>
             <div v-else class="offline-map">
-                <img :src="offlineMapUrl" alt="Offline Map" class="offline-map-image" />
+                <img :src="getOfflineMapUrl()" alt="Offline Map" class="offline-map-image" />
             </div>
         </div>
         
@@ -102,7 +102,7 @@
         </div>
         
         <div class="floating-panel all-aircraft-list" :class="{ 'panel-hidden': !showAllAircraftList }">
-            <h2>部飞行物列表
+            <h2>飞行物列表
                 <button @click="toggleAllAircraftList" class="toggle-btn">{{
                         showAllAircraftList ? '隐藏' : '显示'
                     }}
@@ -207,7 +207,7 @@
     const map = ref()
     
     const zoom = ref(15) // 保持不变
-    const center = ref([22.7087, 114.3671]) // 更新为深圳市坪山区的坐标
+    const center = ref([22.695519, 114.437709]) // 更新为深圳市坪山区的坐标
     const url = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     const attribution = ref('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
     const mapOptions = ref({
@@ -223,8 +223,8 @@
             altitude: 500,
             distance: 2.5,
             updateTime: '2023/4/10 10:30:00',
-            lat: 34.2286,
-            lng: 108.9291,
+            lat: 22.695519,
+            lng: 114.437709,
             color: 'red'
         },
         {
@@ -235,8 +235,8 @@
             altitude: 1000,
             distance: 5,
             updateTime: '2023/4/10 10:35:00',
-            lat: 34.2386,
-            lng: 108.9391,
+            lat: 22.695515,
+            lng: 114.437708,
             color: 'blue'
         },
         {
@@ -247,8 +247,8 @@
             altitude: 800,
             distance: 4.5,
             updateTime: '2023/4/10 10:50:00',
-            lat: 34.2186,
-            lng: 108.9191,
+            lat: 22.695519,
+            lng: 114.437708,
             color: 'green'
         },
         {
@@ -259,8 +259,8 @@
             altitude: 550,
             distance: 3.0,
             updateTime: '2023/4/10 11:00:00',
-            lat: 34.2300,
-            lng: 108.9300,
+            lat: 22.6900,
+            lng: 144.4300,
             color: 'yellow'
         },
         {
@@ -271,7 +271,7 @@
             altitude: 1100,
             distance: 5.5,
             updateTime: '2023/4/10 11:05:00',
-            lat: 34.2400,
+            lat: 22.2400,
             lng: 108.9400,
             color: 'purple'
         },
@@ -283,8 +283,8 @@
             altitude: 750,
             distance: 4.0,
             updateTime: '2023/4/10 11:10:00',
-            lat: 34.2200,
-            lng: 108.9200,
+            lat: 22.6900,
+            lng: 144.4300,
             color: 'orange'
         },
         {
@@ -295,8 +295,8 @@
             altitude: 480,
             distance: 2.8,
             updateTime: '2023/4/10 11:15:00',
-            lat: 34.2290,
-            lng: 108.9295,
+            lat: 22.6990,
+            lng: 144.4395,
             color: 'pink'
         },
         {
@@ -307,8 +307,8 @@
             altitude: 1050,
             distance: 5.2,
             updateTime: '2023/4/10 11:20:00',
-            lat: 34.2390,
-            lng: 108.9395,
+            lat: 22.6990,
+            lng: 144.4395,
             color: 'cyan'
         },
         {
@@ -331,8 +331,8 @@
             altitude: 520,
             distance: 2.7,
             updateTime: '2023/4/10 11:30:00',
-            lat: 34.2295,
-            lng: 108.9298,
+            lat: 22.6995,
+            lng: 144.4398,
             color: 'lime'
         }
     ])
@@ -374,15 +374,17 @@
     const selectedAircraft = ref(null);
     const infoPosition = ref({ left: '0px', top: '0px' });
     const noFlyZone = ref({
-        center: [34.2286, 108.9391], // 禁飞区中心坐标
+        center: [22.695519, 114.437709], // 禁飞区中心坐标
         radius: 1000 // 禁飞区半径（米）
     })
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
     
     // 将 isOnline 的初始化移到这里
-    const isOnline = ref(navigator.onLine);
-    const offlineMapUrl = ref('/src/assets/map.png'); // 确保这是正确的路径
+    const isOnline = ref(false);
+    const getOfflineMapUrl = () => {
+        return new URL('../assets/map.png', import.meta.url).href
+    }
 
     // 修改这里：调整离线地图的边界，整体缩小 1.3 倍
     const originalCenter = [22.7087, 114.3671]; // 原始中心点

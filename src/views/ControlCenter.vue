@@ -1,7 +1,7 @@
 <template>
     <div id="home">
         <div class="title-container">
-            <h1 class="main-title">指挥控制中心</h1>
+            <h1 class="main-title">低空经济飞行器指挥控制管理系统</h1>
             <button @click="goToTracking()" class="main-button">
                 追踪页面
             </button>

@@ -1,6 +1,6 @@
 <template>
     <div class="full-screen-view">
-        <h2>全景视频监控</h2>
+        <h2>光电设备视频</h2>
         <div class="video-container">
             <video ref="videoPlayer" controls width="100%"/>
         </div>
@@ -21,11 +21,11 @@
     
     let hls = null;
     const videoPlayer = ref();
-    const selectedCamera = ref('http://localhost:8585/hls/playlist.m3u8')
+    const selectedCamera = ref('http://200.99.99.20:8585/hls/playlist.m3u8')
     const cameras = [
-        {id: 1, name: '摄像头 1', src: 'http://localhost:8585/hls/playlist.m3u8'},
-        {id: 2, name: '摄像头 2', src: 'http://localhost:8585/hls/playlist.m3u8'},
-        {id: 3, name: '摄像头 3', src: 'http://localhost:8585/hls/playlist.m3u8'},
+        {id: 1, name: '摄像头 1', src: 'http://200.99.99.20:8585/hls/playlist.m3u8'},
+        {id: 2, name: '摄像头 2', src: 'http://200.99.99.20:8585/hls/playlist.m3u8'},
+        {id: 3, name: '摄像头 3', src: 'http://200.99.99.20:8585/hls/playlist.m3u8'},
     ]
     const changeCamera = () => {
         refreshVideo();
