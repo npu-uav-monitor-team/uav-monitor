@@ -7,8 +7,7 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 使用离线地图需要下载瓦片tiles
 链接：https://pan.baidu.com/s/1PyuBWFRFlg7zE7L7Vuy0Mw?pwd=ce66 
 提取码：ce66 
-<<<<<<< HEAD
+
 解压至/public/目录下
-=======
-解压至/public/目录下
->>>>>>> 0dd1c3df4c16626cc9e3492f3c3e1e7dcefcff82
+
+
