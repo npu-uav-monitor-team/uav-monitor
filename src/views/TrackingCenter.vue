@@ -157,7 +157,7 @@
             </div>
         </div>
         
-        <!-- 注释掉或删除左侧按钮组 -->
+        <!-- 注释掉左侧按钮组 -->
         <!--
         <div class="left-buttons">
             <button @click="showModal('zoomControl')" class="control-btn"><i class="fas fa-search"></i></button>
@@ -169,7 +169,7 @@
         </div>
         -->
         
-        <!-- 注释掉或删除模态框 -->
+        <!-- 注释掉模态框 -->
         <!--
         <div v-if="activeModal" class="modal">
             <div class="modal-content">
@@ -214,7 +214,7 @@
     import 'leaflet/dist/leaflet.css'
     import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip, LImageOverlay } from '@vue-leaflet/vue-leaflet'
     import L from 'leaflet'
-    
+    import axios from 'axios'; // 引入 axios 用于发送 HTTP 请求
     import { onMounted, ref, onUnmounted, watch } from "vue";
     import { useRouter } from "vue-router";
     
@@ -235,6 +235,50 @@
         attributionControl: false,
     })
     const flightPaths = ref([])
+
+    const updateAircraftData = () => {    //用于从接口获取并且更新无人机数据
+  axios.get('/api/v0/uavs')
+    .then(response => {
+      if (response.data.code === 0 && response.data.result && response.data.result.allAircraft) {
+        const newAircraftData = response.data.result.allAircraft;
+
+        // 更新 allAircraft 数据
+        allAircraft.value = newAircraftData.map(aircraft => ({
+          ...aircraft, // 保留原有数据
+          path: aircraft.path.map(point => [point[0], point[1]]), // 将路径转换为 Leaflet 可识别的格式 [[lat, lng], [lat, lng], ...]
+        }));
+
+
+        // 更新 threats 数据 (根据威胁等级过滤)
+        threats.value = newAircraftData.filter(aircraft => aircraft.threadLevel !== '低').map(aircraft => ({
+            id: aircraft.id,
+            type: aircraft.type,
+            name: aircraft.name,
+            level: aircraft.threadLevel,
+            speed: aircraft.speed,
+            altitude: aircraft.altitude,
+            distance: aircraft.distance,
+            updateTime: aircraft.updateTime,
+            color: aircraft.color
+          }));
+
+
+        // 更新 flightPaths 数据
+        flightPaths.value = allAircraft.value.map(aircraft => ({
+          id: aircraft.id,  
+          points: aircraft.path, // 使用接口提供的路径数据
+          color: aircraft.color
+        }));
+
+
+      } else {
+        console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+      }
+    })
+    .catch(error => {
+      console.error('获取飞行器数据失败:', error);
+    });
+};
     const allAircraft = ref([
         {
             id: 1,
@@ -500,7 +544,7 @@
         crossOrigin: true,
         detectRetina: true,
         maxNativeZoom: 15,
-        maxZoom: 19,
+        maxZoom: 17,
         minZoom: 0,
         bounds: [
             [22.67, 114.32],  // 南西角
@@ -552,6 +596,8 @@
         
         center.value = [22.7087, 114.3671];
         
+        updateAircraftData();
+  setInterval(updateAircraftData, 5000); // 每 5 秒更新一次数据
         // 添加调试信息
         console.log('Map center:', center.value);
         console.log('Initial zoom:', zoom.value);
@@ -570,11 +616,7 @@
             });
     })
     
-    onUnmounted(() => {
-        // 删除离线相关的事件监听
-        // window.removeEventListener('online', updateOnlineStatus);
-        // window.removeEventListener('offline', updateOnlineStatus);
-    })
+    
 
     // Define URLs for online and offline maps
     const onlineUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';  //https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png 卫星地图，但数据有点老
