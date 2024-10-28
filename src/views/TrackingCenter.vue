@@ -231,7 +231,8 @@
         zoomControl: false,
         minZoom: 0,  // 限制最小缩放级别
         maxZoom: 17,  // 限制最大缩放级别
-        preferCanvas: true
+        preferCanvas: true,
+        attributionControl: false,
     })
     const flightPaths = ref([])
     const allAircraft = ref([
@@ -574,6 +575,22 @@
         // window.removeEventListener('online', updateOnlineStatus);
         // window.removeEventListener('offline', updateOnlineStatus);
     })
+
+    // Define URLs for online and offline maps
+    const onlineUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';  //https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png 卫星地图，但数据有点老
+    const offlineUrl = '/public/tiles/{z}/{x}/{y}/tile.png';
+
+    // Function to update the map URL based on network status
+    const updateMapUrl = () => {
+        url.value = navigator.onLine ? onlineUrl : offlineUrl;
+    };
+
+    // Watch for changes in network status
+    window.addEventListener('online', updateMapUrl);
+    window.addEventListener('offline', updateMapUrl);
+
+    // Initialize map URL based on current network status
+    updateMapUrl();
 </script>
 
 <style scoped>
@@ -980,6 +997,7 @@
     
     /* ... 为其他列添加类似的规则 ... */
 </style>
+
 
 
 
