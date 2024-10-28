@@ -7,59 +7,75 @@
             </button>
         </div>
         <div class="map-container">
-            <div v-if="isOnline">
-                <l-map ref="map" v-model:zoom="zoom" :center="center" :options="mapOptions">
-                    <l-tile-layer :url="url" :attribution="attribution" :opacity="0.7"></l-tile-layer>
-                    <l-polyline
-                        v-for="(path, index) in flightPaths"
-                        :key="index"
-                        :lat-lngs="path.points"
-                        :color="path.color"
-                        :weight="4"
-                        :opacity="0.8"
-                    />
-                    <l-circle-marker
-                        v-for="aircraft in allAircraft"
-                        :key="aircraft.id"
-                        :lat-lng="[aircraft.lat, aircraft.lng]"
-                        :radius="6"
-                        :color="aircraft.color"
-                        :fillColor="aircraft.color"
-                        fillOpacity="0.8"
-                        @mouseover="showAircraftInfo(aircraft, $event)"
-                        @mouseout="closeAircraftInfo"
-                    >
-                        <l-tooltip :options="{ permanent: false, direction: 'right', offset: [10, 0] }">
-                            <div class="aircraft-tooltip">
-                                <h4>{{ aircraft.name }}</h4>
-                                <p>类型: {{ aircraft.type }}</p>
-                                <p>速度: {{ aircraft.speed }} km/h</p>
-                                <p>高度: {{ aircraft.altitude }} m</p>
-                                <p>距离: {{ aircraft.distance }} km</p>
-                            </div>
-                        </l-tooltip>
-                    </l-circle-marker>
-                    <l-marker
-                        v-for="aircraft in allAircraft"
-                        :key="'arrow-' + aircraft.id"
-                        :lat-lng="[aircraft.lat, aircraft.lng]"
-                        :icon="getArrowIcon(aircraft)"
-                        :z-index-offset="-1000"
-                        @mouseover="showAircraftInfo(aircraft, $event)"
-                        @mouseout="closeAircraftInfo"
-                    />
-                    <l-circle
-                        :lat-lng="noFlyZone.center"
-                        :radius="noFlyZone.radius"
-                        color="red"
-                        fillColor="#f03"
-                        fillOpacity="0.2"
-                    />
-                </l-map>
-            </div>
-            <div v-else class="offline-map">
-                <img :src="getOfflineMapUrl()" alt="Offline Map" class="offline-map-image" />
-            </div>
+            <l-map 
+                ref="map" 
+                v-model:zoom="zoom" 
+                :center="center" 
+                :options="mapOptions"
+                @ready="onMapReady"
+            >
+                <!-- 基础瓦片图层 -->
+                <l-tile-layer 
+                    :url="url" 
+                    :attribution="attribution" 
+                    :opacity="0.7"
+                    @error="handleTileError"
+                    v-bind="tileLayerOptions"
+                    :zIndex="0"
+                />
+                
+                <!-- 其他图层保持不变，但添加zIndex -->
+                <l-circle
+                    :lat-lng="noFlyZone.center"
+                    :radius="noFlyZone.radius"
+                    color="red"
+                    fillColor="#f03"
+                    :fillOpacity="0.2"
+                    :zIndex="10"
+                />
+                
+                <l-polyline
+                    v-for="(path, index) in flightPaths"
+                    :key="index"
+                    :lat-lngs="path.points"
+                    :color="path.color"
+                    :weight="4"
+                    :opacity="0.8"
+                    :zIndex="20"
+                />
+                
+                <l-circle-marker
+                    v-for="aircraft in allAircraft"
+                    :key="aircraft.id"
+                    :lat-lng="[aircraft.lat, aircraft.lng]"
+                    :radius="6"
+                    :color="aircraft.color"
+                    :fillColor="aircraft.color"
+                    :fillOpacity="0.8"
+                    :zIndex="30"
+                    @mouseover="showAircraftInfo(aircraft, $event)"
+                    @mouseout="closeAircraftInfo"
+                >
+                    <l-tooltip :options="{ permanent: false, direction: 'right', offset: [10, 0] }">
+                        <div class="aircraft-tooltip">
+                            <h4>{{ aircraft.name }}</h4>
+                            <p>类型: {{ aircraft.type }}</p>
+                            <p>速度: {{ aircraft.speed }} km/h</p>
+                            <p>高度: {{ aircraft.altitude }} m</p>
+                            <p>距离: {{ aircraft.distance }} km</p>
+                        </div>
+                    </l-tooltip>
+                </l-circle-marker>
+                <l-marker
+                    v-for="aircraft in allAircraft"
+                    :key="'arrow-' + aircraft.id"
+                    :lat-lng="[aircraft.lat, aircraft.lng]"
+                    :icon="getArrowIcon(aircraft)"
+                    :z-index-offset="-1000"
+                    @mouseover="showAircraftInfo(aircraft, $event)"
+                    @mouseout="closeAircraftInfo"
+                />
+            </l-map>
         </div>
         
         <div class="floating-panel threat-list" :class="{ 'panel-hidden': !showThreatList }">
@@ -208,10 +224,14 @@
     
     const zoom = ref(15) // 保持不变
     const center = ref([22.695519, 114.437709]) // 更新为深圳市坪山区的坐标
-    const url = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    const url = ref('/public/tiles/{z}/{x}/{y}/tile.png')  // 修改为相对路径
+    const fallbackUrl = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     const attribution = ref('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
     const mapOptions = ref({
         zoomControl: false,
+        minZoom: 0,  // 限制最小缩放级别
+        maxZoom: 17,  // 限制最大缩放级别
+        preferCanvas: true
     })
     const flightPaths = ref([])
     const allAircraft = ref([
@@ -380,29 +400,6 @@
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
     
-    // 将 isOnline 的初始化移到这里
-    const isOnline = ref(false);
-    const getOfflineMapUrl = () => {
-        return new URL('../assets/map.png', import.meta.url).href
-    }
-
-    // 修改这里：调整离线地图的边界，整体缩小 1.3 倍
-    const originalCenter = [22.7087, 114.3671]; // 原始中心点
-    const originalWidth = 114.4671 - 114.2671;
-    const originalHeight = 22.7587 - 22.6587;
-    const scaleFactor = 1.3;
-
-    const offlineMapBounds = ref([
-      [
-        originalCenter[0] - (originalHeight / 2) / scaleFactor,
-        originalCenter[1] - (originalWidth / 2) / scaleFactor
-      ],
-      [
-        originalCenter[0] + (originalHeight / 2) / scaleFactor,
-        originalCenter[1] + (originalWidth / 2) / scaleFactor
-      ]
-    ]);
-    
     const goToControlCenter = async () => {
         await router.push('/control-center')
     }
@@ -445,7 +442,7 @@
             const newAngle = prevAngle + angleChange;
             
             // 增加距离以创建更长的路径
-            const distance = 0.0002 + Math.random() * 0.0004; // 约200-600米的范围
+            const distance = 0.00001 + Math.random() * 0.0003; // 约200-600米的范围
             const newLat = prevPoint[0] + distance * Math.cos(newAngle);
             const newLng = prevPoint[1] + distance * Math.sin(newAngle);
             
@@ -486,43 +483,55 @@
         showAllAircraftList.value = !showAllAircraftList.value
     }
     
-    function updateOnlineStatus() {
-        isOnline.value = navigator.onLine;
-    }
+    // 添加调试信息
+    const handleTileError = (error) => {
+  console.error('Tile loading error:', error);
+  const tileUrl = error.target.src;
+  console.log('Failed tile URL:', tileUrl);
+
+  // 使用 fallbackUrl
+  error.target.src = fallbackUrl.value.replace('{z}', error.tile.z).replace('{x}', error.tile.x).replace('{y}', error.tile.y).replace('{s}', 'a'); //  使用fallbackUrl
+};
     
-    function initializeMap() {
-        if (!isOnline.value) {
-            // 如果离线，立即设置离线地图
-            nextTick(() => {
-                if (map.value && map.value.leafletObject) {
-                    map.value.leafletObject.fitBounds(offlineMapBounds.value);
-                }
-            });
-        }
+    // 修改瓦片图层配置
+    const tileLayerOptions = ref({
+        tileSize: 256,
+        crossOrigin: true,
+        detectRetina: true,
+        maxNativeZoom: 15,
+        maxZoom: 19,
+        minZoom: 0,
+        bounds: [
+            [22.67, 114.32],  // 南西角
+            [22.73, 114.42]   // 北东角
+        ]
+    })
+
+    // 添加地图就绪事件处理
+    const onMapReady = (mapInstance) => {
+        console.log('Map is ready');
+        // 测试瓦片加载
+        const z = 15;
+        const x = Math.floor((center.value[1] + 180) * Math.pow(2, z) / 360);
+        const y = Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, z-1));
+        
+        const testTileUrl = `/public/tiles/{z}/{x}/{y}/tile.png`;
+        console.log('Testing tile URL:', testTileUrl);
+        
+        fetch(testTileUrl)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.blob();
+            })
+            .then(() => console.log('Test tile loaded successfully'))
+            .catch(error => console.error('Test tile loading failed:', error));
     }
-    
-    // 监听 isOnline 的变化
-    watch(isOnline, (newValue) => {
-        if (newValue) {
-            // 如果重新连接，可以在这里添加在线地图的逻辑
-        } else {
-            // 如果断开连接，设置离线地图
-            initializeMap();
-        }
-    });
     
     onMounted(() => {
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        
-        // 初始化地图
-        initializeMap();
-        
         allAircraft.value.forEach((aircraft) => {
-            // 更新初始位置为深圳市坪山区附近的随机位置
             const startPoint = [
-                22.7087 + (Math.random() - 0.5) * 0.02,
-                114.3671 + (Math.random() - 0.5) * 0.02
+                22.695519 + (Math.random() - 0.5) * 0.02,
+                114.437709 + (Math.random() - 0.5) * 0.02
             ];
             const path = generateRandomPath(startPoint, 30);
             flightPaths.value.push({
@@ -530,31 +539,40 @@
                 points: path,
                 color: aircraft.color
             });
-            // 更新飞行器的位置为路径的最后一个点
             const lastPoint = path[path.length - 1];
             aircraft.lat = lastPoint[0];
             aircraft.lng = lastPoint[1];
         });
         
-        // 更新禁飞区位置
         noFlyZone.value = {
-            center: [22.7087, 114.3671], // 使用坪山区中心作为禁飞区中心
-            radius: 500 // 半径保持500米不变
+            center: [22.695519, 114.437709],
+            radius: 500
         };
         
-        // 更新地图中心和缩放级别以适应离线地图
-        center.value = originalCenter;
+        center.value = [22.7087, 114.3671];
         
-        // 如果离线，调整缩放级别以适应离线地图
-        if (!isOnline.value) {
-            const mapElement = map.value.leafletObject;
-            mapElement.fitBounds(offlineMapBounds.value);
-        }
+        // 添加调试信息
+        console.log('Map center:', center.value);
+        console.log('Initial zoom:', zoom.value);
+        
+        // 测试瓦片加载
+        const testTileUrl = `/public/tiles/15/${Math.floor((center.value[1] + 180) * Math.pow(2, 15) / 360)}/${Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, 15-1))}/tile.png`;
+        fetch(testTileUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                console.log('Test tile loaded successfully');
+            })
+            .catch(error => {
+                console.error('Test tile loading failed:', error);
+            });
     })
     
     onUnmounted(() => {
-        window.removeEventListener('online', updateOnlineStatus);
-        window.removeEventListener('offline', updateOnlineStatus);
+        // 删除离线相关的事件监听
+        // window.removeEventListener('online', updateOnlineStatus);
+        // window.removeEventListener('offline', updateOnlineStatus);
     })
 </script>
 
@@ -962,6 +980,15 @@
     
     /* ... 为其他列添加类似的规则 ... */
 </style>
+
+
+
+
+
+
+
+
+
 
 
 
