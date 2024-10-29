@@ -22,6 +22,11 @@ const routes = [
         component: () => import('../views/MonitorCenter.vue')
     },
     {
+        path: '/stream-test',
+        name: 'StreamTest',
+        component: () => import('../views/StreamTest.vue')
+    },
+    {
         path: '/404',
         name: 'NotFound',
         component: () => import('../views/NotFound.vue')
