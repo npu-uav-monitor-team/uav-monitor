@@ -13,6 +13,12 @@
             >
                 光电设备控制
             </button>
+            <button
+                @click="activeTab = 'deception'"
+                :class="{ active: activeTab === 'deception' }"
+            >
+                诱骗和干扰
+            </button>
         </div>
         
         <div class="tab-content">
@@ -90,7 +96,7 @@
                 </div>
             </div>
             
-            <div v-else class="control-content">
+            <div v-else-if="activeTab === 'optoelectronic'" class="control-content">
                 <div class="status-section">
                     <div class="status-row">
                         <div class="status-item">
@@ -158,6 +164,67 @@
                     </div>
                 </div>
             </div>
+
+            <div v-else class="control-content">
+                <div class="status-section">
+                    <div class="status-row">
+                        <div class="status-item">
+                            <span>设备状态：</span>
+                            <span :class="['status-indicator', deviceOnline ? 'online' : 'offline']">
+                                {{ deviceOnline ? '在线' : '离线' }}
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span>设备状态：</span>
+                            <span :class="['status-badge', deviceNormal ? 'normal' : 'abnormal']">
+                                {{ deviceNormal ? '正常' : '异常' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h4>经纬度（雷达数据）</h4>
+                    <div class="coordinates-display">
+                        <div class="coordinate">{{ radarData.longitude }}°</div>
+                        <div class="coordinate">{{ radarData.latitude }}°</div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h4>模糊度</h4>
+                    <input 
+                        type="range" 
+                        v-model="simulationLevel" 
+                        min="0" 
+                        max="100" 
+                        class="simulation-slider"
+                    >
+                    <div class="slider-value">{{ simulationLevel }}</div>
+                </div>
+
+                <div class="control-section">
+                    <div class="action-buttons">
+                        <button @click="stopEmission" class="action-btn">停止发射</button>
+                        <button @click="approachEmission" class="action-btn">就近发射</button>
+                        <button @click="sendCommand" class="action-btn">发送</button>
+                    </div>
+                </div>
+
+                <div class="control-section drive-away-section">
+                    <h4>驱离角度 (°)</h4>
+                    <div class="angle-input-container">
+                        <input 
+                            type="number" 
+                            v-model="driveAwayAngle" 
+                            min="0" 
+                            max="360"
+                            class="angle-input"
+                        >
+                        <button @click="driveAway" class="drive-away-btn">驱离</button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- 添加设置弹窗 -->
@@ -214,7 +281,7 @@
 </template>
 
 <script setup>
-    import { onMounted, ref } from "vue";
+    import { onMounted, ref, onUnmounted } from "vue";
     
     const activeTab = ref('control');
     const activeBands = ref([]);
@@ -260,6 +327,15 @@
         noiseReduction: 'none'
     });
     
+    const deviceOnline = ref(true);
+    const deviceNormal = ref(true);
+    const radarData = ref({
+        longitude: 0.0000,
+        latitude: 0.0000
+    });
+    const simulationLevel = ref(100);
+    const driveAwayAngle = ref(10);
+    
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
         // TODO: 调用后端 API 获取无线设备状态
@@ -295,6 +371,15 @@
             altitude: 500,
             distance: 2.5
         };
+
+        updateRadarData();
+        // 定期更新雷达数据
+        const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
+
+        // 组件卸载时清除定时器
+        onUnmounted(() => {
+            clearInterval(updateInterval);
+        });
     });
     
     // 切换频段
@@ -410,6 +495,26 @@
         console.log(`频率: ${frequency.value ? '5Hz' : '12.5Hz'}`);
     }
     
+    function stopEmission() {
+        console.log('停止发射');
+        // TODO: 实现停止发射逻辑
+    }
+    
+    function approachEmission() {
+        console.log('就近发射');
+        // TODO: 实现就近发射逻辑
+    }
+    
+    function sendCommand() {
+        console.log('发送命令');
+        // TODO: 实现发送命令逻辑
+    }
+    
+    function driveAway() {
+        console.log('执行驱离', driveAwayAngle.value);
+        // TODO: 实现驱离逻辑
+    }
+    
     // 保存设置
     function saveSettings() {
         // TODO: 调用后端 API 保存设置
@@ -425,6 +530,21 @@
     // 显示设置弹窗
     function showSettings() {
         showSettingsDialog.value = true;
+    }
+
+    // 添加雷达数据获取方法
+    async function updateRadarData() {
+        try {
+            // TODO: 调用后端API获取雷达数据
+            // const response = await api.getRadarData();
+            // radarData.value = {
+            //     longitude: response.longitude,
+            //     latitude: response.latitude
+            // };
+            console.log('更新雷达数据');
+        } catch (error) {
+            console.error('获取雷达数据失败:', error);
+        }
     }
 </script>
 
@@ -732,6 +852,96 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
         align-items: center;
+    }
+
+    .coordinates-display {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+    }
+
+    .coordinate {
+        background: #001f3f;
+        padding: 10px;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        color: #00ffff;
+        flex: 1;
+        text-align: center;
+        margin: 0 5px;
+    }
+
+    .simulation-slider {
+        width: 100%;
+        margin: 10px 0;
+        -webkit-appearance: none;
+        height: 8px;
+        background: #003366;
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .simulation-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #00ffff;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .slider-value {
+        text-align: center;
+        color: #00ffff;
+        margin-top: 5px;
+    }
+
+    .angle-input-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .angle-input {
+        flex: 1;
+        background: #001f3f;
+        border: 1px solid #00ffff;
+        color: #00ffff;
+        padding: 5px;
+        border-radius: 4px;
+    }
+
+    .drive-away-btn {
+        padding: 5px 15px;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 10px;
+        background: #003366;
+        color: #00ffff;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .action-btn:hover {
+        background: #004080;
+    }
+
+    /* 添加驱离部分的特殊样式 */
+    .drive-away-section {
+        margin-top: 20px;
+        border-top: 1px solid rgba(0, 255, 255, 0.3);
+        padding-top: 20px;
     }
 </style>
 
