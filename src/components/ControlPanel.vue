@@ -14,7 +14,7 @@
                 光电设备控制
             </button>
             <button
-                @click="activeTab = 'deception'"
+                @click="clickDeception"
                 :class="{ active: activeTab === 'deception' }"
             >
                 诱骗和干扰
@@ -265,6 +265,7 @@
 <script setup>
     import { onMounted, ref, onUnmounted } from "vue";
     import axios from "axios";
+    import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
     const activeBands = ref([]);
@@ -569,9 +570,28 @@
         // TODO: 实现就近发射逻辑
     }
     
-    function sendCommand() {
+    async function sendCommand() {
         console.log('发送命令');
         // TODO: 实现发送命令逻辑
+        const updateCommandRequestDto = {
+            cmdWord: 4352,
+            commandDto: {
+                capture: {
+                    position: {
+                        latitude: 0,
+                        longitude: 0,
+                        altitude: 0
+                    },
+                    captureAmbiguity: 0,
+                    operate: true
+                }
+            }
+        }
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        console.log(res)
+        if (res) {
+            return true
+        }
     }
     
     function driveAway() {
@@ -615,6 +635,19 @@
         // TODO: 显示传感器详细信息
         console.log('显示传感器详细信息:', sensorId);
       window.location.href = 'http://192.168.10.188:8081/#/Index'
+    }
+
+    function clickDeception(){
+        activeTab.value = 'deception'
+        const udpSettingsDto = {
+            deviceAddress: '192.168.101.101',
+            devicePort: 8700,
+        }
+        const connectRes = deceptionService.updateConnectSetting(udpSettingsDto)
+        if(connectRes.isSuccess){
+            // 自行处理
+            // 设备在线，连接成功
+        }
     }
 </script>
 
