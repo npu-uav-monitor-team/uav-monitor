@@ -64,10 +64,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="sensor in sensors" :key="sensor.id">
-                                <td>{{ sensor.id }}</td>
-                                <td><button @click="showSensorDetails(sensor.id)">详细信息</button></td>
-                            </tr>
+                        <td>{{device.id}}</td>
+                        <td><button @click="showSensorDetails(device.id)">详细信息</button></td>
                         </tbody>
                     </table>
                 </div>
@@ -266,6 +264,7 @@
 
 <script setup>
     import { onMounted, ref, onUnmounted } from "vue";
+    import axios from "axios";
     
     const activeTab = ref('control');
     const activeBands = ref([]);
@@ -300,6 +299,7 @@
     const laserStatus = ref(false);
     const frequency = ref(false);
     const showSettingsDialog = ref(false);
+    const device = ref({});
     
     // 添加设置相关的状态变量
     const settings = ref({
@@ -328,11 +328,48 @@
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
-        // TODO: 调用后端 API 获取无线设备状态
-        // 示例：
-        // const response = await api.getWirelessDeviceStatus();
-        // wirelessDeviceOnline.value = response.online;
-        // wirelessDeviceNormal.value = response.normal;
+      // TODO: 调用后端 API 获取无线设备状态
+      axios.get('http://192.168.10.187:8090/api/v0/getDeviceList')
+          .then(response => {
+            if (response.data.code === 0 && response.data.data) {
+              // 无线设备数据
+              const data = response.data.data[0];
+              device.value = data
+              // 防御状态
+              autoDefense.value = data.attackAuto !== 1
+              // defenseDelay.value = data.attackDelay
+              // defenseDuration.value = data.attackDuration
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+          });
+      // 获取无线系统配置
+      axios.get('http://192.168.10.187:8090/api/v0/getSystemConfig')
+          .then(response => {
+            if (response.data.code === 0 && response.data.data) {
+              // 无线设备数据
+              const data = response.data.data;
+              defenseDelay.value = data.DefenseDelay
+              defenseDuration.value = data.DefenseDuration
+              // 设备是否在线
+              wirelessDeviceOnline.value = true
+              wirelessDeviceNormal.value = true
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+              wirelessDeviceOnline.value = false
+              wirelessDeviceNormal.value = false
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+            wirelessDeviceOnline.value = false
+            wirelessDeviceNormal.value = false
+          });
+      // wirelessDeviceOnline.value = response.online;
+      // wirelessDeviceNormal.value = response.normal;
     }
     
     function updateOptoelectronicDeviceStatus() {
@@ -384,13 +421,39 @@
     }
     
     // 更新防御延迟
-    function updateDefenseDelay() {
-        // TODO: 调用后端 API 更新防御延迟
+    function confirmDefenseDelay() {
+      // TODO: 调用后端 API 更新防御延迟
+      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              alert('设置防御延迟时间成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+
+          });
     }
     
     // 更新防御持续时间
-    function updateDefenseDuration() {
+    function confirmDefenseDuration() {
         // TODO: 调用后端 API 更新防御持续时间
+      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              alert('设置防御持续时间成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+
+          });
     }
     
     // 执行防御
@@ -402,6 +465,17 @@
     // 切换自动防御
     function toggleAutoDefense() {
         // TODO: 调用后端 API 切换自动防御状态
+      axios.post('http://192.168.10.187:8090/api/v0/setAttackAuto?did='+device.value.id+'&isCancel='+autoDefense.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              console.log('自动防御设置成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+          });
     }
     
     function adjustFocus(direction) {
@@ -537,19 +611,10 @@
         }
     }
 
-    function confirmDefenseDelay() {
-        // TODO: 调用后端 API 确认防御延迟
-        console.log('确认防御延迟:', defenseDelay.value);
-    }
-
-    function confirmDefenseDuration() {
-        // TODO: 调用后端 API 确认防御持续时间
-        console.log('确认防御持续时间:', defenseDuration.value);
-    }
-
     function showSensorDetails(sensorId) {
         // TODO: 显示传感器详细信息
         console.log('显示传感器详细信息:', sensorId);
+      window.location.href = 'http://192.168.10.188:8081/#/Index'
     }
 </script>
 

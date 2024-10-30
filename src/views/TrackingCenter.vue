@@ -237,11 +237,10 @@
     const flightPaths = ref([])
 
     const updateAircraftData = () => {    //用于从接口获取并且更新无人机数据
-  axios.get('/api/v0/uavs')
+  axios.get('http://192.168.10.187:8090/api/v0/uavs')
     .then(response => {
-      if (response.data.code === 0 && response.data.result && response.data.result.allAircraft) {
-        const newAircraftData = response.data.result.allAircraft;
-
+      if (response.data.code === 0 && response.data.data) {
+        const newAircraftData = response.data.data;
         // 更新 allAircraft 数据
         allAircraft.value = newAircraftData.map(aircraft => ({
           ...aircraft, // 保留原有数据
@@ -261,8 +260,6 @@
             updateTime: aircraft.updateTime,
             color: aircraft.color
           }));
-
-
         // 更新 flightPaths 数据
         flightPaths.value = allAircraft.value.map(aircraft => ({
           id: aircraft.id,  
@@ -401,41 +398,7 @@
             color: 'lime'
         }
     ])
-    const threats = ref([
-        {
-            id: 1,
-            type: 'uav',
-            name: 'UAV-001',
-            level: '高',
-            speed: 120,
-            altitude: 500,
-            distance: 2.5,
-            updateTime: '2023/4/10 10:30:00',
-            color: 'red'
-        },
-        {
-            id: 2,
-            type: 'uav',
-            name: 'UAV-004',
-            level: '高',
-            speed: 150,
-            altitude: 600,
-            distance: 3.2,
-            updateTime: '2023/4/10 10:45:00',
-            color: 'blue'
-        },
-        {
-            id: 3,
-            type: 'aircraft',
-            name: 'AC-002',
-            level: '中',
-            speed: 200,
-            altitude: 1000,
-            distance: 5,
-            updateTime: '2023/4/10 10:35:00',
-            color: 'green'
-        },
-    ])
+    const threats = ref([]);
     const selectedAircraft = ref(null);
     const infoPosition = ref({ left: '0px', top: '0px' });
     const noFlyZone = ref({
@@ -450,8 +413,9 @@
     }
     function getIconClass(type) {
         switch (type) {
-            case 'uav':
-                return 'fas fa-drone-alt';
+            case 'UAV':
+              // fas fa-drone-alt不显示，暂时跟下面一样
+                return 'fas fa-plane';
             case 'aircraft':
                 return 'fas fa-plane';
             case 'helicopter':
@@ -697,8 +661,8 @@
         box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         color: #ffffff;
         z-index: 1000;
-        width: calc(30% - 40px);
-        max-width: 500px;
+        width: calc(50%);
+        max-width: 600px;
     }
     
     .threat-list {
