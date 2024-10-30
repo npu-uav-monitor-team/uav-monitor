@@ -24,7 +24,7 @@
     { id: 3, name: '摄像头 3', src: 'rtmp://your-rtmp-address-3' }, // 替换为你的RTMP地址
   ];
   
-  const changeCamera = () => {
+  const changeCamera = () => {在·
     if (player.value) {
       player.value.loadByUrl(selectedCamera.value); // 仅切换视频源
     }

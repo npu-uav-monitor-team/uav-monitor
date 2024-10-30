@@ -22,8 +22,12 @@
                      src="@/assets/radar.gif"
                      alt="雷达数据"
                      :class="['device-image', { 'large-image': isLarge }]"/>
-                <img v-else-if="currentContent.deviceType === 'video'"
+                <img v-else-if="currentContent.deviceType === 'video' && selectedDeviceId === 1"
                      src="@/assets/UAV.gif"
+                     alt="视频数据"
+                     :class="['device-image', { 'large-image': isLarge }]"/>
+                <img v-else-if="currentContent.deviceType === 'video' && selectedDeviceId === 2"
+                     src="@/assets/UAV2.gif"
                      alt="视频数据"
                      :class="['device-image', { 'large-image': isLarge }]"/>
                 <img v-else-if="currentContent.deviceType === 'optical'"
