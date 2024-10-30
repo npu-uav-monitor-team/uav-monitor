@@ -58,14 +58,18 @@
                     <h4>Sensors</h4>
                     <table class="sensor-info-table">
                         <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>详细信息</th>
-                            </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>详细信息</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <td>{{device.id}}</td>
-                        <td><button @click="showSensorDetails(device.id)">详细信息</button></td>
+                        <tr v-for="deviceItem in devices" :key="deviceItem.id">
+                            <td>{{ deviceItem.id }}</td>
+                            <td>
+                                <button @click="showSensorDetails(deviceItem.id)">详细信息</button>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
@@ -146,7 +150,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <div v-else class="control-content">
                 <div class="status-section">
                     <div class="status-row">
@@ -164,7 +168,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="control-section">
                     <h4>经纬度（雷达数据）</h4>
                     <div class="coordinates-display">
@@ -172,19 +176,19 @@
                         <div class="coordinate">{{ radarData.latitude }}°</div>
                     </div>
                 </div>
-
+                
                 <div class="control-section">
                     <h4>模糊度</h4>
-                    <input 
-                        type="range" 
-                        v-model="simulationLevel" 
-                        min="0" 
-                        max="100" 
+                    <input
+                        type="range"
+                        v-model="simulationLevel"
+                        min="0"
+                        max="100"
                         class="simulation-slider"
                     >
                     <div class="slider-value">{{ simulationLevel }}</div>
                 </div>
-
+                
                 <div class="control-section">
                     <div class="action-buttons">
                         <button @click="stopEmission" class="action-btn">停止发射</button>
@@ -192,14 +196,14 @@
                         <button @click="sendCommand" class="action-btn">发送</button>
                     </div>
                 </div>
-
+                
                 <div class="control-section drive-away-section">
                     <h4>驱离角度 (°)</h4>
                     <div class="angle-input-container">
-                        <input 
-                            type="number" 
-                            v-model="driveAwayAngle" 
-                            min="0" 
+                        <input
+                            type="number"
+                            v-model="driveAwayAngle"
+                            min="0"
                             max="360"
                             class="angle-input"
                         >
@@ -300,6 +304,7 @@
     const laserStatus = ref(false);
     const frequency = ref(false);
     const showSettingsDialog = ref(false);
+    const devices = ref([])
     const device = ref({});
     
     // 添加设置相关的状态变量
@@ -322,55 +327,55 @@
     const driveAwayAngle = ref(10);
     
     const sensors = ref([
-        { id: 'SF7000012719' },
-        { id: 'SF7000012720' },
+        {id: 'SF7000012719'},
+        {id: 'SF7000012720'},
         // 添加更多传感器数据
     ]);
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
-      // TODO: 调用后端 API 获取无线设备状态
-      axios.get('http://192.168.10.187:8090/api/v0/getDeviceList')
-          .then(response => {
-            if (response.data.code === 0 && response.data.data) {
-              // 无线设备数据
-              const data = response.data.data[0];
-              device.value = data
-              // 防御状态
-              autoDefense.value = data.attackAuto !== 1
-              // defenseDelay.value = data.attackDelay
-              // defenseDuration.value = data.attackDuration
-            } else {
-              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-            }
-          })
-          .catch(error => {
-            console.error('获取飞行器数据失败:', error);
-          });
-      // 获取无线系统配置
-      axios.get('http://192.168.10.187:8090/api/v0/getSystemConfig')
-          .then(response => {
-            if (response.data.code === 0 && response.data.data) {
-              // 无线设备数据
-              const data = response.data.data;
-              defenseDelay.value = data.DefenseDelay
-              defenseDuration.value = data.DefenseDuration
-              // 设备是否在线
-              wirelessDeviceOnline.value = true
-              wirelessDeviceNormal.value = true
-            } else {
-              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-              wirelessDeviceOnline.value = false
-              wirelessDeviceNormal.value = false
-            }
-          })
-          .catch(error => {
-            console.error('获取飞行器数据失败:', error);
-            wirelessDeviceOnline.value = false
-            wirelessDeviceNormal.value = false
-          });
-      // wirelessDeviceOnline.value = response.online;
-      // wirelessDeviceNormal.value = response.normal;
+        // TODO: 调用后端 API 获取无线设备状态
+        axios.get('/api/v0/getDeviceList')
+            .then(response => {
+                if (response.data.code === 0 && response.data.data) {
+                    // 无线设备数据
+                    devices.value = response.data.data
+                    device.value = response.data.data[0]
+                    // 防御状态
+                    autoDefense.value = device.value.attackAuto !== 1
+                    // defenseDelay.value = data.attackDelay
+                    // defenseDuration.value = data.attackDuration
+                } else {
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('获取飞行器数据失败:', error);
+            });
+        // 获取无线系统配置
+        axios.get('/api/v0/getSystemConfig')
+            .then(response => {
+                if (response.data.code === 0 && response.data.data) {
+                    // 无线设备数据
+                    const data = response.data.data;
+                    defenseDelay.value = data.DefenseDelay
+                    defenseDuration.value = data.DefenseDuration
+                    // 设备是否在线
+                    wirelessDeviceOnline.value = true
+                    wirelessDeviceNormal.value = true
+                } else {
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                    wirelessDeviceOnline.value = false
+                    wirelessDeviceNormal.value = false
+                }
+            })
+            .catch(error => {
+                console.error('获取飞行器数据失败:', error);
+                wirelessDeviceOnline.value = false
+                wirelessDeviceNormal.value = false
+            });
+        // wirelessDeviceOnline.value = response.online;
+        // wirelessDeviceNormal.value = response.normal;
     }
     
     function updateOptoelectronicDeviceStatus() {
@@ -399,11 +404,11 @@
             altitude: 500,
             distance: 2.5
         };
-
+        
         updateRadarData();
         // 定期更新雷达数据
         const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
-
+        
         // 组件卸载时清除定时器
         onUnmounted(() => {
             clearInterval(updateInterval);
@@ -423,38 +428,38 @@
     
     // 更新防御延迟
     function confirmDefenseDelay() {
-      // TODO: 调用后端 API 更新防御延迟
-      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
-          .then(response => {
-            if (response.data.code === 0) {
-              alert('设置防御延迟时间成功')
-            } else {
-              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-
-            }
-          })
-          .catch(error => {
-            console.error('获取飞行器数据失败:', error);
-
-          });
+        // TODO: 调用后端 API 更新防御延迟
+        axios.post('/api/v0/setDefenseConfig?defenseDuration=' + defenseDuration.value + '&defenseDelay=' + defenseDelay.value)
+            .then(response => {
+                if (response.data.code === 0) {
+                    alert('设置防御延迟时间成功')
+                } else {
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                    
+                }
+            })
+            .catch(error => {
+                console.error('获取飞行器数据失败:', error);
+                
+            });
     }
     
     // 更新防御持续时间
     function confirmDefenseDuration() {
         // TODO: 调用后端 API 更新防御持续时间
-      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
-          .then(response => {
-            if (response.data.code === 0) {
-              alert('设置防御持续时间成功')
-            } else {
-              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-
-            }
-          })
-          .catch(error => {
-            console.error('获取飞行器数据失败:', error);
-
-          });
+        axios.post('/api/v0/setDefenseConfig?defenseDuration=' + defenseDuration.value + '&defenseDelay=' + defenseDelay.value)
+            .then(response => {
+                if (response.data.code === 0) {
+                    alert('设置防御持续时间成功')
+                } else {
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                    
+                }
+            })
+            .catch(error => {
+                console.error('获取飞行器数据失败:', error);
+                
+            });
     }
     
     // 执行防御
@@ -466,17 +471,17 @@
     // 切换自动防御
     function toggleAutoDefense() {
         // TODO: 调用后端 API 切换自动防御状态
-      axios.post('http://192.168.10.187:8090/api/v0/setAttackAuto?did='+device.value.id+'&isCancel='+autoDefense.value)
-          .then(response => {
-            if (response.data.code === 0) {
-              console.log('自动防御设置成功')
-            } else {
-              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-            }
-          })
-          .catch(error => {
-            console.error('获取飞行器数据失败:', error);
-          });
+        axios.post('/api/v0/setAttackAuto?did=' + device.value.id + '&isCancel=' + autoDefense.value)
+            .then(response => {
+                if (response.data.code === 0) {
+                    console.log('自动防御设置成功')
+                } else {
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('获取飞行器数据失败:', error);
+            });
     }
     
     function adjustFocus(direction) {
@@ -615,7 +620,7 @@
     function showSettings() {
         showSettingsDialog.value = true;
     }
-
+    
     // 添加雷达数据获取方法
     async function updateRadarData() {
         try {
@@ -630,11 +635,11 @@
             console.error('获取雷达数据失败:', error);
         }
     }
-
+    
     function showSensorDetails(sensorId) {
         // TODO: 显示传感器详细信息
         console.log('显示传感器详细信息:', sensorId);
-      window.location.href = 'http://192.168.10.188:8081/#/Index'
+        window.location.href = 'http://192.168.10.188:8081/#/Index'
     }
 
     function clickDeception(){
@@ -798,13 +803,13 @@
         width: 34px;
         height: 20px;
     }
-
+    
     .switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
-
+    
     .slider {
         position: absolute;
         cursor: pointer;
@@ -816,7 +821,7 @@
         transition: .4s;
         border-radius: 20px;
     }
-
+    
     .slider:before {
         position: absolute;
         content: "";
@@ -828,35 +833,35 @@
         transition: .4s;
         border-radius: 50%;
     }
-
+    
     input:checked + .slider {
         background-color: #00ffff;
     }
-
+    
     input:checked + .slider:before {
         transform: translateX(14px);
     }
-
+    
     .focus-wheel {
         width: 70px;
         height: 70px;
         margin: 5px auto;
     }
-
+    
     .focus-wheel svg {
         width: 100%;
         height: 100%;
     }
-
+    
     .focus-wheel polygon {
         cursor: pointer;
         transition: fill 0.3s;
     }
-
+    
     .focus-wheel polygon:hover {
         fill: #007acc;
     }
-
+    
     .button-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -864,14 +869,14 @@
         align-items: center;
         justify-items: center;
     }
-
+    
     .action-buttons {
         display: flex;
         justify-content: space-between;
         gap: 10px;
         margin-top: 15px;
     }
-
+    
     .action-btn {
         flex: 1;
         padding: 8px;
@@ -882,17 +887,17 @@
         cursor: pointer;
         transition: background-color 0.3s;
     }
-
+    
     .action-btn:hover {
         background: #004080;
     }
-
+    
     .drive-away-section {
         margin-top: 15px;
         border-top: 1px solid rgba(0, 255, 255, 0.3);
         padding-top: 15px;
     }
-
+    
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -905,7 +910,7 @@
         align-items: center;
         z-index: 1000;
     }
-
+    
     .modal-content {
         background-color: #1a1a1a;
         border: 1px solid #00ffff;
@@ -916,36 +921,36 @@
         max-height: 80vh;
         overflow-y: auto;
     }
-
+    
     .modal-content h2 {
         color: #00ffff;
         margin-bottom: 20px;
         text-align: center;
     }
-
+    
     .settings-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         margin-bottom: 20px;
     }
-
+    
     .setting-item {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
-
+    
     .setting-item label {
         color: #00ffff;
         font-size: 14px;
     }
-
+    
     .setting-item input[type="range"] {
         width: 100%;
         background-color: #333;
     }
-
+    
     .setting-item select {
         padding: 5px;
         background-color: #333;
@@ -953,20 +958,20 @@
         border: 1px solid #00ffff;
         border-radius: 4px;
     }
-
+    
     .setting-item span {
         color: #00ffff;
         font-size: 12px;
         text-align: right;
     }
-
+    
     .settings-footer {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
         margin-top: 20px;
     }
-
+    
     .settings-footer button {
         padding: 8px 20px;
         font-size: 14px;
