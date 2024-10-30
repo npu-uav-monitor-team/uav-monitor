@@ -39,59 +39,41 @@
                         </div>
                     </div>
                 </div>
-                <div class="control-section">
-                    <h4>Control Bands</h4>
-                    <div class="button-group full-width">
-                        <button @click="toggleBand('2.4GHz')" :class="{ active: activeBands.includes('2.4GHz') }">
-                            2.4GHz
-                        </button>
-                        <button @click="toggleBand('5.8GHz')" :class="{ active: activeBands.includes('5.8GHz') }">
-                            5.8GHz
-                        </button>
-                        <button @click="toggleBand('433MHz')" :class="{ active: activeBands.includes('433MHz') }">
-                            433MHz
-                        </button>
-                        <button @click="toggleBand('915MHz')" :class="{ active: activeBands.includes('915MHz') }">
-                            915MHz
-                        </button>
-                    </div>
-                </div>
-                <div class="control-section">
-                    <h4>GNSS Bands</h4>
-                    <div class="button-group full-width">
-                        <button @click="toggleBand('1.2GHz')" :class="{ active: activeBands.includes('1.2GHz') }">
-                            1.2GHz
-                        </button>
-                        <button @click="toggleBand('1.5GHz')" :class="{ active: activeBands.includes('1.5GHz') }">
-                            1.5GHz
-                        </button>
-                    </div>
-                </div>
                 <div class="control-section defense-settings">
                     <h4>Defense Settings</h4>
                     <div class="input-group-container">
                         <div class="input-group">
                             <label>Defense delay (sec)</label>
-                            <input type="number" v-model="defenseDelay" @change="updateDefenseDelay">
+                            <input type="number" v-model="defenseDelay">
+                            <button @click="confirmDefenseDelay">确认</button>
                         </div>
                         <div class="input-group">
                             <label>Defense duration (min)</label>
-                            <input type="number" v-model="defenseDuration" @change="updateDefenseDuration">
+                            <input type="number" v-model="defenseDuration">
+                            <button @click="confirmDefenseDuration">确认</button>
                         </div>
                     </div>
                 </div>
                 <div class="control-section">
                     <h4>Sensors</h4>
-                    <div class="sensor-group">
-                        <span>SF7000012719</span>
-                        <button @click="defend">详细信息</button>
-                    </div>
+                    <table class="sensor-info-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>详细信息</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <td>{{device.id}}</td>
+                        <td><button @click="showSensorDetails(device.id)">详细信息</button></td>
+                        </tbody>
+                    </table>
                 </div>
                 <div class="auto-defense">
                     <span>Auto Defense</span>
                     <label class="switch">
                         <input type="checkbox" v-model="autoDefense" @change="toggleAutoDefense">
-                        <span class="slider"></span>
+                        <span class="slider round"></span>
                     </label>
                 </div>
             </div>
@@ -149,15 +131,15 @@
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
                         <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
-                        <button @click="showSettings">详细设置</button>
+                        <button @click="showSettingsDialog = true">详细设置</button>
                         <div class="focus-wheel">
                             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                 <g>
                                     <circle cx="50" cy="50" r="45" fill="#005a8c"/>
-                                    <polygon points="50,10 40,30 60,30" fill="#00ffff" @click="adjustFocus('up')"/>
-                                    <polygon points="90,50 70,40 70,60" fill="#00ffff" @click="adjustFocus('right')"/>
-                                    <polygon points="50,90 60,70 40,70" fill="#00ffff" @click="adjustFocus('down')"/>
-                                    <polygon points="10,50 30,60 30,40" fill="#00ffff" @click="adjustFocus('left')"/>
+                                    <polygon points="50,15 42,30 58,30" fill="#00ffff" @click="adjustFocus('up')"/>
+                                    <polygon points="85,50 70,42 70,58" fill="#00ffff" @click="adjustFocus('right')"/>
+                                    <polygon points="50,85 58,70 42,70" fill="#00ffff" @click="adjustFocus('down')"/>
+                                    <polygon points="15,50 30,58 30,42" fill="#00ffff" @click="adjustFocus('left')"/>
                                 </g>
                             </svg>
                         </div>
@@ -227,9 +209,9 @@
             </div>
         </div>
         
-        <!-- 添加设置弹窗 -->
-        <div v-if="showSettingsDialog" class="settings-modal">
-            <div class="settings-content">
+        <!-- 弹窗 -->
+        <div v-if="showSettingsDialog" class="modal-overlay">
+            <div class="modal-content">
                 <h2>详细设置</h2>
                 <div class="settings-grid">
                     <div class="setting-item">
@@ -282,6 +264,7 @@
 
 <script setup>
     import { onMounted, ref, onUnmounted } from "vue";
+    import axios from "axios";
     
     const activeTab = ref('control');
     const activeBands = ref([]);
@@ -316,6 +299,7 @@
     const laserStatus = ref(false);
     const frequency = ref(false);
     const showSettingsDialog = ref(false);
+    const device = ref({});
     
     // 添加设置相关的状态变量
     const settings = ref({
@@ -336,13 +320,56 @@
     const simulationLevel = ref(100);
     const driveAwayAngle = ref(10);
     
+    const sensors = ref([
+        { id: 'SF7000012719' },
+        { id: 'SF7000012720' },
+        // 添加更多传感器数据
+    ]);
+    
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
-        // TODO: 调用后端 API 获取无线设备状态
-        // 示例：
-        // const response = await api.getWirelessDeviceStatus();
-        // wirelessDeviceOnline.value = response.online;
-        // wirelessDeviceNormal.value = response.normal;
+      // TODO: 调用后端 API 获取无线设备状态
+      axios.get('http://192.168.10.187:8090/api/v0/getDeviceList')
+          .then(response => {
+            if (response.data.code === 0 && response.data.data) {
+              // 无线设备数据
+              const data = response.data.data[0];
+              device.value = data
+              // 防御状态
+              autoDefense.value = data.attackAuto !== 1
+              // defenseDelay.value = data.attackDelay
+              // defenseDuration.value = data.attackDuration
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+          });
+      // 获取无线系统配置
+      axios.get('http://192.168.10.187:8090/api/v0/getSystemConfig')
+          .then(response => {
+            if (response.data.code === 0 && response.data.data) {
+              // 无线设备数据
+              const data = response.data.data;
+              defenseDelay.value = data.DefenseDelay
+              defenseDuration.value = data.DefenseDuration
+              // 设备是否在线
+              wirelessDeviceOnline.value = true
+              wirelessDeviceNormal.value = true
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+              wirelessDeviceOnline.value = false
+              wirelessDeviceNormal.value = false
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+            wirelessDeviceOnline.value = false
+            wirelessDeviceNormal.value = false
+          });
+      // wirelessDeviceOnline.value = response.online;
+      // wirelessDeviceNormal.value = response.normal;
     }
     
     function updateOptoelectronicDeviceStatus() {
@@ -394,13 +421,39 @@
     }
     
     // 更新防御延迟
-    function updateDefenseDelay() {
-        // TODO: 调用后端 API 更新防御延迟
+    function confirmDefenseDelay() {
+      // TODO: 调用后端 API 更新防御延迟
+      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              alert('设置防御延迟时间成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+
+          });
     }
     
     // 更新防御持续时间
-    function updateDefenseDuration() {
+    function confirmDefenseDuration() {
         // TODO: 调用后端 API 更新防御持续时间
+      axios.post('http://192.168.10.187:8090/api/v0/setDefenseConfig?defenseDuration='+defenseDuration.value+'&defenseDelay='+defenseDelay.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              alert('设置防御持续时间成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+
+          });
     }
     
     // 执行防御
@@ -412,6 +465,17 @@
     // 切换自动防御
     function toggleAutoDefense() {
         // TODO: 调用后端 API 切换自动防御状态
+      axios.post('http://192.168.10.187:8090/api/v0/setAttackAuto?did='+device.value.id+'&isCancel='+autoDefense.value)
+          .then(response => {
+            if (response.data.code === 0) {
+              console.log('自动防御设置成功')
+            } else {
+              console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+            }
+          })
+          .catch(error => {
+            console.error('获取飞行器数据失败:', error);
+          });
     }
     
     function adjustFocus(direction) {
@@ -546,11 +610,17 @@
             console.error('获取雷达数据失败:', error);
         }
     }
+
+    function showSensorDetails(sensorId) {
+        // TODO: 显示传感器详细信息
+        console.log('显示传感器详细信息:', sensorId);
+      window.location.href = 'http://192.168.10.188:8081/#/Index'
+    }
 </script>
 
 <style scoped>
     .control-panel {
-        background-color: rgba(0, 31, 63, 0.8);
+        background-color: rgba(0, 31, 63, 0.9);
         border: 1px solid #00ffff;
         border-radius: 10px;
         color: #ffffff;
@@ -558,11 +628,13 @@
         flex-direction: column;
         height: 100%;
         overflow: hidden;
+        padding: 10px;
     }
     
     .tabs {
         display: flex;
         border-bottom: 1px solid #00ffff;
+        margin-bottom: 5px;
     }
     
     .tabs button {
@@ -577,7 +649,7 @@
     }
     
     .tabs button.active {
-        background-color: rgba(0, 255, 255, 0.2);
+        background-color: rgba(0, 255, 255, 0.3);
         color: #00ffff;
         border-bottom: 2px solid #00ffff;
     }
@@ -586,17 +658,19 @@
         flex: 1;
         display: flex;
         overflow: hidden;
+        padding: 5px;
+        min-height: 500px;
     }
     
     .control-content {
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 10px;
+        gap: 15px;
     }
     
     .status-section, .control-section {
-        margin-bottom: 8px;
+        margin-bottom: 15px;
     }
     
     h4 {
@@ -608,7 +682,7 @@
     .button-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 6px;
     }
     
     button {
@@ -616,33 +690,35 @@
         color: #ffffff;
         border: 1px solid #00ffff;
         border-radius: 5px;
-        padding: 5px 10px;
+        padding: 6px 10px;
         cursor: pointer;
-        transition: background-color 0.3s;
-        font-size: 16px;
+        transition: background-color 0.3s, box-shadow 0.3s;
+        font-size: 14px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
     button:hover, button.active {
         background-color: #007acc;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
     
-    .target-info-table {
+    .sensor-info-table, .target-info-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 10px;
+        margin-top: 5px;
     }
     
-    .target-info-table th,
-    .target-info-table td {
+    .sensor-info-table th, .target-info-table th,
+    .sensor-info-table td, .target-info-table td {
         border: 1px solid #00ffff;
-        padding: 5px;
+        padding: 6px;
         text-align: center;
     }
     
-    .target-info-table th {
+    .sensor-info-table th, .target-info-table th {
         background-color: rgba(0, 255, 255, 0.1);
         font-weight: bold;
     }
@@ -660,7 +736,7 @@
     
     .status-indicator, .status-badge {
         margin-left: 4px;
-        padding: 2px 4px;
+        padding: 3px 5px;
         border-radius: 3px;
         font-weight: bold;
     }
@@ -683,248 +759,89 @@
         color: #ffffff;
     }
     
-    /* 移除滚动条样式 */
-    ::-webkit-scrollbar {
-        display: none;
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 34px;
+        height: 20px;
     }
-    
-    /* 其他样式保持不变 */
-    
-    .button-group.full-width {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 4px;
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
     }
-    
-    .button-group.full-width button {
-        flex: 1;
-        min-width: 0;
-        font-size: 16px;
-        padding: 5px 10px;
-    }
-    
-    /* 更新所有按钮样式 */
-    button {
-        background-color: #005a8c;
-        color: #ffffff;
-        border: 1px solid #00ffff;
-        border-radius: 5px;
-        padding: 5px 10px;
+
+    .slider {
+        position: absolute;
         cursor: pointer;
-        transition: background-color 0.3s;
-        font-size: 16px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    button:hover, button.active {
-        background-color: #007acc;
-    }
-    
-    /* 特定按钮样式调整 */
-    .sensor-group button,
-    .tabs button {
-        flex: none; /* 移除弹性布局 */
-        width: auto; /* 根据内容自适应宽度 */
-    }
-    
-    /* ... 其他样式保持不变 ... */
-    
-    .button-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 10px;
-    }
-    
-    .button-grid button {
-        width: 100%;
-        height: 40px;
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    /* 设置弹窗样式 */
-    .settings-modal {
-        position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 20px;
     }
-    
-    .settings-content {
-        background-color: #1a1a1a;
-        border: 1px solid #00ffff;
-        border-radius: 8px;
-        padding: 20px;
-        width: 80%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
     }
-    
-    .settings-content h2 {
-        color: #00ffff;
-        margin-bottom: 20px;
-        text-align: center;
+
+    input:checked + .slider {
+        background-color: #00ffff;
     }
-    
-    .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        margin-bottom: 20px;
+
+    input:checked + .slider:before {
+        transform: translateX(14px);
     }
-    
-    .setting-item {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .setting-item label {
-        color: #00ffff;
-        font-size: 14px;
-    }
-    
-    .setting-item input[type="range"] {
-        width: 100%;
-        background-color: #333;
-    }
-    
-    .setting-item select {
-        padding: 5px;
-        background-color: #333;
-        color: #fff;
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-    }
-    
-    .setting-item span {
-        color: #00ffff;
-        font-size: 12px;
-        text-align: right;
-    }
-    
-    .settings-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-    }
-    
-    .settings-footer button {
-        padding: 8px 20px;
-        font-size: 14px;
-    }
-    
+
     .focus-wheel {
-        width: 100px;
-        height: 100px;
-        margin: 10px auto;
+        width: 70px;
+        height: 70px;
+        margin: 5px auto;
     }
-    
+
     .focus-wheel svg {
         width: 100%;
         height: 100%;
     }
-    
+
     .focus-wheel polygon {
         cursor: pointer;
         transition: fill 0.3s;
     }
-    
+
     .focus-wheel polygon:hover {
         fill: #007acc;
     }
-    
-    /* 调整按钮网格以适应新的轮盘 */
+
     .button-grid {
+        display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
         align-items: center;
-    }
-
-    .coordinates-display {
-        display: flex;
-        justify-content: space-between;
-        margin: 10px 0;
-    }
-
-    .coordinate {
-        background: #001f3f;
-        padding: 10px;
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-        color: #00ffff;
-        flex: 1;
-        text-align: center;
-        margin: 0 5px;
-    }
-
-    .simulation-slider {
-        width: 100%;
-        margin: 10px 0;
-        -webkit-appearance: none;
-        height: 8px;
-        background: #003366;
-        border-radius: 4px;
-        outline: none;
-    }
-
-    .simulation-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #00ffff;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .slider-value {
-        text-align: center;
-        color: #00ffff;
-        margin-top: 5px;
-    }
-
-    .angle-input-container {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .angle-input {
-        flex: 1;
-        background: #001f3f;
-        border: 1px solid #00ffff;
-        color: #00ffff;
-        padding: 5px;
-        border-radius: 4px;
-    }
-
-    .drive-away-btn {
-        padding: 5px 15px;
+        justify-items: center;
     }
 
     .action-buttons {
         display: flex;
         justify-content: space-between;
         gap: 10px;
-        margin-top: 20px;
+        margin-top: 15px;
     }
 
     .action-btn {
         flex: 1;
-        padding: 10px;
+        padding: 8px;
         background: #003366;
         color: #00ffff;
         border: 1px solid #00ffff;
@@ -937,11 +854,89 @@
         background: #004080;
     }
 
-    /* 添加驱离部分的特殊样式 */
     .drive-away-section {
-        margin-top: 20px;
+        margin-top: 15px;
         border-top: 1px solid rgba(0, 255, 255, 0.3);
-        padding-top: 20px;
+        padding-top: 15px;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #1a1a1a;
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .modal-content h2 {
+        color: #00ffff;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .setting-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .setting-item label {
+        color: #00ffff;
+        font-size: 14px;
+    }
+
+    .setting-item input[type="range"] {
+        width: 100%;
+        background-color: #333;
+    }
+
+    .setting-item select {
+        padding: 5px;
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+    }
+
+    .setting-item span {
+        color: #00ffff;
+        font-size: 12px;
+        text-align: right;
+    }
+
+    .settings-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .settings-footer button {
+        padding: 8px 20px;
+        font-size: 14px;
     }
 </style>
 
