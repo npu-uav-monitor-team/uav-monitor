@@ -19,32 +19,36 @@
                     <div class="device-label">
                         雷达设备 {{ selectedDeviceName }}
                     </div>
-                    <!-- 修改设备状态指示器 -->
-                    <div class="device-status">
-                        <div class="status-group">
-                            <span class="status-label">在线状态:</span>
-                            <span
-                                :class="['status-indicator', { 'status-normal': isOnline, 'status-error': !isOnline }]">
-                {{ isOnline ? '在线' : '离线' }}
-              </span>
-                        </div>
-                        <div class="status-group">
-                            <span class="status-label">故障状态:</span>
-                            <span
-                                :class="['status-indicator', { 'status-normal': !hasFault, 'status-error': hasFault }]">
-                {{ hasFault ? '故障' : '正常' }}
-              </span>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="device-controls">
-                <button @click="togglePower">开关机</button>
-                <button @click="toggleRadarWave">雷达波发射</button>
-                <button @click="resetToZero">归零</button>
-                <button @click="clearCurrent">清当前</button>
-                <button @click="track">跟踪</button>
-                <button @click="openSettings">详细设置</button>
+                <div class="controls-container">
+                    <!-- 雷控制 -->
+                    <div class="control-group">
+                        <h3>雷达控制</h3>
+                        <div class="control-row">
+                            <button @click="handleStandby">待机</button>
+                            <button @click="handleSearch">搜索</button>
+                            <button @click="handleTrack">跟踪</button>
+                            <button @click="handleTest">调试</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 电源控制 -->
+                    <div class="control-group">
+                        <h3>电源控制</h3>
+                        <div class="control-row">
+                            <button @click="handlePowerAll">一体机上电</button>
+                            <button @click="handlePowerFront">前端上电</button>
+                            <button @click="handlePowerSystem">系统上电</button>
+                        </div>
+                    </div>
+
+                    <!-- 详细设置按钮 -->
+                    <div class="control-group settings-group">
+                        <button @click="openSettings" class="settings-btn">详细设置</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="illegal-aircraft-list">
@@ -52,12 +56,16 @@
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>编号</th>
                     <th>类型</th>
                     <th>距离 (km)</th>
                     <th>方位角 (°)</th>
                     <th>俯仰角 (°)</th>
-                    <th>速度 (km/h)</th>
+                    <th>速度 (m/h)</th>
+                    <th>高度 (m)</th>
+                    <th>幅度 (dB)</th>
+                    <th>信杂比 (dB)</th>
+                    <th>丢失计数</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -74,30 +82,139 @@
                     <td>{{ aircraft.angle.toFixed(2) }}</td>
                     <td>{{ aircraft.elevation.toFixed(2) }}</td>
                     <td>{{ aircraft.speed }}</td>
+                    <td>{{ aircraft.altitude }}</td>
+                    <td>{{ aircraft.amplitude }}</td>
+                    <td>{{ aircraft.signalLossRatio }}</td>
+                    <td>{{ aircraft.lossCount }}</td>
                 </tr>
                 </tbody>
             </table>
         </div>
-        
-        <!-- 添加设置弹窗 -->
+        <!-- 设置弹窗 -->
         <div v-if="showSettings" class="settings-modal">
             <div class="settings-content">
-                <h2>详细设置</h2>
-                <!-- 在这里添加设置选项 -->
-                <div class="setting-item">
-                    <label for="range">扫描范围:</label>
-                    <input type="range" id="range" v-model="scanRange" min="0" max="100">
+                <!-- 添加关闭按钮 -->
+                <button class="close-btn" @click="closeSettings">×</button>
+                
+                <!-- 静默区设置 -->
+                <div class="settings-section">
+                    <h3>静默区设置</h3>
+                    <div class="settings-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="settings.silentZone.enabled"> 使能
+                        </label>
+                        <div class="input-group">
+                            <label>开始角</label>
+                            <div class="number-input">
+                                <input type="number" v-model="settings.silentZone.startAngle">
+                                <div class="number-controls">
+                                    <button class="arrow-btn" @click="incrementStartAngle">▲</button>
+                                    <button class="arrow-btn" @click="decrementStartAngle">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>结束角</label>
+                            <div class="number-input">
+                                <input type="number" v-model="settings.silentZone.endAngle">
+                                <div class="number-controls">
+                                    <button class="arrow-btn" @click="incrementEndAngle">▲</button>
+                                    <button class="arrow-btn" @click="decrementEndAngle">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="setting-item">
-                    <label for="mode">扫描模式:</label>
-                    <select id="mode" v-model="scanMode">
-                        <option value="normal">普通</option>
-                        <option value="detailed">详细</option>
-                        <option value="fast">快速</option>
-                    </select>
+
+                <!-- 当前状态 -->
+                <div class="settings-section">
+                    <h3>当前状态</h3>
+                    <div class="settings-group">
+                        <div class="input-group">
+                            <label>伺服角度</label>
+                            <input type="text" v-model="settings.status.servoAngle" disabled>
+                            <span class="unit">°</span>
+                        </div>
+                        <div class="input-group">
+                            <label>信处温度</label>
+                            <input type="text" v-model="settings.status.temperature" disabled>
+                            <span class="unit">°C</span>
+                        </div>
+                        <div class="input-group">
+                            <label>量程范围</label>
+                            <input type="text" v-model="settings.status.range" disabled>
+                            <span class="unit">km</span>
+                        </div>
+                    </div>
                 </div>
-                <!-- 添加更多设置选项 -->
-                <button @click="closeSettings">关闭</button>
+
+                <!-- 杂波图设置 -->
+                <div class="settings-section">
+                    <h3>杂波图设置</h3>
+                    <div class="settings-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="settings.clutterMap.save"> 保存杂波图
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="settings.clutterMap.load"> 加载杂波图
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 雷达位置 -->
+                <div class="settings-section">
+                    <h3>雷达位置</h3>
+                    <div class="settings-group">
+                        <div class="input-group">
+                            <label>纬度</label>
+                            <input type="text" v-model="settings.position.latitude">
+                            <span class="unit">UTC</span>
+                        </div>
+                        <div class="input-group">
+                            <label>经度</label>
+                            <input type="text" v-model="settings.position.longitude">
+                            <span class="unit">卫星数量</span>
+                        </div>
+                        <div class="input-group">
+                            <label>海拔</label>
+                            <input type="text" v-model="settings.position.altitude">
+                            <span class="unit">校北角度</span>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" v-model="settings.position.autoRefresh"> 自动刷新
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" v-model="settings.position.northReturn"> 北回归
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" v-model="settings.position.effective"> 有效
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 伺服待机模式 -->
+                <div class="settings-section">
+                    <h3>伺服待机模式</h3>
+                    <div class="settings-group">
+                        <div class="input-group">
+                            <select v-model="settings.servoMode.mode">
+                                <option value="idle">空闲</option>
+                                <option value="standby">待机</option>
+                                <option value="active">工作</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>指向角度</label>
+                            <input type="number" v-model="settings.servoMode.angle">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button @click="saveSettings" class="confirm-btn">确定</button>
+                </div>
             </div>
         </div>
     </div>
@@ -110,7 +227,18 @@
     const radarDevices = ref([]);
     const activeTarget = ref(null);
     const illegalAircraft = ref([
-        {id: 1, type: 'UAV', distance: 5.2, angle: 45, elevation: 15, speed: 80},
+        {
+            id: 1,
+            type: 'UAV',
+            distance: 5.20,
+            angle: 45.00,
+            elevation: 15.00,
+            speed: 80,
+            altitude: 150,
+            amplitude: -65,
+            signalLossRatio: -12,
+            lossCount: 3
+        },
         {id: 2, type: 'Drone', distance: 3.7, angle: 120, elevation: 20, speed: 60},
         {id: 3, type: 'UAV', distance: 7.1, angle: 210, elevation: 10, speed: 90},
     ]);
@@ -119,10 +247,6 @@
         const device = radarDevices.value.find(d => d.id === selectedDeviceId.value);
         return device ? device.name : '';
     });
-    
-    // 添加设备状态相关的响应式变量
-    const isOnline = ref(true);
-    const hasFault = ref(false);
     
     onMounted(async () => {
         // 模拟从API获取雷达设备列表
@@ -149,21 +273,7 @@
         console.log('刷新数据');
     };
     
-    const startScan = () => {
-        console.log('开始扫描');
-    };
-    
-    const stopScan = () => {
-        console.log('停止扫描');
-    };
-    
-    const adjustRange = () => {
-        console.log('调整范围');
-    };
-    
-    const switchMode = () => {
-        console.log('切换模式');
-    };
+
     
     const highlightAircraft = (id) => {
         activeTarget.value = illegalAircraft.value.find(aircraft => aircraft.id === id);
@@ -177,30 +287,88 @@
     const scanRange = ref(50);
     const scanMode = ref('normal');
     
-    const togglePower = () => {
-        console.log('切换雷达电源');
-    };
-    
-    const toggleRadarWave = () => {
-        console.log('切换雷达波发射');
-    };
-    
-    const resetToZero = () => {
-        console.log('雷达归零');
-    };
-    
-    const clearCurrent = () => {
-        console.log('清除当前数据');
-    };
-    
-    const track = () => {
-        console.log('开始跟踪');
-    };
     
     const openSettings = () => {
         showSettings.value = true;
     };
     
+
+    
+    // 新增控制方法
+    const handleStandby = () => {
+        console.log('执行待机操作');
+    };
+
+    const handleSearch = () => {
+        console.log('执行搜索操作');
+    };
+
+    const handleTrack = () => {
+        console.log('执行跟踪操作');
+    };
+
+    const handleTest = () => {
+        console.log('执行调试操作');
+    };
+
+    const handlePowerAll = () => {
+        console.log('执行一体机上电操作');
+    };
+
+    const handlePowerFront = () => {
+        console.log('执行前端上电操作');
+    };
+
+    const handlePowerSystem = () => {
+        console.log('执行系统上电操作');
+    };
+
+    const settings = ref({
+        silentZone: {
+            enabled: true,
+            startAngle: 270.0,
+            endAngle: 90.0
+        },
+        status: {
+            servoAngle: 0.0,
+            temperature: 0,
+            range: 5
+        },
+        clutterMap: {
+            save: false,
+            load: false
+        },
+        position: {
+            latitude: '4.204982',
+            longitude: '08.85629',
+            altitude: '4.2e+02',
+            autoRefresh: false,
+            northReturn: false,
+            effective: true
+        },
+        servoMode: {
+            mode: 'idle',
+            angle: 0
+        }
+    });
+
+    // 添加角度调整方法
+    const incrementStartAngle = () => {
+        settings.value.silentZone.startAngle = Math.min(360, settings.value.silentZone.startAngle + 1);
+    };
+
+    const decrementStartAngle = () => {
+        settings.value.silentZone.startAngle = Math.max(0, settings.value.silentZone.startAngle - 1);
+    };
+
+    const incrementEndAngle = () => {
+        settings.value.silentZone.endAngle = Math.min(360, settings.value.silentZone.endAngle + 1);
+    };
+
+    const decrementEndAngle = () => {
+        settings.value.silentZone.endAngle = Math.max(0, settings.value.silentZone.endAngle - 1);
+    };
+
     const closeSettings = () => {
         showSettings.value = false;
     };
@@ -306,21 +474,78 @@
     }
     
     .device-controls {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 15px;
-        flex-wrap: nowrap;
-        gap: 8px;
+        margin-top: 20px;
+        padding: 0 15px;
     }
     
-    .device-controls button {
+    .controls-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    
+    .control-group {
         flex: 1;
+        background-color: rgba(15, 23, 42, 0.8);
+        padding: 0 10px 10px 5px;
+        border-radius: 5px;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+    }
+    
+    .control-group h3 {
+        color: #00ffff;
+        margin: 0;
+        padding: 2px 0;
+        text-align: center;
+        font-size: 1em;
+    }
+    
+    .control-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .control-row button {
+        background-color: #003366;
+        color: #00ffff;
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s;
         white-space: nowrap;
+    }
+    
+    .settings-group {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: none;
+        border: none;
+    }
+    
+    .settings-btn {
+        height: 100%;
+        background-color: #003366;
+        color: #00ffff;
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .control-row button:hover,
+    .settings-btn:hover {
+        background-color: #004080;
     }
     
     .illegal-aircraft-list {
         flex: 1;
-        padding: 10px;
+        padding: 5px 10px;
         background-color: rgba(0, 31, 63, 0.8);
         border-radius: 0 0 10px 10px;
         overflow-y: auto;
@@ -329,16 +554,19 @@
     h2 {
         color: #00ffff;
         text-align: center;
-        margin-bottom: 10px;
+        margin: 0 0 5px 0;
+        font-size: 1em;
+        padding: 2px 0;
     }
     
     table {
         width: 100%;
         border-collapse: collapse;
+        margin-top: 0;
     }
     
     th, td {
-        padding: 8px;
+        padding: 4px 8px;
         text-align: left;
         border-bottom: 1px solid rgba(0, 255, 255, 0.3);
     }
@@ -366,82 +594,131 @@
     }
     
     .settings-content {
-        background-color: #0f172a;
+        background-color: rgb(200, 200, 200, 0.1);
         padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #00ffff;
-        width: 300px;
-    }
-    
-    .setting-item {
-        margin-bottom: 15px;
-    }
-    
-    .setting-item label {
-        display: block;
-        margin-bottom: 5px;
-        color: #00ffff;
-    }
-    
-    .setting-item input,
-    .setting-item select {
-        width: 100%;
-        padding: 5px;
-        background-color: #1e293b;
-        color: #00ffff;
-        border: 1px solid #00ffff;
         border-radius: 5px;
-    }
-    
-    .settings-content button {
-        background-color: #003366;
-        color: #00ffff;
         border: 1px solid #00ffff;
-        border-radius: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        margin-top: 15px;
+        width: 600px;
+        color: #00ffff;
+        position: relative;
     }
     
-    .settings-content button:hover {
-        background-color: #004080;
+    .settings-section {
+        margin-bottom: 20px;
     }
     
-    .device-status {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
+    .settings-section h3 {
+        color: #00ffff;
+        margin-bottom: 10px;
+        font-size: 1em;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        padding-bottom: 5px;
+    }
+    
+    .settings-group {
         display: flex;
-        flex-direction: column;
-        gap: 5px;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
     }
     
-    .status-group {
+    .input-group {
         display: flex;
         align-items: center;
         gap: 5px;
     }
     
-    .status-label {
+    .input-group label {
+        min-width: 80px;
+    }
+    
+    .input-group input[type="number"] {
+        background-color: transparent;
+        border: 1px solid #00ffff;
         color: #00ffff;
-        font-size: 0.9em;
+        padding: 3px 5px;
+        width: 100px;
+        -moz-appearance: textfield;
     }
     
-    .status-indicator {
-        padding: 3px 8px;
-        border-radius: 3px;
-        font-size: 0.9em;
-        font-weight: bold;
+    .input-group input[type="number"]::-webkit-outer-spin-button,
+    .input-group input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
     
-    .status-normal {
-        background-color: #00ff00;
-        color: #000000;
+    .number-input {
+        display: flex;
+        align-items: center;
     }
     
-    .status-error {
-        background-color: #ff0000;
-        color: #ffffff;
+    .number-controls {
+        display: flex;
+        flex-direction: column;
+        margin-left: -1px;
+    }
+    
+    .arrow-btn {
+        padding: 0 5px;
+        font-size: 8px;
+        background: transparent;
+        border: 1px solid #00ffff;
+        color: #00ffff;
+        cursor: pointer;
+        height: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .unit {
+        color: #00ffff;
+        margin-left: 5px;
+    }
+    
+    .button-group {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
+    .confirm-btn {
+        background-color: transparent;
+        border: 1px solid #00ffff;
+        color: #00ffff;
+        padding: 5px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .confirm-btn:hover {
+        background-color: rgba(0, 255, 255, 0.1);
+    }
+
+    .close-btn {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        background: transparent;
+        border: none;
+        color: #00ffff;
+        font-size: 24px;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+
+    .close-btn:hover {
+        background-color: rgba(0, 255, 255, 0.1);
     }
 </style>
