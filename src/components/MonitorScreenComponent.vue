@@ -53,9 +53,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-
-// Props 定义
+    import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+    
+    // Props 定义
 const props = defineProps({
     id: String,
     isLarge: {

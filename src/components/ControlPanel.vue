@@ -754,24 +754,24 @@
         let updateCommandRequestDto
         if (cmdWord === 4352) {
              updateCommandRequestDto = {
-                cmdWord: cmdWord,
-                commandDto: {
-                    capture: {
-                        position: {
-                            latitude: gpsData.value.latitude,
-                            longitude: gpsData.value.longitude,
-                            altitude: gpsData.value.altitude
+                CmdWord: cmdWord,
+                CommandDto: {
+                    Capture: {
+                        Position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
                         },
-                        captureAmbiguity: simulationLevel.value,
-                        operate: true
+                        CaptureAmbiguity: simulationLevel.value,
+                        Operate: true
                     }
                 }
             }
         } else if (cmdWord === 4097) {
             updateCommandRequestDto = {
-                cmdWord: cmdWord,
-                commandDto: {
-                    driveAngle: driveAwayAngle.value
+                CmdWord: cmdWord,
+                CommandDto: {
+                    DriveAngle: driveAwayAngle.value
                 }
             }
         }

@@ -14,9 +14,9 @@
   </template>
   
   <script setup>
-  import { onMounted, onUnmounted, ref, watch } from "vue";
-  
-  const player = ref(null);
+      import { onMounted, onUnmounted, ref, watch } from "vue";
+      
+      const player = ref(null);
   const selectedCamera = ref('//player.alicdn.com/video/aliyunmedia.mp4'); // 使用你的RTMP地址
   const cameras = [
     { id: 1, name: '摄像头 1', src: '//player.alicdn.com/video/aliyunmedia.mp4' }, // 替换为你的RTMP地址

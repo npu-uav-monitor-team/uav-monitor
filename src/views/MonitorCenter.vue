@@ -37,6 +37,7 @@
     import MonitorScreenComponent from "@/components/MonitorScreenComponent.vue";
     import { ref } from "vue";
     import { useRouter } from "vue-router";
+    
     const router = useRouter()
     
     const screenContents= ref({

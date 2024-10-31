@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
+    "@novnc/novnc": "^1.5.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.7.7",
     "core-js": "^3.23.3",

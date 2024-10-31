@@ -27,6 +27,11 @@ const routes = [
         component: () => import('../views/StreamTest.vue')
     },
     {
+        path: '/vnc-test',
+        name: 'VNCTest',
+        component: () => import('../views/VNCTest.vue')
+    },
+    {
         path: '/404',
         name: 'NotFound',
         component: () => import('../views/NotFound.vue')

@@ -7,17 +7,17 @@
             </button>
         </div>
         <div class="map-container">
-            <l-map 
-                ref="map" 
-                v-model:zoom="zoom" 
-                :center="center" 
+            <l-map
+                ref="map"
+                v-model:zoom="zoom"
+                :center="center"
                 :options="mapOptions"
                 @ready="onMapReady"
             >
                 <!-- 基础瓦片图层 -->
-                <l-tile-layer 
-                    :url="url" 
-                    :attribution="attribution" 
+                <l-tile-layer
+                    :url="url"
+                    :attribution="attribution"
                     :opacity="0.7"
                     @error="handleTileError"
                     v-bind="tileLayerOptions"
@@ -157,48 +157,6 @@
             </div>
         </div>
         
-        <!-- 注释掉左侧按钮组 -->
-        <!--
-        <div class="left-buttons">
-            <button @click="showModal('zoomControl')" class="control-btn"><i class="fas fa-search"></i></button>
-            <button @click="showModal('layerControl')" class="control-btn"><i class="fas fa-layer-group"></i></button>
-            <button @click="showModal('measureTool')" class="control-btn"><i class="fas fa-ruler"></i></button>
-            <button @click="showModal('drawTool')" class="control-btn"><i class="fas fa-pencil-alt"></i></button>
-            <button @click="showModal('commandCenter')" class="control-btn"><i class="fas fa-satellite-dish"></i>
-            </button>
-        </div>
-        -->
-        
-        <!-- 注释掉模态框 -->
-        <!--
-        <div v-if="activeModal" class="modal">
-            <div class="modal-content">
-                <span class="close" @click="closeModal">&times;</span>
-                <h2>{{ modalTitle }}</h2>
-                <div v-if="activeModal === 'zoomControl'">
-                    <button @click="zoomIn">放大</button>
-                    <button @click="zoomOut">缩小</button>
-                </div>
-                <div v-else-if="activeModal === 'layerControl'">
-                    <label><input type="checkbox" v-model="showSatelliteLayer"> 卫星图层</label>
-                    <label><input type="checkbox" v-model="showTerrainLayer"> 地形图层</label>
-                </div>
-                <div v-else-if="activeModal === 'measureTool'">
-                    <button @click="startMeasure">开始测量</button>
-                    <button @click="endMeasure">结束测量</button>
-                </div>
-                <div v-else-if="activeModal === 'drawTool'">
-                    <button @click="startDrawing('polygon')">绘制多边形</button>
-                    <button @click="startDrawing('line')">绘制线段</button>
-                </div>
-                <div v-else-if="activeModal === 'commandCenter'">
-                    <button @click="sendCommand('intercept')">拦截目标</button>
-                    <button @click="sendCommand('patrol')">巡逻任务</button>
-                </div>
-            </div>
-        </div>
-        -->
-        
         <!-- Add this new element for the tooltip -->
         <div v-if="selectedAircraft" class="aircraft-tooltip" :style="infoPosition">
             <h4>{{ selectedAircraft.name }}</h4>
@@ -212,10 +170,10 @@
 
 <script setup>
     import 'leaflet/dist/leaflet.css'
-    import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip, LImageOverlay } from '@vue-leaflet/vue-leaflet'
+    import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip } from '@vue-leaflet/vue-leaflet'
     import L from 'leaflet'
     import axios from 'axios'; // 引入 axios 用于发送 HTTP 请求
-    import { onMounted, ref, onUnmounted, watch } from "vue";
+    import { onMounted, ref } from "vue";
     import { useRouter } from "vue-router";
     
     const router = useRouter()
@@ -263,7 +221,7 @@
           }));
         // 更新 flightPaths 数据
         flightPaths.value = allAircraft.value.map(aircraft => ({
-          id: aircraft.id,  
+          id: aircraft.id,
           points: aircraft.path, // 使用接口提供的路径数据
           color: aircraft.color
         }));
