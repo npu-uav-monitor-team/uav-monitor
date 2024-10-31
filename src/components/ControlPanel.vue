@@ -32,7 +32,7 @@
                             </span>
                         </div>
                         <div class="status-item">
-                            <span>设备状态：</span>
+                            <span>故障状态：</span>
                             <span :class="['status-badge', wirelessDeviceNormal ? 'normal' : 'abnormal']">
                                 {{ wirelessDeviceNormal ? '正常' : '异常' }}
                             </span>
@@ -92,7 +92,7 @@
                             </span>
                         </div>
                         <div class="status-item">
-                            <span>设备状态：</span>
+                            <span>故障状态：</span>
                             <span :class="['status-badge', optoelectronicDeviceNormal ? 'normal' : 'abnormal']">
                                 {{ optoelectronicDeviceNormal ? '正常' : '异常' }}
                             </span>
@@ -161,7 +161,7 @@
                             </span>
                         </div>
                         <div class="status-item">
-                            <span>设备状态：</span>
+                            <span>故障状态：</span>
                             <span :class="['status-badge', deviceNormal ? 'normal' : 'abnormal']">
                                 {{ deviceNormal ? '正常' : '异常' }}
                             </span>
@@ -190,10 +190,16 @@
                 </div>
                 
                 <div class="control-section">
+                    <div class="status-display">
+                        <div class="status-item emission-status">
+                            <span class="status-label">当前发射状态：</span>
+                            <span class="status-value" :class="{ 'active': emissionStatus === '就近' }">
+                                {{ emissionStatus }}
+                            </span>
+                        </div>
+                    </div>
                     <div class="action-buttons">
-                        <button @click="stopEmission" class="action-btn">停止发射</button>
-                        <button @click="approachEmission" class="action-btn">就近发射</button>
-                        <button @click="sendCommand" class="action-btn">发送</button>
+                        <button @click="sendCommand" class="action-btn primary">发射</button>
                     </div>
                 </div>
                 
@@ -307,7 +313,7 @@
     const devices = ref([])
     const device = ref({});
     
-    // 添加设置相关的状态变量
+    // 添加设置关的状态变量
     const settings = ref({
         sensitivity: 5,
         targetSize: 50,
@@ -346,7 +352,7 @@
                     // defenseDelay.value = data.attackDelay
                     // defenseDuration.value = data.attackDuration
                 } else {
-                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
+                    console.error('口返回数据格式错误或出现错误:', response.data.msg);
                 }
             })
             .catch(error => {
@@ -378,23 +384,57 @@
         // wirelessDeviceNormal.value = response.normal;
     }
     
-    function updateOptoelectronicDeviceStatus() {
-        // TODO: 调用后端 API 获取光电设备状态
-        // 示例：
-        // const response = await api.getOptoelectronicDeviceStatus();
-        // optoelectronicDeviceOnline.value = response.online;
-        // optoelectronicDeviceNormal.value = response.normal;
+    async function updateOptoelectronicDeviceStatus() {
+        // 检查是否有设备ID
+        if (!currentPhotoelectricId.value) {
+            console.warn('未找到光电设备ID');
+            optoelectronicDeviceOnline.value = false;
+            optoelectronicDeviceNormal.value = false;
+            return;
+        }
+
+        try {
+            const response = await axios.get(`/api/v0/photoelectrics/${currentPhotoelectricId.value}`);
+            if (response.data.code === 0 && response.data.result?.photoelectrics?.[0]) {
+                const device = response.data.result.photoelectrics[0];
+                
+                // 更新设备在线状态（这里假设如果能获取到数据就是在线的）
+                optoelectronicDeviceOnline.value = true;
+                optoelectronicDeviceNormal.value = true;
+                
+                // 更新各个状态
+                servoStatus.value = device.isServerPowerOn;
+                channelType.value = !device.isChannelTv; // true为红外通道，false为电视通道
+                targetColor.value = !device.isPolarityBlack; // true为目标白，false为目标黑
+                trackingMode.value = !device.isCorrelation; // true为质心，false为相关
+                infraredStatus.value = device.isIrPowerOn;
+                infraredColor.value = !device.isPolarityIrBlack; // true为热白，false为热黑
+                laserStatus.value = device.isLaserOn;
+                
+                console.log('光电设备状态更新成功');
+            } else {
+                console.error('获取光电设备状态失败:', response.data.msg);
+                optoelectronicDeviceOnline.value = false;
+                optoelectronicDeviceNormal.value = false;
+            }
+        } catch (error) {
+            console.error('获取光电设备状态请求失败:', error);
+            optoelectronicDeviceOnline.value = false;
+            optoelectronicDeviceNormal.value = false;
+        }
     }
     
     // 在组件挂载时获取设备状态
     onMounted(() => {
         updateWirelessDeviceStatus();
         updateOptoelectronicDeviceStatus();
-        // 可以设置定时器定期更新状态
-        // setInterval(() => {
-        //     updateWirelessDeviceStatus();
-        //     updateOptoelectronicDeviceStatus();
-        // }, 5000); // 每5秒更新一次
+        initPhotoelectrics();
+        
+        // 添加定时器，定期新状态
+        const statusInterval = setInterval(() => {
+            updateWirelessDeviceStatus();
+            updateOptoelectronicDeviceStatus();
+        }, 1000); // 每秒更新一次
         
         // 这里应该是从实际数据源获取目标信息
         currentTarget.value = {
@@ -409,9 +449,15 @@
         // 定期更新雷达数据
         const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
         
+        // 添加发射状态更新
+        updateEmissionStatus();
+        const emissionStatusInterval = setInterval(updateEmissionStatus, 1000);
+        
         // 组件卸载时清除定时器
         onUnmounted(() => {
+            clearInterval(statusInterval);
             clearInterval(updateInterval);
+            clearInterval(emissionStatusInterval);
         });
     });
     
@@ -480,7 +526,7 @@
                 }
             })
             .catch(error => {
-                console.error('获取飞行器数据失败:', error);
+                console.error('获取飞行器数据失:', error);
             });
     }
     
@@ -513,50 +559,174 @@
     
     // 添加切换函数
     function toggleServo() {
-        servoStatus.value = !servoStatus.value;
-        // TODO: 调用后端 API
-        console.log(`伺服状态: ${servoStatus.value ? '关机' : '开机'}`);
+        // 检查是否有可用的设备ID
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+        
+        const apiEndpoint = servoStatus.value ? 
+            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweroff` : 
+            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweron`;
+        
+        axios.post(apiEndpoint)
+            .then(response => {
+                if (response.data.code === 0) {
+                    servoStatus.value = !servoStatus.value;
+                    alert(servoStatus.value ? '伺服关机成功' : '伺服开机成功');
+                } else {
+                    alert(response.data.msg || (servoStatus.value ? '伺服关机失败' : '伺服开机失败'));
+                }
+            })
+            .catch(error => {
+                console.error('伺服控制请求失败:', error);
+                alert('伺服控制请求失败，请检查网络连接');
+            });
     }
     
-    function toggleChannel() {
-        channelType.value = !channelType.value;
-        // TODO: 调用后端 API
-        console.log(`通道类型: ${channelType.value ? '红外' : '电视'}`);
+    // 修改通道切换函数
+    async function toggleChannel() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        const apiEndpoint = channelType.value ? 
+            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/tv` : 
+            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/ir`;
+
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                channelType.value = !channelType.value;
+                alert(channelType.value ? '切换到红外通道成功' : '切换到电视通道成功');
+            } else {
+                alert(response.data.msg || '通道切换失败');
+            }
+        } catch (error) {
+            console.error('通道切换请求失败:', error);
+            alert('通道切换失败，请检查网络连接');
+        }
     }
-    
-    function resetOptoelectronic() {
-        // TODO: 调用后端 API
-        console.log('光电归零');
+
+    // 修改电归零函数
+    async function resetOptoelectronic() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        try {
+            const response = await axios.post(`/api/v0/photoelectrics/zero/${currentPhotoelectricId.value}`);
+            if (response.data.code === 0) {
+                alert('电归零成功');
+            } else {
+                alert(response.data.msg || '电归零失败');
+            }
+        } catch (error) {
+            console.error('电归零请求失败:', error);
+            alert('电归零失败，请检查网络连接');
+        }
     }
-    
-    function toggleTargetColor() {
-        targetColor.value = !targetColor.value;
-        // TODO: 调用后端 API
-        console.log(`目标颜色: ${targetColor.value ? '白' : '黑'}`);
+
+    // 修改目标颜色切换函数
+    async function toggleTargetColor() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        const apiEndpoint = targetColor.value ? 
+            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/black` : 
+            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/white`;
+
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                targetColor.value = !targetColor.value;
+                alert(targetColor.value ? '切换到目标白成功' : '切换到目标黑成功');
+            } else {
+                alert(response.data.msg || '目标颜色切换失败');
+            }
+        } catch (error) {
+            console.error('目标颜色切换请求失败:', error);
+            alert('目标颜色切换失败，请检查网络连接');
+        }
     }
-    
-    function toggleTrackingMode() {
-        trackingMode.value = !trackingMode.value;
-        // TODO: 调用后端 API
-        console.log(`跟踪模式: ${trackingMode.value ? '质心' : '相关'}`);
+
+    // 修改跟踪模式切换函数
+    async function toggleTrackingMode() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        const apiEndpoint = trackingMode.value ? 
+            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/correlation` : 
+            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/centroid`;
+
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                trackingMode.value = !trackingMode.value;
+                alert(trackingMode.value ? '切换到质心跟踪成功' : '切换到相关跟踪成功');
+            } else {
+                alert(response.data.msg || '跟踪模式切换失败');
+            }
+        } catch (error) {
+            console.error('跟踪模式切换请求失败:', error);
+            alert('跟踪模式切换失败，请检查网络连接');
+        }
     }
-    
-    function toggleInfrared() {
-        infraredStatus.value = !infraredStatus.value;
-        // TODO: 调用后端 API
-        console.log(`红外状态: ${infraredStatus.value ? '关机' : '开机'}`);
+
+    // 修改红外颜色切换函数
+    async function toggleInfraredColor() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        const apiEndpoint = infraredColor.value ? 
+            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/black` : 
+            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/white`;
+
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                infraredColor.value = !infraredColor.value;
+                alert(infraredColor.value ? '切换到红外热黑成功' : '切换到红外热白成功');
+            } else {
+                alert(response.data.msg || '红外颜色切换失败');
+            }
+        } catch (error) {
+            console.error('红外颜色切换请求失败:', error);
+            alert('红外颜色切换失败，请检查网络连接');
+        }
     }
-    
-    function toggleInfraredColor() {
-        infraredColor.value = !infraredColor.value;
-        // TODO: 调用后端 API
-        console.log(`红外颜色: ${infraredColor.value ? '热黑' : '热白'}`);
-    }
-    
-    function toggleLaser() {
-        laserStatus.value = !laserStatus.value;
-        // TODO: 调用后端 API
-        console.log(`激光状态: ${laserStatus.value ? '关' : '开'}`);
+
+    // 修改激光开关函数
+    async function toggleLaser() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        const apiEndpoint = laserStatus.value ? 
+            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweroff` : 
+            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweron`;
+
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                laserStatus.value = !laserStatus.value;
+                alert(laserStatus.value ? '激光关闭成功' : '激光开启成功');
+            } else {
+                alert(response.data.msg || '激光控制失败');
+            }
+        } catch (error) {
+            console.error('激光控制请求失败:', error);
+            alert('激光控制失败，请检查网络连接');
+        }
     }
     
     function toggleFrequency() {
@@ -576,26 +746,30 @@
     }
     
     async function sendCommand() {
-        console.log('发送命令');
-        // TODO: 实现发送命令逻辑
-        const updateCommandRequestDto = {
-            cmdWord: 4352,
-            commandDto: {
-                capture: {
-                    position: {
-                        latitude: 0,
-                        longitude: 0,
-                        altitude: 0
-                    },
-                    captureAmbiguity: 0,
-                    operate: true
+        try {
+            const updateCommandRequestDto = {
+                cmdWord: 4352,
+                commandDto: {
+                    capture: {
+                        position: {
+                            latitude: 0,
+                            longitude: 0,
+                            altitude: 0
+                        },
+                        captureAmbiguity: 0,
+                        operate: true
+                    }
                 }
             }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        console.log(res)
-        if (res) {
-            return true
+            const res = await deceptionService.updateCommand(updateCommandRequestDto)
+            if (res) {
+                // 更新发射状态
+                emissionStatus.value = '就近';
+                alert('发射命令已发送');
+            }
+        } catch (error) {
+            console.error('发送命令失败:', error);
+            alert('发送命令失败，请检查网络连接');
         }
     }
     
@@ -654,6 +828,45 @@
             // 设备在线，连接成功
         }
     }
+
+    // 在 script setup 部分添加新的响应式变量
+    const photoelectricDevices = ref([]);
+    const currentPhotoelectricId = ref(''); // 存储当前选中的设备ID
+
+    // 添加初始化光电设备的函数
+    async function initPhotoelectrics() {
+        try {
+            const response = await axios.get('/api/v0/photoelectrics');
+            if (response.data.code === 0 && response.data.result?.photoelectrics) {
+                photoelectricDevices.value = response.data.result.photoelectrics;
+                // 如果有设备，默认选择第一个设备的ID
+                if (photoelectricDevices.value.length > 0) {
+                    currentPhotoelectricId.value = photoelectricDevices.value[0].id;
+                }
+                console.log('光电设备初始化成功:', photoelectricDevices.value);
+            } else {
+                console.error('获取光电设备数据失败:', response.data.msg);
+            }
+        } catch (error) {
+            console.error('获取光电设备信息请求失败:', error);
+        }
+    }
+
+    // 添加状态更新函数（预留接口）
+    async function updateEmissionStatus() {
+        try {
+            // TODO: 调用后端 API 获取当前发射状态
+            // const response = await axios.get('/api/v0/emission/status');
+            // if (response.data.code === 0) {
+            //     emissionStatus.value = response.data.status;
+            // }
+        } catch (error) {
+            console.error('获取发射状态失败:', error);
+        }
+    }
+
+    // 在 script setup 部分添加新的响应式变量
+    const emissionStatus = ref('停止'); // 可能的值：'停止' 或 '就近'
 </script>
 
 <style scoped>
@@ -704,16 +917,18 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 10px;
+        overflow-y: auto;
+        padding-right: 5px;
     }
     
     .status-section, .control-section {
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
     
     h4 {
         color: #00ffff;
-        margin: 4px 0;
+        margin: 2px 0;
         font-size: 14px;
     }
     
@@ -874,7 +1089,7 @@
         display: flex;
         justify-content: space-between;
         gap: 10px;
-        margin-top: 15px;
+        margin-top: 10px;
     }
     
     .action-btn {
@@ -893,9 +1108,9 @@
     }
     
     .drive-away-section {
-        margin-top: 15px;
+        margin-top: 10px;
         border-top: 1px solid rgba(0, 255, 255, 0.3);
-        padding-top: 15px;
+        padding-top: 10px;
     }
     
     .modal-overlay {
@@ -975,6 +1190,86 @@
     .settings-footer button {
         padding: 8px 20px;
         font-size: 14px;
+    }
+
+    .status-display {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .emission-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .status-label {
+        color: #00ffff;
+        font-size: 14px;
+    }
+
+    .status-value {
+        color: #ff4444;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 5px 15px;
+        border-radius: 4px;
+        background-color: rgba(255, 68, 68, 0.1);
+    }
+
+    .status-value.active {
+        color: #00ff00;
+        background-color: rgba(0, 255, 0, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .action-btn.primary {
+        background-color: #007acc;
+        color: white;
+        padding: 12px 40px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .action-btn.primary:hover {
+        background-color: #0090ea;
+        transform: translateY(-2px);
+    }
+
+    .action-btn.primary:active {
+        transform: translateY(0);
+    }
+
+    .coordinates-display {
+        padding: 5px;
+    }
+
+    .control-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .control-content::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .control-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .control-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 255, 255, 0.5);
     }
 </style>
 
