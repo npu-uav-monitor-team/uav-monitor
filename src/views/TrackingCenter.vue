@@ -243,10 +243,11 @@
         const newAircraftData = response.data.data;
         // 更新 allAircraft 数据
         allAircraft.value = newAircraftData.map(aircraft => ({
-          ...aircraft, // 保留原有数据
-          path: aircraft.path.map(point => [point[0], point[1]]), // 将路径转换为 Leaflet 可识别的格式 [[lat, lng], [lat, lng], ...]
+          ...aircraft,
+          lat: parseFloat(aircraft.lat),
+          lng: parseFloat(aircraft.lng),
+          path: aircraft.path.map(point => [parseFloat(point[1]), parseFloat(point[0])]),
         }));
-
 
         // 更新 threats 数据 (根据威胁等级过滤)
         threats.value = newAircraftData.filter(aircraft => aircraft.threadLevel !== '低').map(aircraft => ({
@@ -276,128 +277,23 @@
       console.error('获取飞行器数据失败:', error);
     });
 };
-    const allAircraft = ref([
-        {
-            id: 1,
-            type: 'uav',
-            name: 'UAV-001',
-            speed: 120,
-            altitude: 500,
-            distance: 2.5,
-            updateTime: '2023/4/10 10:30:00',
-            lat: 22.695519,
-            lng: 114.437709,
-            color: 'red'
-        },
-        {
-            id: 2,
-            type: 'aircraft',
-            name: 'AC-002',
-            speed: 200,
-            altitude: 1000,
-            distance: 5,
-            updateTime: '2023/4/10 10:35:00',
-            lat: 22.695515,
-            lng: 114.437708,
-            color: 'blue'
-        },
-        {
-            id: 3,
-            type: 'helicopter',
-            name: 'HC-003',
-            speed: 180,
-            altitude: 800,
-            distance: 4.5,
-            updateTime: '2023/4/10 10:50:00',
-            lat: 22.695519,
-            lng: 114.437708,
-            color: 'green'
-        },
-        {
-            id: 4,
-            type: 'uav',
-            name: 'UAV-004',
-            speed: 130,
-            altitude: 550,
-            distance: 3.0,
-            updateTime: '2023/4/10 11:00:00',
-            lat: 22.6900,
-            lng: 144.4300,
-            color: 'yellow'
-        },
-        {
-            id: 5,
-            type: 'aircraft',
-            name: 'AC-005',
-            speed: 220,
-            altitude: 1100,
-            distance: 5.5,
-            updateTime: '2023/4/10 11:05:00',
-            lat: 22.2400,
-            lng: 108.9400,
-            color: 'purple'
-        },
-        {
-            id: 6,
-            type: 'helicopter',
-            name: 'HC-006',
-            speed: 170,
-            altitude: 750,
-            distance: 4.0,
-            updateTime: '2023/4/10 11:10:00',
-            lat: 22.6900,
-            lng: 144.4300,
-            color: 'orange'
-        },
-        {
-            id: 7,
-            type: 'uav',
-            name: 'UAV-007',
-            speed: 110,
-            altitude: 480,
-            distance: 2.8,
-            updateTime: '2023/4/10 11:15:00',
-            lat: 22.6990,
-            lng: 144.4395,
-            color: 'pink'
-        },
-        {
-            id: 8,
-            type: 'aircraft',
-            name: 'AC-008',
-            speed: 210,
-            altitude: 1050,
-            distance: 5.2,
-            updateTime: '2023/4/10 11:20:00',
-            lat: 22.6990,
-            lng: 144.4395,
-            color: 'cyan'
-        },
-        {
-            id: 9,
-            type: 'helicopter',
-            name: 'HC-009',
-            speed: 175,
-            altitude: 820,
-            distance: 4.7,
-            updateTime: '2023/4/10 11:25:00',
-            lat: 34.2190,
-            lng: 108.9195,
-            color: 'magenta'
-        },
-        {
-            id: 10,
-            type: 'uav',
-            name: 'UAV-010',
-            speed: 125,
-            altitude: 520,
-            distance: 2.7,
-            updateTime: '2023/4/10 11:30:00',
-            lat: 22.6995,
-            lng: 144.4398,
-            color: 'lime'
-        }
-    ])
+    // 注释掉写死的无人机数据
+    // const allAircraft = ref([
+    //     {
+    //         id: 1,
+    //         type: 'uav',
+    //         name: 'UAV-001',
+    //         speed: 120,
+    //         altitude: 500,
+    //         distance: 2.5,
+    //         updateTime: '2023/4/10 10:30:00',
+    //         lat: 22.695519,
+    //         lng: 114.437709,
+    //         color: 'red'
+    //     },
+    //     // ... other aircraft data ...
+    // ])
+
     const threats = ref([]);
     const selectedAircraft = ref(null);
     const infoPosition = ref({ left: '0px', top: '0px' });
@@ -440,6 +336,26 @@
     function closeAircraftInfo() {
         selectedAircraft.value = null;
     }
+    
+    // 注释掉随机生成轨迹的代码
+    // onMounted(() => {
+    //     allAircraft.value.forEach((aircraft) => {
+    //         const startPoint = [
+    //             22.695519 + (Math.random() - 0.5) * 0.02,
+    //             114.437709 + (Math.random() - 0.5) * 0.02
+    //         ];
+    //         const path = generateRandomPath(startPoint, 30);
+    //         flightPaths.value.push({
+    //             id: aircraft.id,
+    //             points: path,
+    //             color: aircraft.color
+    //         });
+    //         const lastPoint = path[path.length - 1];
+    //         aircraft.lat = lastPoint[0];
+    //         aircraft.lng = lastPoint[1];
+    //     });
+    //     // ... existing code ...
+    // })
     
     function generateRandomPath(startPoint, numPoints = 20) {  // 增加点的数量
         const path = [startPoint];
@@ -502,7 +418,7 @@
   error.target.src = fallbackUrl.value.replace('{z}', error.tile.z).replace('{x}', error.tile.x).replace('{y}', error.tile.y).replace('{s}', 'a'); //  使用fallbackUrl
 };
     
-    // 修改瓦片图层配置
+    // 修改瓦图层配置
     const tileLayerOptions = ref({
         tileSize: 256,
         crossOrigin: true,
@@ -537,22 +453,43 @@
     }
     
     onMounted(() => {
-        allAircraft.value.forEach((aircraft) => {
-            const startPoint = [
-                22.695519 + (Math.random() - 0.5) * 0.02,
-                114.437709 + (Math.random() - 0.5) * 0.02
-            ];
-            const path = generateRandomPath(startPoint, 30);
-            flightPaths.value.push({
-                id: aircraft.id,
-                points: path,
-                color: aircraft.color
-            });
-            const lastPoint = path[path.length - 1];
-            aircraft.lat = lastPoint[0];
-            aircraft.lng = lastPoint[1];
-        });
-        
+        // 注释掉写死的无人机数据
+        // const allAircraft = ref([
+        //     {
+        //         id: 1,
+        //         type: 'uav',
+        //         name: 'UAV-001',
+        //         speed: 120,
+        //         altitude: 500,
+        //         distance: 2.5,
+        //         updateTime: '2023/4/10 10:30:00',
+        //         lat: 22.695519,
+        //         lng: 114.437709,
+        //         color: 'red'
+        //     },
+        //     // ... other aircraft data ...
+        // ])
+
+        // 注释掉随机生成轨迹的代码
+        // onMounted(() => {
+        //     allAircraft.value.forEach((aircraft) => {
+        //         const startPoint = [
+        //             22.695519 + (Math.random() - 0.5) * 0.02,
+        //             114.437709 + (Math.random() - 0.5) * 0.02
+        //         ];
+        //         const path = generateRandomPath(startPoint, 30);
+        //         flightPaths.value.push({
+        //             id: aircraft.id,
+        //             points: path,
+        //             color: aircraft.color
+        //         });
+        //         const lastPoint = path[path.length - 1];
+        //         aircraft.lat = lastPoint[0];
+        //         aircraft.lng = lastPoint[1];
+        //     });
+        //     // ... existing code ...
+        // })
+
         noFlyZone.value = {
             center: [22.695519, 114.437709],
             radius: 500
@@ -601,12 +538,15 @@
 
 <style scoped>
     .tracking-view {
-        height: 100vh;
-        width: 100vw;
+        height: calc(100vh - 10px); /* 适当减少上下的空白边框 */
+        width: calc(100vw - 20px); /* 适当减少左右的空白宽度 */
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        position: relative; /* 添加相对定位 */
+        position: relative;
+        padding: 5px; /* 保持一些内边距 */
+        box-sizing: border-box; /* 确保内边距不会影响整体宽高 */
+        margin: 5px 10px; /* 调整外边距以实现裁剪效果 */
     }
     
     .title-container {
@@ -646,8 +586,9 @@
         flex: 1;
         position: relative;
         z-index: 1;
-        width: 100%;
-        height: 100%;
+        width: 98%; /* 减少地图宽度 */
+        height: 98%; /* 减少地图高度 */
+        margin: auto; /* 居中地图 */
     }
     
     .floating-panel {
@@ -661,19 +602,19 @@
         box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         color: #ffffff;
         z-index: 1000;
-        width: calc(50%);
-        max-width: 600px;
+        width: 48%; /* 调整宽度以适应新布局 */
+        max-width: 580px; /* 调整最大宽度 */
     }
     
     .threat-list {
         top: 70px;
-        right: 20px;
+        right: 10px; /* 调整位置 */
         height: calc(45% - 70px); /* 调整高度 */
     }
     
     .all-aircraft-list {
-        bottom: 20px;
-        right: 20px;
+        bottom: 10px; /* 调整位置 */
+        right: 10px; /* 调整位置 */
         height: calc(45% - 20px); /* 调整高度 */
     }
     
@@ -685,18 +626,18 @@
     
     .toggle-btn {
         float: right;
-        background: #005a8c; /* 调整按钮背景色 */
+        background: #005a8c;
         color: #ffffff;
         border: 1px solid #00ffff;
-        padding: 4px 8px; /* 增加按钮内边距 */
+        padding: 4px 8px;
         cursor: pointer;
         font-size: 12px;
-        border-radius: 4px; /* 添加圆角 */
+        border-radius: 4px;
         transition: background-color 0.3s ease;
     }
     
     .toggle-btn:hover {
-        background: #007acc; /* 添加悬停效果 */
+        background: #007acc;
     }
     
     .map-section, .threat-list, .all-aircraft-list {
@@ -966,12 +907,12 @@
     .offline-map-image {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* 改为 cover 以填充整个容器 */
+        object-fit: cover; /* 改为 cover 以填充���个容器 */
     }
     
     .threat-list table th:nth-child(5),
     .threat-list table td:nth-child(5) {
-        width: 60px; /* 调整这个值以适应两个字的宽度 */
+        width: 60px; /* 调整这个值以适应两字的宽度 */
         min-width: 60px;
         max-width: 60px;
         text-align: center;
