@@ -18,7 +18,15 @@ export default defineConfig({
     ],
     server: {
         port: 7070,
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        proxy: {
+            // 把对/UAV的请求转到 http://localhost:8848/UAV
+            '/UAV': {
+                target: 'http://localhost:8848',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/UAV/, '/UAV')
+            }
+        }
     },
     preview: {
         port: 7070

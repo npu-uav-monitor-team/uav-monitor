@@ -172,14 +172,14 @@
                 <div class="coordinates-section">
                     <div class="coordinate-container">
                         <div class="control-section">
-                            <h4>经纬度与高度（雷达数据）</h4>
+                            <h4>GPS接收器</h4>
                             <div class="coordinates-display">
                                 <div class="coordinate-row">
-                                    <div class="coordinate">{{ radarData.longitude }}°</div>
-                                    <div class="coordinate">{{ radarData.latitude }}°</div>
+                                    <div class="coordinate">{{ gpsData.longitude }}°</div>
+                                    <div class="coordinate">{{ gpsData.latitude }}°</div>
                                 </div>
                                 <div class="coordinate-row">
-                                    <div class="coordinate">{{ radarData.altitude || 0 }}m</div>
+                                    <div class="coordinate">{{ gpsData.altitude || 0 }}m</div>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +194,7 @@
                                     max="360"
                                     class="angle-input"
                                 >
-                                <button @click="driveAway" class="drive-away-btn">驱离</button>
+                                <button @click="sendCommand(4097)" class="drive-away-btn">驱离</button>
                             </div>
                         </div>
                     </div>
@@ -209,7 +209,7 @@
                         max="100"
                         class="simulation-slider"
                     >
-                    <div class="slider-value">{{ simulationLevel }}</div>
+                    <span class="slider-value">{{ simulationLevel }}</span>
                 </div>
                 
                 <div class="control-section">
@@ -222,7 +222,7 @@
                         </div>
                     </div>
                     <div class="action-buttons">
-                        <button @click="sendCommand" class="action-btn primary">发射</button>
+                        <button @click="sendCommand(4352)" class="action-btn primary">捕获</button>
                     </div>
                 </div>
             </div>
@@ -282,7 +282,7 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, onUnmounted } from "vue";
+    import { onMounted, onUnmounted, ref } from "vue";
     import axios from "axios";
     import { deceptionService } from "../service/deceptionService";
     
@@ -292,7 +292,7 @@
     const defenseDuration = ref(1);
     const autoDefense = ref(false);
     
-    // 新增的状���变量
+    // 新增的状态变量
     const wirelessDeviceOnline = ref(true);
     const wirelessDeviceNormal = ref(true);
     const optoelectronicDeviceOnline = ref(true);
@@ -334,19 +334,14 @@
     
     const deviceOnline = ref(true);
     const deviceNormal = ref(true);
-    const radarData = ref({
+    
+    const gpsData = ref({
         longitude: 0.0000,
         latitude: 0.0000,
         altitude: 0.0000
-    });
+    })
     const simulationLevel = ref(100);
     const driveAwayAngle = ref(10);
-    
-    const sensors = ref([
-        {id: 'SF7000012719'},
-        {id: 'SF7000012720'},
-        // 添加更多传感器数据
-    ]);
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
@@ -362,7 +357,7 @@
                     // defenseDelay.value = data.attackDelay
                     // defenseDuration.value = data.attackDuration
                 } else {
-                    console.error('口返回数据格式错误或出现错误:', response.data.msg);
+                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
                 }
             })
             .catch(error => {
@@ -402,7 +397,7 @@
             optoelectronicDeviceNormal.value = false;
             return;
         }
-
+        
         try {
             const response = await axios.get(`/api/v0/photoelectrics/${currentPhotoelectricId.value}`);
             if (response.data.code === 0 && response.data.result?.photoelectrics?.[0]) {
@@ -444,7 +439,7 @@
         const statusInterval = setInterval(() => {
             updateWirelessDeviceStatus();
             updateOptoelectronicDeviceStatus();
-        }, 1000); // 每秒更新一次
+        }, 100000000); // 每秒更新一次
         
         // 这里应该是从实际数据源获取目标信息
         currentTarget.value = {
@@ -575,8 +570,8 @@
             return;
         }
         
-        const apiEndpoint = servoStatus.value ? 
-            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweroff` : 
+        const apiEndpoint = servoStatus.value ?
+            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweroff` :
             `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweron`;
         
         axios.post(apiEndpoint)
@@ -600,11 +595,11 @@
             alert('未找到可用的光电设备');
             return;
         }
-
-        const apiEndpoint = channelType.value ? 
-            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/tv` : 
+        
+        const apiEndpoint = channelType.value ?
+            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/tv` :
             `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/ir`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -618,14 +613,14 @@
             alert('通道切换失败，请检查网络连接');
         }
     }
-
+    
     // 修改电归零函数
     async function resetOptoelectronic() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
             return;
         }
-
+        
         try {
             const response = await axios.post(`/api/v0/photoelectrics/zero/${currentPhotoelectricId.value}`);
             if (response.data.code === 0) {
@@ -638,18 +633,18 @@
             alert('电归零失败，请检查网络连接');
         }
     }
-
+    
     // 修改目标颜色切换函数
     async function toggleTargetColor() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
             return;
         }
-
-        const apiEndpoint = targetColor.value ? 
-            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/black` : 
+        
+        const apiEndpoint = targetColor.value ?
+            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/black` :
             `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/white`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -663,18 +658,18 @@
             alert('目标颜色切换失败，请检查网络连接');
         }
     }
-
+    
     // 修改跟踪模式切换函数
     async function toggleTrackingMode() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
             return;
         }
-
-        const apiEndpoint = trackingMode.value ? 
-            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/correlation` : 
+        
+        const apiEndpoint = trackingMode.value ?
+            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/correlation` :
             `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/centroid`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -688,18 +683,18 @@
             alert('跟踪模式切换失败，请检查网络连接');
         }
     }
-
+    
     // 修改红外颜色切换函数
     async function toggleInfraredColor() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
             return;
         }
-
-        const apiEndpoint = infraredColor.value ? 
-            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/black` : 
+        
+        const apiEndpoint = infraredColor.value ?
+            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/black` :
             `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/white`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -713,18 +708,18 @@
             alert('红外颜色切换失败，请检查网络连接');
         }
     }
-
+    
     // 修改激光开关函数
     async function toggleLaser() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
             return;
         }
-
-        const apiEndpoint = laserStatus.value ? 
-            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweroff` : 
+        
+        const apiEndpoint = laserStatus.value ?
+            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweroff` :
             `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweron`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -755,37 +750,35 @@
         // TODO: 实现就近发射逻辑
     }
     
-    async function sendCommand() {
-        try {
-            const updateCommandRequestDto = {
-                cmdWord: 4352,
+    async function sendCommand(cmdWord) {
+        let updateCommandRequestDto
+        if (cmdWord === 4352) {
+             updateCommandRequestDto = {
+                cmdWord: cmdWord,
                 commandDto: {
                     capture: {
                         position: {
-                            latitude: 0,
-                            longitude: 0,
-                            altitude: 0
+                            latitude: gpsData.value.latitude,
+                            longitude: gpsData.value.longitude,
+                            altitude: gpsData.value.altitude
                         },
-                        captureAmbiguity: 0,
+                        captureAmbiguity: simulationLevel.value,
                         operate: true
                     }
                 }
             }
-            const res = await deceptionService.updateCommand(updateCommandRequestDto)
-            if (res) {
-                // 更新发射状态
-                emissionStatus.value = '就近';
-                alert('发射命令已发送');
+        } else if (cmdWord === 4097) {
+            updateCommandRequestDto = {
+                cmdWord: cmdWord,
+                commandDto: {
+                    driveAngle: driveAwayAngle.value
+                }
             }
-        } catch (error) {
-            console.error('发送命令失败:', error);
-            alert('发送命令失败，请检查网络连接');
         }
-    }
-    
-    function driveAway() {
-        console.log('执行驱离', driveAwayAngle.value);
-        // TODO: 实现驱离逻辑
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        if (res) {
+            return true
+        }
     }
     
     // 保存设置
@@ -825,24 +818,27 @@
         console.log('显示传感器详细信息:', sensorId);
         window.location.href = 'http://192.168.10.188:8081/#/Index'
     }
-
-    function clickDeception(){
+    
+    async function clickDeception() {
         activeTab.value = 'deception'
         const udpSettingsDto = {
-            deviceAddress: '192.168.101.101',
-            devicePort: 8700,
+            deviceAddress: import.meta.env.VITE_UAV_CONTROL_DEVICE_ADDR,
+            devicePort: import.meta.env.VITE_UAV_CONTROL_DEVICE_PORT,
         }
-        const connectRes = deceptionService.updateConnectSetting(udpSettingsDto)
-        if(connectRes.isSuccess){
-            // 自行处理
-            // 设备在线，连接成功
+        const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
+        console.log(connectRes)
+        if (connectRes.isSuccess) {
+            // 经纬度都截取到小数点后六位
+            gpsData.value.altitude = connectRes.data.data.locatedPosition.altitude.toFixed(5)
+            gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
+            gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
         }
     }
-
+    
     // 在 script setup 部分添加新的响应式变量
     const photoelectricDevices = ref([]);
     const currentPhotoelectricId = ref(''); // 存储当前选中的设备ID
-
+    
     // 添加初始化光电设备的函数
     async function initPhotoelectrics() {
         try {
@@ -861,7 +857,7 @@
             console.error('获取光电设备信息请求失败:', error);
         }
     }
-
+    
     // 添加状态更新函数（预留接口）
     async function updateEmissionStatus() {
         try {
@@ -874,7 +870,7 @@
             console.error('获取发射状态失败:', error);
         }
     }
-
+    
     // 在 script setup 部分添加新的响应式变量
     const emissionStatus = ref('停止'); // 可能的值：'停止' 或 '就近'
 </script>
@@ -1202,26 +1198,26 @@
         padding: 8px 20px;
         font-size: 14px;
     }
-
+    
     .status-display {
         background-color: rgba(0, 0, 0, 0.3);
         border-radius: 5px;
         padding: 8px;
         margin-bottom: 10px;
     }
-
+    
     .emission-status {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
     }
-
+    
     .status-label {
         color: #00ffff;
         font-size: 14px;
     }
-
+    
     .status-value {
         color: #ff4444;
         font-weight: bold;
@@ -1230,18 +1226,18 @@
         border-radius: 4px;
         background-color: rgba(255, 68, 68, 0.1);
     }
-
+    
     .status-value.active {
         color: #00ff00;
         background-color: rgba(0, 255, 0, 0.1);
     }
-
+    
     .action-buttons {
         display: flex;
         justify-content: center;
         margin-top: 20px;
     }
-
+    
     .action-btn.primary {
         background-color: #007acc;
         color: white;
@@ -1252,16 +1248,16 @@
         cursor: pointer;
         transition: background-color 0.3s, transform 0.2s;
     }
-
+    
     .action-btn.primary:hover {
         background-color: #0090ea;
         transform: translateY(-2px);
     }
-
+    
     .action-btn.primary:active {
         transform: translateY(0);
     }
-
+    
     .coordinates-display {
         display: flex;
         flex-direction: column;
@@ -1284,50 +1280,50 @@
         font-family: monospace;
         font-size: 14px;
     }
-
+    
     .control-content::-webkit-scrollbar {
         width: 4px;
     }
-
+    
     .control-content::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.1);
     }
-
+    
     .control-content::-webkit-scrollbar-thumb {
         background: rgba(0, 255, 255, 0.3);
         border-radius: 2px;
     }
-
+    
     .control-content::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 255, 255, 0.5);
     }
-
+    
     .coordinates-section {
         margin-bottom: 5px;
     }
-
+    
     .coordinate-container {
         display: flex;
         gap: 20px;
         justify-content: space-between;
     }
-
+    
     .coordinate-container .control-section {
         flex: 1;
     }
-
+    
     .drive-away-section {
         margin-top: 0 !important;
         border-top: none !important;
         padding-top: 0 !important;
     }
-
+    
     .angle-input-container {
         display: flex;
         gap: 10px;
         align-items: center;
     }
-
+    
     .angle-input {
         flex: 1;
         background: rgba(0, 0, 0, 0.3);
@@ -1336,7 +1332,7 @@
         color: #ffffff;
         padding: 5px;
     }
-
+    
     .drive-away-btn {
         padding: 5px 15px;
         background: #005a8c;
@@ -1346,9 +1342,25 @@
         cursor: pointer;
         transition: background-color 0.3s;
     }
-
+    
     .drive-away-btn:hover {
         background: #007acc;
+    }
+    
+    .coordinates-display {
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px;
+        border-radius: 4px;
+    }
+    
+    .coordinate {
+        flex: 1;
+        text-align: center;
+        color: #00ffff;
+        font-family: monospace;
+        font-size: 14px;
     }
 </style>
 
