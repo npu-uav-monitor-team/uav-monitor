@@ -46,6 +46,7 @@
         height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
     
     .title-container {
@@ -60,7 +61,7 @@
     }
     
     .main-button {
-        background-color: #004080; /* Change to a more suitable background color */
+        background-color: #004080;
         color: #ffffff;
         border: none;
         padding: 10px 20px;
@@ -70,12 +71,12 @@
     }
     
     .main-button:hover {
-        background-color: #0059b3; /* Slightly darker shade on hover */
+        background-color: #0059b3;
     }
     
     .main-title {
         text-align: center;
-        color: #ffffff; /* 将颜色从 #00ffff 改为 #ffffff */
+        color: #ffffff;
         margin: 0;
         padding: 10px 0;
         font-size: 28px;

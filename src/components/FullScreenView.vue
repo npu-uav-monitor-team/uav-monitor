@@ -1,10 +1,12 @@
 <template>
     <div class="full-screen-view">
       <h2>光电设备视频</h2>
-      <div class="video-container" id="player-con"></div>
+      <div class="video-container" id="player-con">
+        <video :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
+      </div>
       <div class="controls">
         <select v-model="selectedCamera" @change="changeCamera">
-          <option v-for="camera in cameras" :key="camera.id" :value="camera.src">
+          <option v-for="camera in cameras" :key="camera.id" :value="camera.id">
             {{ camera.name }}
           </option>
         </select>
@@ -14,68 +16,54 @@
   </template>
   
   <script setup>
-      import { onMounted, onUnmounted, ref, watch } from "vue";
+      import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
       
-      const player = ref(null);
-  const selectedCamera = ref('//player.alicdn.com/video/aliyunmedia.mp4'); // 使用你的RTMP地址
-  const cameras = [
-    { id: 1, name: '摄像头 1', src: '//player.alicdn.com/video/aliyunmedia.mp4' }, // 替换为你的RTMP地址
-    { id: 2, name: '摄像头 2', src: 'rtmp://your-rtmp-address-2' }, // 替换为你的RTMP地址
-    { id: 3, name: '摄像头 3', src: 'rtmp://your-rtmp-address-3' }, // 替换为你的RTMP地址
-  ];
-  
-  const changeCamera = () => {
-    if (player.value) {
-      player.value.loadByUrl(selectedCamera.value); // 仅切换视频源
-    }
-  };
-  
-  const refreshVideo = () => {
-    if (player.value) {
-      player.value.dispose(); // 销毁之前的播放器实例
-      player.value = null; // 清空引用
-    }
-  
-    player.value = new window.Aliplayer({
-      id: 'player-con',
-      source: selectedCamera.value,
-      autoplay: true, // 自动播放
-      isLive: true,   // 设置为直播模式
-      // ...其他配置
-    });
-  };
-  
-  
-  onMounted(async () => {
-    // 动态加载 CSS 和 JS (如果在main.js中全局引入了，则不需要这部分)
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = 'https://g.alicdn.com/de/prismplayer/2.9.21/skins/default/aliplayer-min.css';
-    document.head.appendChild(cssLink);
-  
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://g.alicdn.com/de/prismplayer/2.9.21/aliplayer-min.js';
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  
-    refreshVideo();
-  });
-  
-  onUnmounted(() => {
-    if (player.value) {
-      player.value.dispose();
-    }
-  });
-  
-  // 监听 selectedCamera 的变化，并更新播放器
-  watch(selectedCamera, () => {
-    changeCamera();
-  });
-  
-  
+      const selectedCamera = ref(1); // 默认选择第一个摄像头
+      const cameras = [
+        { id: 1, name: '摄像头 1', src: 'rtsp://your-rtsp-address-1' }, // 替换为你的RTSP地址
+        { id: 2, name: '摄像头 2', src: 'rtsp://your-rtsp-address-2' }, // 替换为你的RTSP地址
+        { id: 3, name: '摄像头 3', src: 'rtsp://your-rtsp-address-3' }, // 替换为你的RTSP地址
+      ];
+      
+      let webRtcServer = null;
+      
+      // 从环境变量获取 WebRTC URL
+      const WEBRTC_URL = import.meta.env.VITE_WEBRTC_URL;
+      
+      const changeCamera = () => {
+        if (webRtcServer) {
+          webRtcServer.disconnect();
+          webRtcServer = null;
+        }
+        refreshVideo();
+      };
+      
+      const refreshVideo = async () => {
+        const rtspStr = cameras.find(camera => camera.id === selectedCamera.value).src;
+        if (rtspStr) {
+          await nextTick(); // 确保DOM加载完毕
+          const videoElement = document.getElementById(`video-${selectedCamera.value}`);
+          webRtcServer = new WebRtcStreamer(videoElement, WEBRTC_URL);
+          webRtcServer.connect(rtspStr, null, `rtptransport=tcp&timeout=60`);
+        }
+      };
+      
+      onMounted(() => {
+        refreshVideo();
+      });
+      
+      onUnmounted(() => {
+        if (webRtcServer) {
+          webRtcServer.disconnect();
+        }
+      });
+      
+      // 监听 selectedCamera 的变化，并更新播放器
+      watch(selectedCamera, () => {
+        changeCamera();
+      });
+      
+      
   </script>
 
 <style scoped>
@@ -83,7 +71,7 @@
         background-color: #001f3f;
         border-radius: 10px;
         padding: 15px;
-        height: 100%;
+        height: 80%;
         display: flex;
         flex-direction: column;
     }
