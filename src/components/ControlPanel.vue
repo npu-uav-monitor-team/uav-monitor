@@ -172,10 +172,15 @@
                 <div class="coordinates-section">
                     <div class="coordinate-container">
                         <div class="control-section">
-                            <h4>经纬度（雷达数据）</h4>
+                            <h4>经纬度与高度（雷达数据）</h4>
                             <div class="coordinates-display">
-                                <div class="coordinate">{{ radarData.longitude }}°</div>
-                                <div class="coordinate">{{ radarData.latitude }}°</div>
+                                <div class="coordinate-row">
+                                    <div class="coordinate">{{ radarData.longitude }}°</div>
+                                    <div class="coordinate">{{ radarData.latitude }}°</div>
+                                </div>
+                                <div class="coordinate-row">
+                                    <div class="coordinate">{{ radarData.altitude || 0 }}m</div>
+                                </div>
                             </div>
                         </div>
                         
@@ -287,7 +292,7 @@
     const defenseDuration = ref(1);
     const autoDefense = ref(false);
     
-    // 新增的状态变量
+    // 新增的状���变量
     const wirelessDeviceOnline = ref(true);
     const wirelessDeviceNormal = ref(true);
     const optoelectronicDeviceOnline = ref(true);
@@ -331,7 +336,8 @@
     const deviceNormal = ref(true);
     const radarData = ref({
         longitude: 0.0000,
-        latitude: 0.0000
+        latitude: 0.0000,
+        altitude: 0.0000
     });
     const simulationLevel = ref(100);
     const driveAwayAngle = ref(10);
@@ -921,13 +927,13 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         overflow-y: auto;
         padding-right: 5px;
     }
     
     .status-section, .control-section {
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
     
     h4 {
@@ -984,6 +990,7 @@
         display: flex;
         justify-content: space-between;
         font-size: 12px;
+        padding: 5px 0;
     }
     
     .status-item {
@@ -1199,7 +1206,7 @@
     .status-display {
         background-color: rgba(0, 0, 0, 0.3);
         border-radius: 5px;
-        padding: 10px;
+        padding: 8px;
         margin-bottom: 10px;
     }
 
@@ -1256,7 +1263,26 @@
     }
 
     .coordinates-display {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: rgba(0, 0, 0, 0.3);
         padding: 5px;
+        border-radius: 4px;
+    }
+
+    .coordinate-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .coordinate {
+        flex: 1;
+        text-align: center;
+        color: #00ffff;
+        font-family: monospace;
+        font-size: 14px;
     }
 
     .control-content::-webkit-scrollbar {
@@ -1277,7 +1303,7 @@
     }
 
     .coordinates-section {
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
 
     .coordinate-container {
@@ -1323,22 +1349,6 @@
 
     .drive-away-btn:hover {
         background: #007acc;
-    }
-
-    .coordinates-display {
-        display: flex;
-        gap: 10px;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 8px;
-        border-radius: 4px;
-    }
-
-    .coordinate {
-        flex: 1;
-        text-align: center;
-        color: #00ffff;
-        font-family: monospace;
-        font-size: 14px;
     }
 </style>
 
