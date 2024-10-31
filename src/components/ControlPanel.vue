@@ -169,11 +169,29 @@
                     </div>
                 </div>
                 
-                <div class="control-section">
-                    <h4>经纬度（雷达数据）</h4>
-                    <div class="coordinates-display">
-                        <div class="coordinate">{{ radarData.longitude }}°</div>
-                        <div class="coordinate">{{ radarData.latitude }}°</div>
+                <div class="coordinates-section">
+                    <div class="coordinate-container">
+                        <div class="control-section">
+                            <h4>经纬度（雷达数据）</h4>
+                            <div class="coordinates-display">
+                                <div class="coordinate">{{ radarData.longitude }}°</div>
+                                <div class="coordinate">{{ radarData.latitude }}°</div>
+                            </div>
+                        </div>
+                        
+                        <div class="control-section drive-away-section">
+                            <h4>驱离角度 (°)</h4>
+                            <div class="angle-input-container">
+                                <input
+                                    type="number"
+                                    v-model="driveAwayAngle"
+                                    min="0"
+                                    max="360"
+                                    class="angle-input"
+                                >
+                                <button @click="driveAway" class="drive-away-btn">驱离</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -200,20 +218,6 @@
                     </div>
                     <div class="action-buttons">
                         <button @click="sendCommand" class="action-btn primary">发射</button>
-                    </div>
-                </div>
-                
-                <div class="control-section drive-away-section">
-                    <h4>驱离角度 (°)</h4>
-                    <div class="angle-input-container">
-                        <input
-                            type="number"
-                            v-model="driveAwayAngle"
-                            min="0"
-                            max="360"
-                            class="angle-input"
-                        >
-                        <button @click="driveAway" class="drive-away-btn">驱离</button>
                     </div>
                 </div>
             </div>
@@ -1270,6 +1274,71 @@
 
     .control-content::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 255, 255, 0.5);
+    }
+
+    .coordinates-section {
+        margin-bottom: 10px;
+    }
+
+    .coordinate-container {
+        display: flex;
+        gap: 20px;
+        justify-content: space-between;
+    }
+
+    .coordinate-container .control-section {
+        flex: 1;
+    }
+
+    .drive-away-section {
+        margin-top: 0 !important;
+        border-top: none !important;
+        padding-top: 0 !important;
+    }
+
+    .angle-input-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .angle-input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        color: #ffffff;
+        padding: 5px;
+    }
+
+    .drive-away-btn {
+        padding: 5px 15px;
+        background: #005a8c;
+        color: #ffffff;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .drive-away-btn:hover {
+        background: #007acc;
+    }
+
+    .coordinates-display {
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px;
+        border-radius: 4px;
+    }
+
+    .coordinate {
+        flex: 1;
+        text-align: center;
+        color: #00ffff;
+        font-family: monospace;
+        font-size: 14px;
     }
 </style>
 
