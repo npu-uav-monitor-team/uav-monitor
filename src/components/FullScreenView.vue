@@ -2,7 +2,8 @@
     <div class="full-screen-view">
       <h2>光电设备视频</h2>
       <div class="video-container" id="player-con">
-        <video :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
+        <div v-if="isLoading" class="loading-spinner"></div>
+        <video v-else :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
       </div>
       <div class="controls">
         <select v-model="selectedCamera" @change="changeCamera">
@@ -19,8 +20,9 @@
       import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
       
       const selectedCamera = ref(1); // 默认选择第一个摄像头
+      const isLoading = ref(true); // 添加加载状态
       const cameras = [
-        { id: 1, name: '摄像头 1', src: 'rtsp://your-rtsp-address-1' }, // 替换为你的RTSP地址
+        { id: 1, name: '摄像头 1', src: 'rtsp://localhost/live' }, // 替换为你的RTSP地址
         { id: 2, name: '摄像头 2', src: 'rtsp://your-rtsp-address-2' }, // 替换为你的RTSP地址
         { id: 3, name: '摄像头 3', src: 'rtsp://your-rtsp-address-3' }, // 替换为你的RTSP地址
       ];
@@ -39,12 +41,16 @@
       };
       
       const refreshVideo = async () => {
+        isLoading.value = true; // 开始加载
         const rtspStr = cameras.find(camera => camera.id === selectedCamera.value).src;
         if (rtspStr) {
           await nextTick(); // 确保DOM加载完毕
           const videoElement = document.getElementById(`video-${selectedCamera.value}`);
           webRtcServer = new WebRtcStreamer(videoElement, WEBRTC_URL);
           webRtcServer.connect(rtspStr, null, `rtptransport=tcp&timeout=60`);
+          webRtcServer.on('connected', () => {
+            isLoading.value = false; // 加载完成
+          });
         }
       };
       
@@ -89,6 +95,7 @@
         align-items: center;
         overflow: hidden;
         margin-bottom: 15px;
+        position: relative;
     }
     
     video {
@@ -126,5 +133,19 @@
     select:hover,
     .refresh-btn:hover {
         background-color: #004080;
+    }
+    
+    .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #00ffff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>

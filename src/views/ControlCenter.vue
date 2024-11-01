@@ -79,7 +79,7 @@
         color: #ffffff;
         margin: 0;
         padding: 10px 0;
-        font-size: 28px;
+        font-size: 2    px;
         font-weight: bold;
     }
     
