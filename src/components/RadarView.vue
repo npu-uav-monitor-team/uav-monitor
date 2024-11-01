@@ -23,72 +23,109 @@
             </div>
             <div class="device-controls">
                 <div class="controls-container">
-                    <!-- 雷控制 -->
-                    <div class="control-group">
-                        <h3>雷达控制</h3>
-                        <div class="control-row">
-                            <button @click="handleStandby">待机</button>
-                            <button @click="handleSearch">搜索</button>
-                            <button @click="handleTrack">跟踪</button>
-                            <button @click="handleTest">调试</button>
-                        </div>
-                    </div>
+                    <!-- 雷制 -->
                     
-                    <!-- 电源控制 -->
-                    <div class="control-group">
-                        <h3>电源控制</h3>
-                        <div class="control-row">
-                            <button @click="handlePowerAll">一体机上电</button>
-                            <button @click="handlePowerFront">前端上电</button>
-                            <button @click="handlePowerSystem">系统上电</button>
-                        </div>
-                    </div>
-
                     <!-- 详细设置按钮 -->
-                    <div class="control-group settings-group">
-                        <button @click="openSettings" class="settings-btn">详细设置</button>
-                    </div>
+                   
                 </div>
             </div>
         </div>
         <div class="illegal-aircraft-list">
             <h2>非法飞行物列表</h2>
-            <table>
-                <thead>
-                <tr>
-                    <th>编号</th>
-                    <th>类型</th>
-                    <th>距离 (km)</th>
-                    <th>方位角 (°)</th>
-                    <th>俯仰角 (°)</th>
-                    <th>速度 (m/h)</th>
-                    <th>高度 (m)</th>
-                    <th>幅度 (dB)</th>
-                    <th>信杂比 (dB)</th>
-                    <th>丢失计数</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr
-                    v-for="aircraft in illegalAircraft"
-                    :key="aircraft.id"
-                    :class="{ 'highlighted': aircraft.id === activeTarget?.id }"
-                    @mouseover="highlightAircraft(aircraft.id)"
-                    @mouseout="unhighlightAircraft"
-                >
-                    <td>{{ aircraft.id }}</td>
-                    <td>{{ aircraft.type }}</td>
-                    <td>{{ aircraft.distance.toFixed(2) }}</td>
-                    <td>{{ aircraft.angle.toFixed(2) }}</td>
-                    <td>{{ aircraft.elevation.toFixed(2) }}</td>
-                    <td>{{ aircraft.speed }}</td>
-                    <td>{{ aircraft.altitude }}</td>
-                    <td>{{ aircraft.amplitude }}</td>
-                    <td>{{ aircraft.signalLossRatio }}</td>
-                    <td>{{ aircraft.lossCount }}</td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th colspan="1"></th>
+                        <th colspan="6">雷达数据</th>
+                        <th colspan="6">电侦数据</th>
+                        <th colspan="3">融合数据</th>
+                    </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>距离</th>
+                        <th>方位角</th>
+                        <th>俯仰角</th>
+                        <th>速度</th>
+                        <th>经度</th>
+                        <th>纬度</th>
+                        <th>频段</th>
+                        <th>型号</th>
+                        <th>来源</th>
+                        <th>信号强度</th>
+                        <th>经度</th>
+                        <th>纬度</th>
+                        <th>经度</th>
+                        <th>纬度</th>
+                        <th>方位角</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>01</td>
+                        <td>1KM</td>
+                        <td>50°</td>
+                        <td>160°</td>
+                        <td>300km/h</td>
+                        <td>25.4562</td>
+                        <td>113.2456</td>
+                        <td>2.4G</td>
+                        <td>Mavic3</td>
+                        <td>无人机</td>
+                        <td>强</td>
+                        <td>25.4562</td>
+                        <td>113.2456</td>
+                        <td>25.4562</td>
+                        <td>113.2456</td>
+                        <td>52°</td>
+                    </tr>
+                    <tr>
+                        <td>02</td>
+                        <td>2KM</td>
+                        <td>60°</td>
+                        <td>150°</td>
+                        <td>250km/h</td>
+                        <td>26.1234</td>
+                        <td>114.5678</td>
+                        <td>5.8G</td>
+                        <td>Phantom4</td>
+                        <td>无人机</td>
+                        <td>中</td>
+                        <td>26.1234</td>
+                        <td>114.5678</td>
+                        <td>26.1234</td>
+                        <td>114.5678</td>
+                        <td>60°</td>
+                    </tr>
+                    <tr>
+                        <td>03</td>
+                        <td>3KM</td>
+                        <td>70°</td>
+                        <td>140°</td>
+                        <td>200km/h</td>
+                        <td>27.9876</td>
+                        <td>115.6789</td>
+                        <td>1.2G</td>
+                        <td>Inspire2</td>
+                        <td>无人机</td>
+                        <td>弱</td>
+                        <td>27.9876</td>
+                        <td>115.6789</td>
+                        <td>27.9876</td>
+                        <td>115.6789</td>
+                        <td>70°</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 添加按钮 -->
+        <div class="button-group">
+            <button @click="handleRadarGuide">雷达引导</button>
+            <button @click="handleElectronicGuide">电侦引导</button>
+            <button @click="handleFusionGuide">融合引导</button>
+            <button @click="handleInterference">干扰</button>
+            <button @click="handleDeception">诱骗</button>
         </div>
         <!-- 设置弹窗 -->
         <div v-if="showSettings" class="settings-modal">
@@ -125,96 +162,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 当前状态 -->
-                <div class="settings-section">
-                    <h3>当前状态</h3>
-                    <div class="settings-group">
-                        <div class="input-group">
-                            <label>伺服角度</label>
-                            <input type="text" v-model="settings.status.servoAngle" disabled>
-                            <span class="unit">°</span>
-                        </div>
-                        <div class="input-group">
-                            <label>信处温度</label>
-                            <input type="text" v-model="settings.status.temperature" disabled>
-                            <span class="unit">°C</span>
-                        </div>
-                        <div class="input-group">
-                            <label>量程范围</label>
-                            <input type="text" v-model="settings.status.range" disabled>
-                            <span class="unit">km</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 杂波图设置 -->
-                <div class="settings-section">
-                    <h3>杂波图设置</h3>
-                    <div class="settings-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" v-model="settings.clutterMap.save"> 保存杂波图
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" v-model="settings.clutterMap.load"> 加载杂波图
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 雷达位置 -->
-                <div class="settings-section">
-                    <h3>雷达位置</h3>
-                    <div class="settings-group">
-                        <div class="input-group">
-                            <label>纬度</label>
-                            <input type="text" v-model="settings.position.latitude">
-                            <span class="unit">UTC</span>
-                        </div>
-                        <div class="input-group">
-                            <label>经度</label>
-                            <input type="text" v-model="settings.position.longitude">
-                            <span class="unit">卫星数量</span>
-                        </div>
-                        <div class="input-group">
-                            <label>海拔</label>
-                            <input type="text" v-model="settings.position.altitude">
-                            <span class="unit">校北角度</span>
-                        </div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" v-model="settings.position.autoRefresh"> 自动刷新
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" v-model="settings.position.northReturn"> 北回归
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" v-model="settings.position.effective"> 有效
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 伺服待机模式 -->
-                <div class="settings-section">
-                    <h3>伺服待机模式</h3>
-                    <div class="settings-group">
-                        <div class="input-group">
-                            <select v-model="settings.servoMode.mode">
-                                <option value="idle">空闲</option>
-                                <option value="standby">待机</option>
-                                <option value="active">工作</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>指向角度</label>
-                            <input type="number" v-model="settings.servoMode.angle">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="button-group">
-                    <button @click="saveSettings" class="confirm-btn">确定</button>
-                </div>
+                <!-- 其他设置保持不变 -->
             </div>
         </div>
     </div>
@@ -229,18 +177,46 @@
     const illegalAircraft = ref([
         {
             id: 1,
-            type: 'UAV',
-            distance: 5.20,
-            angle: 45.00,
-            elevation: 15.00,
-            speed: 80,
-            altitude: 150,
-            amplitude: -65,
-            signalLossRatio: -12,
-            lossCount: 3
+            distance: 1.0,
+            angle: 50.0,
+            elevation: 160.0,
+            speed: 300,
+            longitude: 25.4562,
+            latitude: 113.2456,
+            frequency: '2.4G',
+            model: 'Mavic3',
+            source: '无人机',
+            signalStrength: '强',
+            bearing: 52.0
         },
-        {id: 2, type: 'Drone', distance: 3.7, angle: 120, elevation: 20, speed: 60},
-        {id: 3, type: 'UAV', distance: 7.1, angle: 210, elevation: 10, speed: 90},
+        {
+            id: 2,
+            distance: 2.0,
+            angle: 60.0,
+            elevation: 150.0,
+            speed: 250,
+            longitude: 26.1234,
+            latitude: 114.5678,
+            frequency: '5.8G',
+            model: 'Phantom4',
+            source: '无人机',
+            signalStrength: '中',
+            bearing: 60.0
+        },
+        {
+            id: 3,
+            distance: 3.0,
+            angle: 70.0,
+            elevation: 140.0,
+            speed: 200,
+            longitude: 27.9876,
+            latitude: 115.6789,
+            frequency: '1.2G',
+            model: 'Inspire2',
+            source: '无人机',
+            signalStrength: '弱',
+            bearing: 70.0
+        }
     ]);
     
     const selectedDeviceName = computed(() => {
@@ -249,7 +225,6 @@
     });
     
     onMounted(async () => {
-        // 模拟从API获取雷达设备列表
         radarDevices.value = [
             {id: 1, name: '雷达设备1'},
             {id: 2, name: '雷达设备2'},
@@ -257,23 +232,19 @@
         ];
         selectedDeviceId.value = radarDevices.value[0].id;
         
-        // 模拟每 10 秒更新一次设备状态
         setInterval(() => {
-            isOnline.value = Math.random() > 0.2; // 80% 概率在线
-            hasFault.value = Math.random() > 0.8; // 20% 概率故障
+            isOnline.value = Math.random() > 0.2;
+            hasFault.value = Math.random() > 0.8;
         }, 10000);
     });
     
     const loadDeviceData = (deviceId) => {
-        // 实现加载选定雷达设备数据的逻辑
         console.log('加载设备数据:', deviceId);
     };
     
     const refresh = () => {
         console.log('刷新数据');
     };
-    
-
     
     const highlightAircraft = (id) => {
         activeTarget.value = illegalAircraft.value.find(aircraft => aircraft.id === id);
@@ -287,14 +258,10 @@
     const scanRange = ref(50);
     const scanMode = ref('normal');
     
-    
     const openSettings = () => {
         showSettings.value = true;
     };
     
-
-    
-    // 新增控制方法
     const handleStandby = () => {
         console.log('执行待机操作');
     };
@@ -352,7 +319,6 @@
         }
     });
 
-    // 添加角度调整方法
     const incrementStartAngle = () => {
         settings.value.silentZone.startAngle = Math.min(360, settings.value.silentZone.startAngle + 1);
     };
@@ -371,6 +337,32 @@
 
     const closeSettings = () => {
         showSettings.value = false;
+    };
+
+    const selectedAircraftId = ref(null);
+
+    const handleButtonClick = () => {
+        console.log('选中的飞行物ID:', selectedAircraftId.value);
+    };
+
+    const handleRadarGuide = () => {
+        console.log('执行雷达引导操作');
+    };
+
+    const handleElectronicGuide = () => {
+        console.log('执行电侦引导操作');
+    };
+
+    const handleFusionGuide = () => {
+        console.log('执行融合引导操作');
+    };
+
+    const handleInterference = () => {
+        console.log('执行干扰操作');
+    };
+
+    const handleDeception = () => {
+        console.log('执行诱骗操作');
     };
 </script>
 
@@ -551,24 +543,21 @@
         overflow-y: auto;
     }
     
-    h2 {
-        color: #00ffff;
-        text-align: center;
-        margin: 0 0 5px 0;
-        font-size: 1em;
-        padding: 2px 0;
+    .table-container {
+        overflow-x: auto;
     }
     
     table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 0;
+        min-width: 1200px;
     }
     
     th, td {
         padding: 4px 8px;
-        text-align: left;
-        border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        text-align: center;
+        border: 1px solid rgba(0, 255, 255, 0.3);
     }
     
     th {
@@ -684,21 +673,22 @@
     
     .button-group {
         display: flex;
-        justify-content: center;
+        justify-content: space-around;
         margin-top: 20px;
     }
-    
-    .confirm-btn {
-        background-color: transparent;
-        border: 1px solid #00ffff;
+
+    .button-group button {
+        background-color: #003366;
         color: #00ffff;
-        padding: 5px 20px;
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        padding: 8px 15px;
         cursor: pointer;
         transition: background-color 0.3s;
     }
-    
-    .confirm-btn:hover {
-        background-color: rgba(0, 255, 255, 0.1);
+
+    .button-group button:hover {
+        background-color: #004080;
     }
 
     .close-btn {

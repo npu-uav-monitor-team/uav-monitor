@@ -79,22 +79,21 @@
         </div>
         
         <div class="floating-panel threat-list" :class="{ 'panel-hidden': !showThreatList }">
-            <h2>威胁列表
+            <h2>电侦列表
                 <button @click="toggleThreatList" class="toggle-btn">{{ showThreatList ? '隐藏' : '显示' }}</button>
             </h2>
             <div v-if="showThreatList" class="table-container">
                 <table>
                     <thead>
                     <tr>
-                        <th>排序</th>
-                        <th>图标</th>
-                        <th>飞行器</th>
-                        <th>类型</th>
-                        <th>威胁等级</th>
-                        <th>速度(km/h)</th>
-                        <th>高度(m)</th>
-                        <th>距离(km)</th>
-                        <th>更新时间</th>
+                        <th>目标ID</th>
+                        <th>型号</th>
+                        <th>来源</th>
+                        <th>报告类型</th>
+                        <th>链接目标ID</th>
+                        <th>探测</th>
+                        <th>停留时长（分:秒）</th>
+                        <th>最近一次定向</th>
                     </tr>
                     </thead>
                     <tbody>
