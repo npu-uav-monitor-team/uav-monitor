@@ -14,11 +14,9 @@
                 </div>
             </div>
             <div class="device-display">
-                <div class="image-container">
-                    <img src="@/assets/radar.gif" alt="Radar Display" class="device-image"/>
-                    <div class="device-label">
-                        雷达设备 {{ selectedDeviceName }}
-                    </div>
+                <div class="vnc-container" ref="vncContainer" style="width: 100%; height: 100%;"></div>
+                <div class="device-label">
+                    雷达设备 {{ selectedDeviceName }}
                 </div>
             </div>
             <div class="device-controls">
@@ -170,74 +168,41 @@
 
 <script setup>
     import { computed, onMounted, ref } from 'vue';
+    import RFB from '@novnc/novnc';
     
     const selectedDeviceId = ref(null);
     const radarDevices = ref([]);
-    const activeTarget = ref(null);
-    const illegalAircraft = ref([
-        {
-            id: 1,
-            distance: 1.0,
-            angle: 50.0,
-            elevation: 160.0,
-            speed: 300,
-            longitude: 25.4562,
-            latitude: 113.2456,
-            frequency: '2.4G',
-            model: 'Mavic3',
-            source: '无人机',
-            signalStrength: '强',
-            bearing: 52.0
-        },
-        {
-            id: 2,
-            distance: 2.0,
-            angle: 60.0,
-            elevation: 150.0,
-            speed: 250,
-            longitude: 26.1234,
-            latitude: 114.5678,
-            frequency: '5.8G',
-            model: 'Phantom4',
-            source: '无人机',
-            signalStrength: '中',
-            bearing: 60.0
-        },
-        {
-            id: 3,
-            distance: 3.0,
-            angle: 70.0,
-            elevation: 140.0,
-            speed: 200,
-            longitude: 27.9876,
-            latitude: 115.6789,
-            frequency: '1.2G',
-            model: 'Inspire2',
-            source: '无人机',
-            signalStrength: '弱',
-            bearing: 70.0
-        }
-    ]);
-    
+    const vncContainer = ref(null);
+    let rfb;
+
     const selectedDeviceName = computed(() => {
         const device = radarDevices.value.find(d => d.id === selectedDeviceId.value);
         return device ? device.name : '';
     });
-    
-    onMounted(async () => {
+
+    onMounted(() => {
         radarDevices.value = [
             {id: 1, name: '雷达设备1'},
             {id: 2, name: '雷达设备2'},
             {id: 3, name: '雷达设备3'},
         ];
         selectedDeviceId.value = radarDevices.value[0].id;
-        
-        setInterval(() => {
-            isOnline.value = Math.random() > 0.2;
-            hasFault.value = Math.random() > 0.8;
-        }, 10000);
+
+        // 初始化 VNC 连接
+        const url = import.meta.env.VITE_VNC_URL;
+        rfb = new RFB(vncContainer.value, url, {
+            credentials: {
+                password: '123456' // 这里可以根据需要进行修改
+            },
+        });
+        rfb.scaleViewport = true;
+        rfb.resizeSession = true;
+
+        rfb.addEventListener('connect', () => console.log('Connected to VNC server'));
+        rfb.addEventListener('disconnect', () => console.log('Disconnected from VNC server'));
+        rfb.addEventListener('credentialsrequired', () => console.log('Credentials are required'));
     });
-    
+
     const loadDeviceData = (deviceId) => {
         console.log('加载设备数据:', deviceId);
     };
@@ -439,18 +404,10 @@
         overflow: hidden;
     }
     
-    .image-container {
+    .vnc-container {
         width: 100%;
         height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .device-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        position: relative;
     }
     
     .device-label {
