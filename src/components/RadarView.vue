@@ -2,12 +2,12 @@
     <div class="radar-view">
         <div class="radar-content">
             <div class="screen-header">
+                <h2>全景视频</h2>
                 <div class="device-selector">
-                    <!-- <select v-model="selectedDeviceId" @change="loadDeviceData">
-                        <option v-for="device in radarDevices" :key="device.id" :value="device.id">
-                            {{ device.name }}
-                        </option>
-                    </select> -->
+                    <select v-model="selectedStream" @change="changeStream">
+                        <option value="1">全景视频1</option>
+                        <option value="2">全景视频2</option>
+                    </select>
                 </div>
                 <div class="screen-controls">
                     <button @click="refresh">刷新</button>
@@ -17,9 +17,6 @@
                 <div class="video-container" id="radar-video-con">
                     <div v-if="isLoading" class="loading-spinner"></div>
                     <video v-else id="radar-video" autoplay width="100%" height="100%"></video>
-                </div>
-                <div class="device-label">
-                    全景视频 {{ selectedDeviceName }}
                 </div>
             </div>
             <div class="device-controls">
@@ -172,74 +169,35 @@
 <script setup>
     import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue';
     
-    const selectedDeviceId = ref(null);
-    const radarDevices = ref([]);
-    const activeTarget = ref(null);
-    const illegalAircraft = ref([
-        {
-            id: 1,
-            distance: 1.0,
-            angle: 50.0,
-            elevation: 160.0,
-            speed: 300,
-            longitude: 25.4562,
-            latitude: 113.2456,
-            frequency: '2.4G',
-            model: 'Mavic3',
-            source: '无人机',
-            signalStrength: '强',
-            bearing: 52.0
-        },
-        {
-            id: 2,
-            distance: 2.0,
-            angle: 60.0,
-            elevation: 150.0,
-            speed: 250,
-            longitude: 26.1234,
-            latitude: 114.5678,
-            frequency: '5.8G',
-            model: 'Phantom4',
-            source: '无人机',
-            signalStrength: '中',
-            bearing: 60.0
-        },
-        {
-            id: 3,
-            distance: 3.0,
-            angle: 70.0,
-            elevation: 140.0,
-            speed: 200,
-            longitude: 27.9876,
-            latitude: 115.6789,
-            frequency: '1.2G',
-            model: 'Inspire2',
-            source: '无人机',
-            signalStrength: '弱',
-            bearing: 70.0
-        }
-    ]);
-    
-    const selectedDeviceName = computed(() => {
-        const device = radarDevices.value.find(d => d.id === selectedDeviceId.value);
-        return device ? device.name : '';
-    });
-    
+    const selectedStream = ref('1'); // 默认选择全景视频1
     const isLoading = ref(true);
     let webRtcServer = null;
 
-    // 从环境变量获取雷达视频流 URL
-    const RADAR_VIDEO_URL = import.meta.env.VITE_RADAR_VIDEO_URL;
+    // 从环境变量获取视频流 URL
+    const RADAR_VIDEO_URL_1 = import.meta.env.VITE_RADAR_VIDEO_URL_1;
+    const RADAR_VIDEO_URL_2 = import.meta.env.VITE_RADAR_VIDEO_URL_2;
+
+    const getVideoUrl = () => {
+        return selectedStream.value === '1' ? RADAR_VIDEO_URL_1 : RADAR_VIDEO_URL_2;
+    };
 
     const refreshVideo = async () => {
         isLoading.value = true;
         await nextTick();
         const videoElement = document.getElementById('radar-video');
-        webRtcServer = new WebRtcStreamer(videoElement, RADAR_VIDEO_URL);
-        webRtcServer.connect(RADAR_VIDEO_URL, null, `rtptransport=tcp&timeout=60`);
+        const videoUrl = getVideoUrl();
+        if (webRtcServer) {
+            webRtcServer.disconnect();
+        }
+        webRtcServer = new WebRtcStreamer(videoElement, videoUrl);
+        webRtcServer.connect(videoUrl, null, `rtptransport=tcp&timeout=60`);
         webRtcServer.on('connected', () => {
             isLoading.value = false;
         });
+    };
+
+    const changeStream = () => {
+        refreshVideo();
     };
 
     onMounted(() => {
@@ -756,5 +714,13 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    h2 {
+        color: #00ffff;
+        margin: 0;
+        padding: 0 10px;
+        flex-grow: 1;
+        text-align: center;
     }
 </style>
