@@ -128,25 +128,16 @@
                     <div class="button-grid">
                         <button @click="toggleServo">{{ servoStatus ? '伺服关机' : '伺服开机' }}</button>
                         <button @click="toggleChannel">{{ channelType ? '红外通道' : '电视通道' }}</button>
-                        <button @click="resetOptoelectronic">电归零</button>
+                        <button @click="resetOptoelectronic">归零</button>
                         <button @click="toggleTargetColor">{{ targetColor ? '目标白' : '目标黑' }}</button>
-                        <button @click="toggleTrackingMode">{{ trackingMode ? '质心' : '相关' }}</button>
+                        <button @click="toggleTrackingMode">{{ trackingMode ? '自动' : '人工' }}</button>
                         <button @click="toggleInfrared">{{ infraredStatus ? '红外关机' : '红外开机' }}</button>
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
                         <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
-                        <button @click="showSettingsDialog = true">详细设置</button>
-                        <div class="focus-wheel">
-                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <g>
-                                    <circle cx="50" cy="50" r="45" fill="#005a8c"/>
-                                    <polygon points="50,15 42,30 58,30" fill="#00ffff" @click="adjustFocus('up')"/>
-                                    <polygon points="85,50 70,42 70,58" fill="#00ffff" @click="adjustFocus('right')"/>
-                                    <polygon points="50,85 58,70 42,70" fill="#00ffff" @click="adjustFocus('down')"/>
-                                    <polygon points="15,50 30,58 30,42" fill="#00ffff" @click="adjustFocus('left')"/>
-                                </g>
-                            </svg>
-                        </div>
+                        <button @click="handleCapture">捕获</button>
+                        <button @click="handleTracking">跟踪</button>
+                        <button @click="handleLaserEmission">{{ laserEmissionStatus ? '激光停止' : '激光发射' }}</button>
                     </div>
                 </div>
             </div>
@@ -222,8 +213,24 @@
                         </div>
                     </div>
                     <div class="action-buttons">
-                        <button @click="sendCommand(4352)" class="action-btn primary">捕获</button>
-                        <button @click="sendCommand(4352)" class="action-btn primary">停止发射</button>
+                        <button 
+                            @click="handleDeception" 
+                            class="action-btn primary"
+                            :disabled="isDeceptionDisabled"
+                            :class="{ disabled: isDeceptionDisabled }"
+                        >诱骗</button>
+                        <button 
+                            @click="handleCapture" 
+                            class="action-btn primary"
+                            :disabled="isCaptureDisabled"
+                            :class="{ disabled: isCaptureDisabled }"
+                        >捕获</button>
+                        <button 
+                            @click="handleStopEmission" 
+                            class="action-btn primary"
+                            :disabled="!isEmitting"
+                            :class="{ disabled: !isEmitting }"
+                        >停止发射</button>
                     </div>
                 </div>
             </div>
@@ -283,7 +290,7 @@
 </template>
 
 <script setup>
-    import { onMounted, onUnmounted, ref } from "vue";
+    import { onMounted, onUnmounted, ref, computed } from "vue";
     import axios from "axios";
     import { deceptionService } from "../service/deceptionService";
     
@@ -452,18 +459,31 @@
         };
         
         updateRadarData();
-        // 定期更新雷达数据
+        // 定期更雷达数据
         const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
         
         // 添加发射状态更新
         updateEmissionStatus();
         const emissionStatusInterval = setInterval(updateEmissionStatus, 1000);
         
+        // 添加键盘事件监听
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
         // 组件卸载时清除定时器
         onUnmounted(() => {
             clearInterval(statusInterval);
             clearInterval(updateInterval);
             clearInterval(emissionStatusInterval);
+            
+            // 移除键盘事件监听
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+            
+            // 清除可能存在的移动定时器
+            if (moveInterval.value) {
+                clearInterval(moveInterval.value);
+            }
         });
     });
     
@@ -535,11 +555,6 @@
             });
     }
     
-    function adjustFocus(direction) {
-        // TODO: 实现调焦功能
-        console.log(`调整焦距: ${direction}`);
-    }
-    
     // 添加切换函数
     function toggleServo() {
         // 检查是否有可用的设备ID
@@ -592,7 +607,7 @@
         }
     }
     
-    // 修改电归零函数
+    // 修改归零函数
     async function resetOptoelectronic() {
         if (!currentPhotoelectricId.value) {
             alert('未找到可用的光电设备');
@@ -602,13 +617,13 @@
         try {
             const response = await axios.post(`/api/v0/photoelectrics/zero/${currentPhotoelectricId.value}`);
             if (response.data.code === 0) {
-                alert('电归零成功');
+                alert('归零成功');
             } else {
-                alert(response.data.msg || '电归零失败');
+                alert(response.data.msg || '归零失败');
             }
         } catch (error) {
-            console.error('电归零请求失败:', error);
-            alert('电归零失败，请检查网络连接');
+            console.error('归零请求失败:', error);
+            alert('归零失败，请检查网络连接');
         }
     }
     
@@ -632,7 +647,7 @@
                 alert(response.data.msg || '目标颜色切换失败');
             }
         } catch (error) {
-            console.error('目标颜色切换请求失败:', error);
+            console.error('目标颜色切换请失败:', error);
             alert('目标颜色切换失败，请检查网络连接');
         }
     }
@@ -645,14 +660,14 @@
         }
         
         const apiEndpoint = trackingMode.value ?
-            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/correlation` :
-            `/api/v0/photoelectrics/algorithm/${currentPhotoelectricId.value}/centroid`;
+            `/api/v0/photoelectrics/tracking/${currentPhotoelectricId.value}/manual` :
+            `/api/v0/photoelectrics/tracking/${currentPhotoelectricId.value}/auto`;
         
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 trackingMode.value = !trackingMode.value;
-                alert(trackingMode.value ? '切换到质心跟踪成功' : '切换到相关跟踪成功');
+                alert(trackingMode.value ? '切换到自动模式成功' : '切换到人工模式成功');
             } else {
                 alert(response.data.msg || '跟踪模式切换失败');
             }
@@ -878,6 +893,308 @@
     
     // 在 script setup 部分添加新的响应式变量
     const emissionStatus = ref('停止'); // 可能的值：'停止' 或 '就近'
+    
+    // 添加新的状态变量
+    const laserEmissionStatus = ref(false);
+    
+    // 添加捕获处理函数
+    async function handleCapture() {
+        try {
+            const updateCommandRequestDto = {
+                CmdWord: 4352,
+                CommandDto: {
+                    Capture: {
+                        Position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
+                        },
+                        CaptureAmbiguity: simulationLevel.value,
+                        Operate: true
+                    }
+                }
+            };
+            
+            const res = await deceptionService.updateCommand(updateCommandRequestDto);
+            if (res) {
+                alert('捕获指令发送成功');
+            } else {
+                alert('捕获指令发送失败');
+            }
+            
+            // 更新数据
+            await clickDeception();
+        } catch (error) {
+            console.error('捕获指令发送失败:', error);
+            alert('捕获指令发送失败，请检查网络连接');
+        }
+    }
+    
+    // 添加跟踪处理函数
+    async function handleTracking() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+        
+        try {
+            const response = await axios.post(`/api/v0/photoelectrics/track/${currentPhotoelectricId.value}`);
+            if (response.data.code === 0) {
+                alert('跟踪开始成功');
+            } else {
+                alert(response.data.msg || '跟踪开始失败');
+            }
+        } catch (error) {
+            console.error('跟踪请求失败:', error);
+            alert('跟踪失败，请检查网络连接');
+        }
+    }
+    
+    // 添加激光发射处理函数
+    async function handleLaserEmission() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+        
+        const apiEndpoint = laserEmissionStatus.value ?
+            `/api/v0/photoelectrics/laser-emission/${currentPhotoelectricId.value}/stop` :
+            `/api/v0/photoelectrics/laser-emission/${currentPhotoelectricId.value}/start`;
+        
+        try {
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                laserEmissionStatus.value = !laserEmissionStatus.value;
+                alert(laserEmissionStatus.value ? '激光发射开始' : '激光发射停止');
+            } else {
+                alert(response.data.msg || '激光发射控制失败');
+            }
+        } catch (error) {
+            console.error('激光发射控制请求失败:', error);
+            alert('激光发射制失败，请检查网络连接');
+        }
+    }
+    
+    // 添加移动控制相关的状态
+    const isMoving = ref(false);
+    const moveDirection = ref(null);
+    const moveInterval = ref(null);
+    const moveAlert = ref(null); // 添加弹窗引用
+    
+    // 键盘按下事件处理
+    function handleKeyDown(event) {
+        // 只在光电设备控制标签页激活时处理键盘事件
+        if (activeTab.value !== 'optoelectronic') return;
+        
+        // 防止重复触发
+        if (isMoving.value && moveDirection.value === event.key) return;
+        
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                event.preventDefault(); // 阻止默认滚动行为
+                startMove(event.key);
+                break;
+        }
+    }
+    
+    // 键盘松开事件处理
+    function handleKeyUp(event) {
+        if (activeTab.value !== 'optoelectronic') return;
+        
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                if (moveDirection.value === event.key) {
+                    stopMove();
+                }
+                break;
+        }
+    }
+    
+    // 开始移动
+    function startMove(direction) {
+        if (isMoving.value) return;
+        
+        isMoving.value = true;
+        moveDirection.value = direction;
+        
+        // 显示移动提示弹窗
+        moveAlert.value = alert(`正在向${getDirectionText(direction)}移动`);
+        
+        // 启动持续移动
+        moveInterval.value = setInterval(() => {
+            moveOptoelectronic(direction);
+        }, 100); // 每100ms执行一次移动
+    }
+    
+    // 停止移动
+    function stopMove() {
+        if (!isMoving.value) return;
+        
+        clearInterval(moveInterval.value);
+        isMoving.value = false;
+        moveDirection.value = null;
+        
+        // 关闭移动提示弹窗
+        if (moveAlert.value) {
+            moveAlert.value.close();
+            moveAlert.value = null;
+        }
+    }
+    
+    // 获取方向文本
+    function getDirectionText(direction) {
+        switch (direction) {
+            case 'ArrowUp': return '上';
+            case 'ArrowDown': return '下';
+            case 'ArrowLeft': return '左';
+            case 'ArrowRight': return '右';
+            default: return '';
+        }
+    }
+    
+    // 光电设备移动控制函数（预留接口）
+    function moveOptoelectronic(direction) {
+        // TODO: 实现光电设备移动控制
+        // 这里预留与后端API的接口
+        // const apiEndpoint = `/api/v0/photoelectrics/move/${currentPhotoelectricId.value}/${direction}`;
+        console.log(`光电设备${getDirectionText(direction)}移动`);
+    }
+//  点击诱骗或捕获后，另一个按钮会被禁用变灰
+// 此时只有停止发射按钮可用
+// 点击停止发射后，诱骗和捕获按钮都会重新变为可用状态
+// 停止发射按钮只在有发射进行时才可用
+    // 添加诱骗处理函数
+    async function handleDeception() {
+        try {
+            const updateCommandRequestDto = {
+                cmdWord: 4097,
+                commandDto: {
+                    category: 15,
+                    driveAngle: 10,
+                    isInterferenceEmitted: true, // 开启干扰发射
+                    noFly: {
+                        state: false,
+                        position: {
+                            Longitude: gpsData.value.longitude,
+                            Latitude: gpsData.value.latitude,
+                            Altitude: gpsData.value.altitude
+                        }
+                    },
+                    defense: false,
+                    transmitPower: {
+                        state: 1,
+                        power: 0,
+                        sinr: 10
+                    },
+                    capture: {
+                        position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
+                        },
+                        captureAmbiguity: simulationLevel.value,
+                        operate: false
+                    },
+                    BootstrapPosition: {
+                        timestamp: 0,
+                        targetType: 0
+                    },
+                    turntableAngle: {
+                        pitchAngle: 0,
+                        horizontalAngle: 0
+                    },
+                    turntableMode: false
+                }
+            };
+            
+            const res = await deceptionService.updateCommand(updateCommandRequestDto);
+            if (res) {
+                alert('诱骗指令发送成功');
+            } else {
+                alert('诱骗指令发送失败');
+            }
+            
+            // 更新数据
+            await clickDeception();
+        } catch (error) {
+            
+            console.error('诱骗指令发送失败:', error);
+            alert('诱骗指令发送失败，请检查网络连接');
+        }
+    }
+
+    // 添加停止发射处理函数
+    async function handleStopEmission() {
+        try {
+            const updateCommandRequestDto = {
+                cmdWord: 4097,
+                commandDto: {
+                    category: 15,
+                    driveAngle: 10,
+                    isInterferenceEmitted: false, // 关闭干扰发射
+                    noFly: {
+                        state: false,
+                        position: {
+                            Longitude: gpsData.value.longitude,
+                            Latitude: gpsData.value.latitude,
+                            Altitude: gpsData.value.altitude
+                        }
+                    },
+                    defense: false,
+                    transmitPower: {
+                        state: 1,
+                        power: 0,
+                        sinr: 10
+                    },
+                    capture: {
+                        position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
+                        },
+                        captureAmbiguity: simulationLevel.value,
+                        operate: false
+                    },
+                    BootstrapPosition: {
+                        timestamp: 0,
+                        targetType: 0
+                    },
+                    turntableAngle: {
+                        pitchAngle: 0,
+                        horizontalAngle: 0
+                    },
+                    turntableMode: false
+                }
+            };
+            
+            const res = await deceptionService.updateCommand(updateCommandRequestDto);
+            if (res) {
+                alert('停止发射指令发送成功');
+            } else {
+                alert('停止发射指令发送失败');
+            }
+            
+            // 更新数据
+            await clickDeception();
+        } catch (error) {
+            console.error('停止发射指令发送失败:', error);
+            alert('停止发射指令发送失败，请检查网络连接');
+        }
+    }
+
+    // 添加状态控制变量
+    const isEmitting = ref(false); // 是否正在发射
+    const emissionType = ref(null); // 'deception' 或 'capture' 或 null
+
+    // 计算属性控制按钮状态
+    const isDeceptionDisabled = computed(() => isEmitting.value && emissionType.value !== 'deception');
+    const isCaptureDisabled = computed(() => isEmitting.value && emissionType.value !== 'capture');
 </script>
 
 <style scoped>
@@ -1366,6 +1683,41 @@
         color: #00ffff;
         font-family: monospace;
         font-size: 14px;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .action-btn.primary {
+        flex: 1;
+        background-color: #007acc;
+        color: white;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .action-btn.primary.disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .action-btn.primary.disabled:hover {
+        background-color: #cccccc;
+        transform: none;
+    }
+
+    .action-btn.primary:not(.disabled):hover {
+        background-color: #0090ea;
+        transform: translateY(-2px);
     }
 </style>
 
