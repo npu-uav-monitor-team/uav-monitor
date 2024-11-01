@@ -17,12 +17,12 @@
   </template>
   
   <script setup>
-      import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+      import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
       
       const selectedCamera = ref(1); // 默认选择第一个摄像头
       const isLoading = ref(true); // 添加加载状态
       const cameras = [
-        { id: 1, name: '摄像头 1', src: 'rtsp://localhost/live' }, // 替换为你的RTSP地址
+        { id: 1, name: '摄像头 1', src: 'rtsp://192.168.10.80:8554/easy.live' }, // 替换为你的RTSP地址
         { id: 2, name: '摄像头 2', src: 'rtsp://your-rtsp-address-2' }, // 替换为你的RTSP地址
         { id: 3, name: '摄像头 3', src: 'rtsp://your-rtsp-address-3' }, // 替换为你的RTSP地址
       ];

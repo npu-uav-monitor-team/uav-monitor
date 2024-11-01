@@ -1,0 +1,48 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+###
+POST http://127.0.0.1:8848/UAV/UpdateCommand
+Content-Type: application/json
+
+{
+  "cmdWord": 4097,
+  "commandDto": {
+    "category": 15,
+    "driveAngle": "10",
+    "isInterferenceEmitted": false,
+    "noFly": {
+      "state": false,
+      "position": {
+        "Longitude": 116.397548,
+        "Latitude": 39.907685,
+        "Altitude": 0
+      }
+    },
+    "defense": false,
+    "transmitPower": {
+      "state": 1,
+      "power": 0,
+      "sinr": 10
+    },
+    "capture": {
+      "position": {
+        "Latitude": 39.907685,
+        "Longitude": 116.397548,
+        "Altitude": 0
+      },
+      "captureAmbiguity": 100,
+      "operate": false
+    },
+    "BootstrapPosition": {
+      "timestamp": 0,
+      "targetType": 0
+    },
+    "turntableAngle": {
+      "pitchAngle": 0,
+      "horizontalAngle": 0
+    },
+    "turntableMode": false
+  }
+}

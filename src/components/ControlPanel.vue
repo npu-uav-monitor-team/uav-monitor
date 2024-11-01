@@ -223,6 +223,7 @@
                     </div>
                     <div class="action-buttons">
                         <button @click="sendCommand(4352)" class="action-btn primary">捕获</button>
+                        <button @click="sendCommand(4352)" class="action-btn primary">停止发射</button>
                     </div>
                 </div>
             </div>
@@ -491,7 +492,6 @@
             })
             .catch(error => {
                 console.error('获取飞行器数据失败:', error);
-                
             });
     }
     
@@ -538,28 +538,6 @@
     function adjustFocus(direction) {
         // TODO: 实现调焦功能
         console.log(`调整焦距: ${direction}`);
-    }
-    
-    function adjustBrightness(direction) {
-        // TODO: 实现亮度调节功能
-        console.log(`Adjusting brightness: ${direction}`);
-    }
-    
-    function switchMode(mode) {
-        currentMode.value = mode;
-        // TODO: 实现模式切换功能
-        console.log(`Switched to ${mode} mode`);
-    }
-    
-    function switchPanoramaMode(mode) {
-        currentPanoramaMode.value = mode;
-        // TODO: 实现全景视频监控模式切换功能
-        console.log(`切换全景视频监控模式到: ${mode}`);
-    }
-    
-    function controlAction(buttonNumber) {
-        console.log(`Button ${buttonNumber} clicked`);
-        // TODO: 实现具体的控制功能
     }
     
     // 添加切换函数
@@ -740,16 +718,6 @@
         console.log(`频率: ${frequency.value ? '5Hz' : '12.5Hz'}`);
     }
     
-    function stopEmission() {
-        console.log('停止发射');
-        // TODO: 实现停止发射逻辑
-    }
-    
-    function approachEmission() {
-        console.log('就近发射');
-        // TODO: 实现就近发射逻辑
-    }
-    
     async function sendCommand(cmdWord) {
         let updateCommandRequestDto
         if (cmdWord === 4352) {
@@ -769,9 +737,43 @@
             }
         } else if (cmdWord === 4097) {
             updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    DriveAngle: driveAwayAngle.value
+                cmdWord: 4097,
+                commandDto: {
+                    category: 15,
+                    driveAngle: 10,
+                    isInterferenceEmitted: false,
+                    noFly: {
+                        state: false,
+                        position: {
+                            Longitude: 116.397548,
+                            Latitude: 39.907685,
+                            Altitude: 0
+                        }
+                    },
+                    defense: false,
+                    transmitPower: {
+                        state: 1,
+                        power: 0,
+                        sinr: 10
+                    },
+                    capture: {
+                        position: {
+                            Latitude: 39.907685,
+                            Longitude: 116.397548,
+                            Altitude: 0
+                        },
+                        captureAmbiguity: 100,
+                        operate: false
+                    },
+                    BootstrapPosition: {
+                        timestamp: 0,
+                        targetType: 0
+                    },
+                    turntableAngle: {
+                        pitchAngle: 0,
+                        horizontalAngle: 0
+                    },
+                    turntableMode: false
                 }
             }
         }
@@ -779,6 +781,9 @@
         if (res) {
             return true
         }
+        
+        // 更新数据
+        await clickDeception()
     }
     
     // 保存设置

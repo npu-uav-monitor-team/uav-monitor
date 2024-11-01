@@ -3,10 +3,10 @@
         <video :id="`video-1`" autoplay width="100%" height="98%"></video>
     </div>
 </template>
-
 <script setup>
     import { nextTick, onMounted } from 'vue'
-    
+    // const show = defineModel({ type: Boolean, default: false })
+    // const innerShow = ref(false)
     let webRtcServer = null
     onMounted(async () => {
         const rtspStr = 'rtsp://localhost/live'
@@ -19,7 +19,6 @@
         }
     })
 </script>
-
 <style scoped>
     .ev-player video {
         width: 100%;
