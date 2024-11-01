@@ -3,20 +3,23 @@
         <div class="radar-content">
             <div class="screen-header">
                 <div class="device-selector">
-                    <select v-model="selectedDeviceId" @change="loadDeviceData">
+                    <!-- <select v-model="selectedDeviceId" @change="loadDeviceData">
                         <option v-for="device in radarDevices" :key="device.id" :value="device.id">
                             {{ device.name }}
                         </option>
-                    </select>
+                    </select> -->
                 </div>
                 <div class="screen-controls">
                     <button @click="refresh">刷新</button>
                 </div>
             </div>
             <div class="device-display">
-                <div class="vnc-container" ref="vncContainer" style="width: 100%; height: 100%;"></div>
+                <div class="video-container" id="radar-video-con">
+                    <div v-if="isLoading" class="loading-spinner"></div>
+                    <video v-else id="radar-video" autoplay width="100%" height="100%"></video>
+                </div>
                 <div class="device-label">
-                    雷达设备 {{ selectedDeviceName }}
+                    全景视频 {{ selectedDeviceName }}
                 </div>
             </div>
             <div class="device-controls">
@@ -167,42 +170,88 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref } from 'vue';
-    import RFB from '@novnc/novnc';
+    import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue';
     
     const selectedDeviceId = ref(null);
     const radarDevices = ref([]);
-    const vncContainer = ref(null);
-    let rfb;
-
+    const activeTarget = ref(null);
+    const illegalAircraft = ref([
+        {
+            id: 1,
+            distance: 1.0,
+            angle: 50.0,
+            elevation: 160.0,
+            speed: 300,
+            longitude: 25.4562,
+            latitude: 113.2456,
+            frequency: '2.4G',
+            model: 'Mavic3',
+            source: '无人机',
+            signalStrength: '强',
+            bearing: 52.0
+        },
+        {
+            id: 2,
+            distance: 2.0,
+            angle: 60.0,
+            elevation: 150.0,
+            speed: 250,
+            longitude: 26.1234,
+            latitude: 114.5678,
+            frequency: '5.8G',
+            model: 'Phantom4',
+            source: '无人机',
+            signalStrength: '中',
+            bearing: 60.0
+        },
+        {
+            id: 3,
+            distance: 3.0,
+            angle: 70.0,
+            elevation: 140.0,
+            speed: 200,
+            longitude: 27.9876,
+            latitude: 115.6789,
+            frequency: '1.2G',
+            model: 'Inspire2',
+            source: '无人机',
+            signalStrength: '弱',
+            bearing: 70.0
+        }
+    ]);
+    
     const selectedDeviceName = computed(() => {
         const device = radarDevices.value.find(d => d.id === selectedDeviceId.value);
         return device ? device.name : '';
     });
+    
+    const isLoading = ref(true);
+    let webRtcServer = null;
+
+    // 从环境变量获取雷达视频流 URL
+    const RADAR_VIDEO_URL = import.meta.env.VITE_RADAR_VIDEO_URL;
+
+    const refreshVideo = async () => {
+        isLoading.value = true;
+        await nextTick();
+        const videoElement = document.getElementById('radar-video');
+        webRtcServer = new WebRtcStreamer(videoElement, RADAR_VIDEO_URL);
+        webRtcServer.connect(RADAR_VIDEO_URL, null, `rtptransport=tcp&timeout=60`);
+        webRtcServer.on('connected', () => {
+            isLoading.value = false;
+        });
+    };
 
     onMounted(() => {
-        radarDevices.value = [
-            {id: 1, name: '雷达设备1'},
-            {id: 2, name: '雷达设备2'},
-            {id: 3, name: '雷达设备3'},
-        ];
-        selectedDeviceId.value = radarDevices.value[0].id;
-
-        // 初始化 VNC 连接
-        const url = import.meta.env.VITE_VNC_URL;
-        rfb = new RFB(vncContainer.value, url, {
-            credentials: {
-                password: '123456' // 这里可以根据需要进行修改
-            },
-        });
-        rfb.scaleViewport = true;
-        rfb.resizeSession = true;
-
-        rfb.addEventListener('connect', () => console.log('Connected to VNC server'));
-        rfb.addEventListener('disconnect', () => console.log('Disconnected from VNC server'));
-        rfb.addEventListener('credentialsrequired', () => console.log('Credentials are required'));
+        refreshVideo();
     });
 
+    onUnmounted(() => {
+        if (webRtcServer) {
+            webRtcServer.disconnect();
+        }
+    });
+    
     const loadDeviceData = (deviceId) => {
         console.log('加载设备数据:', deviceId);
     };
@@ -404,10 +453,18 @@
         overflow: hidden;
     }
     
-    .vnc-container {
+    .image-container {
         width: 100%;
         height: 100%;
-        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .device-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
     
     .device-label {
@@ -667,5 +724,37 @@
 
     .close-btn:hover {
         background-color: rgba(0, 255, 255, 0.1);
+    }
+
+    .video-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #00ffff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 </style>
