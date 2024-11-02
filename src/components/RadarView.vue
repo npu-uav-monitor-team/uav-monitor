@@ -238,7 +238,7 @@
     
     const selectedAircraftId = ref();
     
-    const handleRadarGuide = () => {
+    const handleRadarGuide = async () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
@@ -247,7 +247,7 @@
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         console.log(aircraft)
         // 方位角和俯仰角要把文字最后的°去掉 然后转数字
-        const data = useRadarGuide(aircraft.distance,
+        const data = await useRadarGuide(aircraft.distance,
             parseFloat(aircraft.azimuth.slice(0, -1)),
             parseFloat(aircraft.pitch.slice(0, -1)))
         console.log(data)
