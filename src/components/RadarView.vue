@@ -93,11 +93,22 @@
             <button @click="handleRadarGuide">雷达引导</button>
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
-            <button @click="handleInterference">干扰</button>
-            <button @click="handlePointCapture">定点捕获</button>
-            <button @click="handleDriveAway">驱离</button>
-            <button @click="handleNoFly">禁飞</button>
-            <button @click="handleDefense">防御</button>
+            <button @click="handleInterference"
+            :class="{active: deceptionOperateType == 'interference', not_active: deceptionOperateType != 'interference'}"
+            >干扰</button>
+            <button @click="handlePointCapture"
+            :class="{active: deceptionOperateType == 'capture', not_active: deceptionOperateType != 'capture'}"
+            >定点捕获</button>
+            <button @click="handleDriveAway"
+            :class="{active: deceptionOperateType == 'driveAway', not_active: deceptionOperateType != 'driveAway'}"
+            >驱离</button>
+            <button @click="handleNoFly"
+            :class="{active: deceptionOperateType == 'noFly', not_active: deceptionOperateType != 'noFly'}"
+            >禁飞</button>
+            <button @click="handleDefense"
+            :class="{active: deceptionOperateType == 'defense', not_active: deceptionOperateType != 'defense'}"
+            >防御</button>
+            <button @click="stopLaunch" class="active">取消发射</button>
         </div>
         <!-- 设置弹窗 -->
         <div v-if="showSettings" class="settings-modal">
@@ -143,8 +154,11 @@
 <script setup>
     import { nextTick, onMounted, onUnmounted, ref } from 'vue';
     import { useRadarGuide } from "@/api/radar.js";
+    import { sendCommand, stopLaunch_1 } from '@/components/ControlPanel.vue'
     
     const selectedStream = ref('1'); // 默认选择全景视频1
+    const deceptionOperateType = ref('')
+
     let webRtcServer = null;
     // 从环境变量获取视频流 URL
     const PANORAMIC_VIDEO_URL_1 = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
@@ -269,45 +283,77 @@
         console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
     
-    const handleInterference = () => {
+    const handleInterference = async () => {
+        if(deceptionOperateType.value !== 'stopLaunch') {
+            alert('请先取消发射');
+            return;
+        }
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        if(await sendCommand(4098))deceptionOperateType.value = 'interference'
         console.log('执行干扰操作，目标ID:', selectedAircraftId.value);
+        
     };
     
-    const handlePointCapture = () => {
+    const handlePointCapture = async () => {
+        if(deceptionOperateType.value !== 'stopLaunch') {
+            alert('请先取消发射');
+            return;
+        }
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        if(await sendCommand(4352))deceptionOperateType.value = 'capture'
         console.log('执行定点捕获操作，目标ID:', selectedAircraftId.value);
     };
     
-    const handleDriveAway = () => {
+    const handleDriveAway = async () => {
+        if(deceptionOperateType.value !== 'stopLaunch') {
+            alert('请先取消发射');
+            return;
+        }
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        if(await sendCommand(4097))deceptionOperateType.value = 'driveAway'
         console.log('执行驱离操作，目标ID:', selectedAircraftId.value);
     };
     
-    const handleNoFly = () => {
+    const handleNoFly = async () => {
+        if(deceptionOperateType.value !== 'stopLaunch') {
+            alert('请先取消发射');
+            return;
+        }
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        if(await sendCommand(4099))deceptionOperateType.value = 'noFly'
         console.log('执行禁飞操作，目标ID:', selectedAircraftId.value);
     };
     
-    const handleDefense = () => {
+    const handleDefense = async () => {
+        if(deceptionOperateType.value !== 'stopLaunch') {
+            alert('请先取消发射');
+            return;
+        }
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        if(await sendCommand(4100))deceptionOperateType.value = 'defense'
         console.log('执行防御操作，目标ID:', selectedAircraftId.value);
     };
+
+    const stopLaunch = async () => {
+        await stopLaunch_1()
+        deceptionOperateType.value = 'stopLaunch'
+        alert('取消发射成功')
+    }
     
     // 添加模拟数据
     const aircraftData = ref([
@@ -800,4 +846,29 @@
     td:first-child {
         min-width: 60px;
     }
+    .active {
+    background-color: #00a8ff !important;
+    color: #ffffff !important;
+    border: 2px solid #00ffff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5) !important;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+.not_active {
+    background-color: rgba(0, 31, 63, 0.8) !important;
+    color: #00ffff !important;
+    border: 1px solid #00ffff !important;
+    transition: all 0.3s ease;
+}
+
+.active:hover {
+    background-color: #0097e6 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.7) !important;
+}
+
+.not_active:hover {
+    background-color: rgba(0, 41, 83, 0.9) !important;
+    border-color: #00ffff !important;
+}
 </style>

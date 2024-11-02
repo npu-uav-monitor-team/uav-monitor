@@ -421,7 +421,6 @@
     })
     const simulationLevel = ref(100);
     const bootStrapTimerId = ref(null);
-    const launchCaptureFlag = ref(false);
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
@@ -827,93 +826,8 @@
             alert('频率切换失败，请检查网络连接');
         }
     }
-    
-    async function sendCommand(cmdWord) {
-        let updateCommandRequestDto
-        if (cmdWord === 4352) {
-            if(!launchCaptureFlag.value){
-                sendCommand(8192)
-            }
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    Capture: {
-                        Position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
-                        },
-                        CaptureAmbiguity: simulationLevel.value,
-                        Operate: true
-                    }
-                }
-            }
-        } else if (cmdWord === 4097) {
-            updateCommandRequestDto = {
-                cmdWord: 4097,
-                commandDto: {
-                    driveAngle: 10
-                }
-            }
-        } else if(cmdWord === 8192){
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    bootstrapPosition: {
-                        targetType: 0,
-                        Position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
-                        },
-                    }
-                }
-            }
-        } else if(cmdWord === 4100){
-            // 防御
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    defense: true
-                }
-            }
-        } else if(cmdWord === 4098){
-            // 干扰
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    IsInterferenceEmitted: true
-                }
-            }
-        } else if(cmdWord === 4099){
-            // 禁飞
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    nofly: {
-                        state: true,
-                        Position: {
-                            Latitude: 0,
-                            Longitude: 0,
-                            Altitude: 0
-                        },
-                    }
-                }
-            }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag��判断捕获发送前有��有发送8192
-            // 如果发送了别的命令，先硬把flag置false
-            launchCaptureFlag.value = cmdWord == 8192
-            return true
-        }
-        
-        // // 更新数据
-        // await clickDeception()
-    }
 
-    async function stopLaunch() {
+    async function stopLaunch_1() {
         let updateCommandRequestDto = {
             cmdWord: 4096,
                 commandDto: {
@@ -1360,6 +1274,115 @@
             simulationLevel.value = 50;
         }
     };
+</script>
+
+<script>
+    
+    import { deceptionService } from "../service/deceptionService";
+    const launchCaptureFlag = ref(false)
+async function sendCommand(cmdWord) {
+    let updateCommandRequestDto
+    if (cmdWord === 4352) {
+        if(!launchCaptureFlag.value){
+            sendCommand(8192)
+        }
+        // todu: 注意更改position绑定的数据
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                Capture: {
+                    Position: {
+                        Latitude: gpsData.value.latitude,
+                        Longitude: gpsData.value.longitude,
+                        Altitude: gpsData.value.altitude
+                    },
+                    CaptureAmbiguity: simulationLevel.value,
+                    Operate: true
+                }
+            }
+        }
+    } else if (cmdWord === 4097) {
+        updateCommandRequestDto = {
+            cmdWord: 4097,
+            commandDto: {
+                driveAngle: driveAwayAngle.value
+            }
+        }
+    } else if(cmdWord === 8192){
+        // 目标位置引导，在捕获之前需要发送一条这个
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                bootstrapPosition: {
+                    targetType: 0,
+                    Position: {
+                        Latitude: gpsData.value.latitude,
+                        Longitude: gpsData.value.longitude,
+                        Altitude: gpsData.value.altitude
+                    },
+                }
+            }
+        }
+    } else if(cmdWord === 4100){
+        // 防御
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                defense: true
+            }
+        }
+    } else if(cmdWord === 4098){
+        // 干扰
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                IsInterferenceEmitted: true
+            }
+        }
+    } else if(cmdWord === 4099){
+        // 禁飞
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                nofly: {
+                    state: true,
+                    Position: {
+                        Latitude: 0,
+                        Longitude: 0,
+                        Altitude: 0
+                    },
+                }
+            }
+        }
+    }
+    const res = await deceptionService.updateCommand(updateCommandRequestDto)
+    if (res) {
+        // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
+        // 如果发送了别的命令，先硬把flag置false
+        launchCaptureFlag.value = cmdWord == 8192
+        return true
+    }
+    
+    // // 更新数据
+    // await clickDeception()
+}   
+    async function stopLaunch_1() {
+        let updateCommandRequestDto = {
+            cmdWord: 4096,
+                commandDto: {
+                    category: 0
+                }
+        }
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        if (res) {
+            return true
+        }
+        
+        // 更新数据
+        await clickDeception()
+    }
+// 在这里导出需要的函数
+export { sendCommand, stopLaunch_1 }
 </script>
 
 <style scoped>
