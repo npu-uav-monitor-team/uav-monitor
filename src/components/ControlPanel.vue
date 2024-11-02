@@ -169,16 +169,16 @@
                             <th>高度</th>
                         </tr>
                         <tr>
-                            <td>{{ gpsData.longitude }}°</td>
-                            <td>{{ gpsData.latitude }}°</td>
-                            <td>{{ gpsData.altitude || 0 }}m</td>
+                            <td>{{ gpsData.longitude.toFixed(6) }}°</td>
+                            <td>{{ gpsData.latitude.toFixed(6) }}°</td>
+                            <td>{{ gpsData.altitude.toFixed(6) || 0 }}m</td>
                         </tr>
                     </table>
                 </div>
 
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
-                    <input type="range" class="power-slider" v-model="powerValue" min="" :max="maxPower" step="1">
+                    <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
                     <button @click="handlePowerConfirm" class="power-confirm-btn">确定</button>
                 </div>
@@ -392,12 +392,6 @@
     const deviceOnline = ref(true);
     const deviceNormal = ref(true);
     
-    const gpsData = ref({
-        longitude: 0.0000,
-        latitude: 0.0000,
-        altitude: 0.0000
-    })
-    const simulationLevel = ref(100);
     const bootStrapTimerId = ref(null);
     
     // 预留的控制接口
@@ -819,11 +813,6 @@
         const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
         console.log(connectRes)
         if (connectRes.isSuccess) {
-            // 经纬度都截取到小数点后六位
-            gpsData.value.altitude = connectRes.data.data.locatedPosition.altitude.toFixed(5)
-            gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
-            gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
-
             maxPower.value = connectRes.data.data.maxRadPower;
 
             // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
@@ -1023,13 +1012,6 @@
         console.log('设置发射功率:', powerValue.value);
     };
 
-    // 添加验证函数
-    const validateSimulationLevel = () => {
-        if (simulationLevel.value < 50) {
-            simulationLevel.value = 50;
-        }
-    };
-
     async function toggleInfrared() {
         try {
             const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
@@ -1058,6 +1040,19 @@ const capturePositionData = ref({
     latitude: 0.0000,
     altitude: 0.0000
 })
+const gpsData = ref({
+    longitude: 0.0000,
+    latitude: 0.0000,
+    altitude: 0.0000
+})
+const simulationLevel = ref(100);
+
+// 添加验证函数
+const validateSimulationLevel = () => {
+    if (simulationLevel.value < 50) {
+        simulationLevel.value = 50;
+    }
+};
 async function sendCommand(cmdWord) {
     let updateCommandRequestDto
     if (cmdWord === 4352) {
@@ -1144,21 +1139,18 @@ async function sendCommand(cmdWord) {
     // // 更新数据
     // await clickDeception()
 }   
-    async function stopLaunch_1() {
-        let updateCommandRequestDto = {
-            cmdWord: 4096,
-                commandDto: {
-                    category: 0
-                }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            return true
-        }
-        
-        // 更新数据
-        await clickDeception()
+async function stopLaunch_1() {
+    let updateCommandRequestDto = {
+        cmdWord: 4096,
+            commandDto: {
+                category: 0
+            }
     }
+    const res = await deceptionService.updateCommand(updateCommandRequestDto)
+    if (res) {
+        return true
+    }
+}
 // 在这里导出需要的函数
 export { sendCommand, stopLaunch_1 }
 </script>
