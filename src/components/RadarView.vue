@@ -660,22 +660,28 @@
     
     .button-group {
         display: flex;
-        justify-content: space-around;
-        margin-top: 20px;
+        gap: 15px;
+        margin-top: 15px;
+        padding: 10px;
     }
 
     .button-group button {
-        background-color: #003366;
-        color: #00ffff;
-        border: 1px solid #00ffff;
-        border-radius: 5px;
-        padding: 8px 15px;
+        flex: 1;
+        padding: 12px 20px;
+        background-color: rgba(0, 122, 204, 0.8);
+        color: white;
+        border: 2px solid #00ffff;
+        border-radius: 6px;
         cursor: pointer;
         transition: background-color 0.3s;
+        white-space: nowrap;
+        font-size: 16px;
+        font-weight: 500;
     }
 
     .button-group button:hover {
-        background-color: #004080;
+        background-color: rgba(0, 144, 234, 0.8);
+        transform: translateY(-2px);
     }
 
     .close-btn {

@@ -177,9 +177,10 @@
                 </div>
 
                 <div class="power-slider-section">
-                    <label>手动功率设置</label>
-                    <input type="range" v-model="powerLevel" min="-90" max="100" class="power-slider">
-                    <span>{{ powerLevel }}</span>
+                    <span>手动功率设置</span>
+                    <input type="range" class="power-slider" v-model="powerValue" min="0" max="100" step="1">
+                    <span>{{ powerValue }}</span>
+                    <button @click="handlePowerConfirm" class="power-confirm-btn">确定</button>
                 </div>
 
                 <div class="small-tabs-content">
@@ -267,7 +268,13 @@
                                 </div>
                                 <div class="ambiguity-input">
                                     <label>模糊度</label>
-                                    <input type="number" v-model="simulationLevel" placeholder="米">
+                                    <input 
+                                        type="number" 
+                                        v-model="simulationLevel" 
+                                        @blur="validateSimulationLevel"
+                                        placeholder="米"
+                                        min="50"
+                                    >
                                 </div>
                                 <div class="operation-buttons">
                                     <button
@@ -842,7 +849,7 @@
         }
         const res = await deceptionService.updateCommand(updateCommandRequestDto)
         if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag来判断捕获发送前有没有发送8192
+            // 要求捕获命令前发送一条8192命令，通过flag��判断捕获发送前有��有发送8192
             // 如果发送了别的命令，先硬把flag置false
             launchCaptureFlag.value = cmdWord == 8192
             return true
@@ -951,7 +958,7 @@
         }
     }
     
-    // 添加状态更新函数预留接口）
+    // 添加状态更新函数预留口）
     async function updateEmissionStatus() {
         try {
             // TODO: 调用后端 API 获取当前发射状态
@@ -1285,6 +1292,20 @@
         // TODO: 调用后端 API 切换防御状态
         console.log('切换防御状态:', defenseEnabled.value);
     }
+
+    const powerValue = ref(0);
+
+    const handlePowerConfirm = () => {
+        // TODO: 调用后端 API 设置发射功率
+        console.log('设置发射功率:', powerValue.value);
+    };
+
+    // 添加验证函数
+    const validateSimulationLevel = () => {
+        if (simulationLevel.value < 50) {
+            simulationLevel.value = 50;
+        }
+    };
 </script>
 
 <style scoped>
@@ -1737,6 +1758,20 @@
     .power-slider {
         flex: 1;
         background-color: #333;
+    }
+
+    .power-confirm-btn {
+        background-color: #007acc;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .power-confirm-btn:hover {
+        background-color: #0090ea;
     }
 
     .small-tabs-content {
