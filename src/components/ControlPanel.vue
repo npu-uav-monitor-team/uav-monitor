@@ -108,7 +108,7 @@
                             <th>类型</th>
                             <th>距离 (KM)</th>
                             <th>方位角 (°)</th>
-                            <th>俯仰角 (°)</th>
+                            <th>仰角 (°)</th>
                             <th>速度 (km/h)</th>
                         </tr>
                         </thead>
@@ -161,76 +161,133 @@
                 </div>
                 
                 <div class="coordinates-section">
-                    <div class="coordinate-container">
-                        <div class="control-section">
-                            <h4>GPS接收器</h4>
-                            <div class="coordinates-display">
-                                <div class="coordinate-row">
-                                    <div class="coordinate">{{ gpsData.longitude }}°</div>
-                                    <div class="coordinate">{{ gpsData.latitude }}°</div>
-                                </div>
-                                <div class="coordinate-row">
-                                    <div class="coordinate">{{ gpsData.altitude || 0 }}m</div>
+                    <h4>GPS接收器</h4>
+                    <table class="gps-table">
+                        <tr>
+                            <th>经度</th>
+                            <th>纬度</th>
+                            <th>高度</th>
+                        </tr>
+                        <tr>
+                            <td>{{ gpsData.longitude }}°</td>
+                            <td>{{ gpsData.latitude }}°</td>
+                            <td>{{ gpsData.altitude || 0 }}m</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="power-slider-section">
+                    <label>手动功率设置</label>
+                    <input type="range" v-model="powerLevel" min="-90" max="100" class="power-slider">
+                    <span>{{ powerLevel }}</span>
+                </div>
+
+                <div class="small-tabs-content">
+                    <div class="small-tabs">
+                        <div class="small-tabs-container">
+                            <button
+                                @click="activeSmallTab = 'driveAway'"
+                                :class="{ active: activeSmallTab === 'driveAway' }"
+                                class="small-tab"
+                            >
+                                驱离
+                            </button>
+                            <button
+                                @click="activeSmallTab = 'interference'"
+                                :class="{ active: activeSmallTab === 'interference' }"
+                                class="small-tab"
+                            >
+                                干扰
+                            </button>
+                            <button
+                                @click="activeSmallTab = 'noFly'"
+                                :class="{ active: activeSmallTab === 'noFly' }"
+                                class="small-tab"
+                            >
+                                禁飞
+                            </button>
+                            <button
+                                @click="activeSmallTab = 'defense'"
+                                :class="{ active: activeSmallTab === 'defense' }"
+                                class="small-tab"
+                            >
+                                防御
+                            </button>
+                            <button
+                                @click="activeSmallTab = 'capture'"
+                                :class="{ active: activeSmallTab === 'capture' }"
+                                class="small-tab"
+                            >
+                                捕获
+                            </button>
+                        </div>
+                    </div>
+                    <div class="small-tab-content">
+                        <div v-if="activeSmallTab === 'driveAway'" class="centered-content">
+                            <div class="drive-away-content">
+                                <label>角度</label>
+                                <input type="number" v-model="driveAwayAngle" placeholder="度">
+                                <button @click="sendDriveAwayCommand">保存</button>
+                            </div>
+                        </div>
+                        <div v-else-if="activeSmallTab === 'interference'" class="centered-content">
+                            <div class="interference-content">
+                                <div class="switch-container">
+                                    <span>无效</span>
+                                    <label class="switch">
+                                        <input type="checkbox" v-model="interferenceEnabled">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>使能</span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="control-section drive-away-section">
-                            <h4>驱离角度 (°)</h4>
-                            <div class="angle-input-container">
-                                <input
-                                    type="number"
-                                    v-model="driveAwayAngle"
-                                    min="0"
-                                    max="360"
-                                    class="angle-input"
-                                >
-                                <button @click="sendCommand(4097)" class="drive-away-btn">驱离</button>
+                        <div v-else-if="activeSmallTab === 'noFly'" class="centered-content">
+                            <button @click="sendNoFlyCommand">发送</button>
+                        </div>
+                        <div v-else-if="activeSmallTab === 'defense'" class="centered-content">
+                            <div class="defense-content">
+                                <div class="switch-container">
+                                    <span>无效</span>
+                                    <label class="switch">
+                                        <input type="checkbox" v-model="defenseEnabled">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>使能</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="control-section">
-                    <h4>模糊度</h4>
-                    <input
-                        type="range"
-                        v-model="simulationLevel"
-                        min="0"
-                        max="100"
-                        class="simulation-slider"
-                    >
-                    <span class="slider-value">{{ simulationLevel }}</span>
-                </div>
-                
-                <div class="control-section">
-                    <div class="status-display">
-                        <div class="status-item emission-status">
-                            <span class="status-label">当前发射状态：</span>
-                            <span class="status-value" :class="{ 'active': emissionStatus === '就近' }">
-                                {{ emissionStatus }}
-                            </span>
+                        <div v-else-if="activeSmallTab === 'capture'">
+                            <div class="capture-content">
+                                <div class="coordinate-inputs">
+                                    <label>经纬度</label>
+                                    <input type="text" v-model="gpsData.latitude" placeholder="纬度">
+                                    <input type="text" v-model="gpsData.longitude" placeholder="经度">
+                                    <button class="icon-button"><i class="icon-target"></i></button>
+                                </div>
+                                <div class="ambiguity-input">
+                                    <label>模糊度</label>
+                                    <input type="number" v-model="simulationLevel" placeholder="米">
+                                </div>
+                                <div class="operation-buttons">
+                                    <button
+                                        @click="emissionStatus = '停止'"
+                                        :class="{ active: emissionStatus === '停止' }"
+                                        class="operation-button"
+                                    >
+                                        停止发射
+                                    </button>
+                                    <button
+                                        @click="emissionStatus = '就近'"
+                                        :class="{ active: emissionStatus === '就近' }"
+                                        class="operation-button"
+                                    >
+                                        就近发射
+                                    </button>
+                                </div>
+                                <button class="send-button">保存</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="action-buttons">
-                        <button 
-                            @click="handleDeception" 
-                            class="action-btn primary"
-                            :disabled="isDeceptionDisabled"
-                            :class="{ disabled: isDeceptionDisabled }"
-                        >诱骗</button>
-                        <button 
-                            @click="handleCapture" 
-                            class="action-btn primary"
-                            :disabled="isCaptureDisabled"
-                            :class="{ disabled: isCaptureDisabled }"
-                        >捕获</button>
-                        <button 
-                            @click="handleStopEmission" 
-                            class="action-btn primary"
-                            :disabled="!isEmitting"
-                            :class="{ disabled: !isEmitting }"
-                        >停止发射</button>
                     </div>
                 </div>
             </div>
@@ -257,7 +314,7 @@
                         <span>{{ settings.contrast }}</span>
                     </div>
                     <div class="setting-item">
-                        <label>亮度</label>
+                        <label>度</label>
                         <input type="range" v-model="settings.brightness" min="0" max="100" step="1">
                         <span>{{ settings.brightness }}</span>
                     </div>
@@ -295,6 +352,13 @@
     import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
+    const activeSmallTab = ref('driveAway');
+    const powerLevel = ref(0);
+    const driveAwayAngle = ref(0);
+    const interferenceEnabled = ref(false);
+    const defenseEnabled = ref(false);
+    const emissionStatus = ref('停止');
+    
     const activeBands = ref([]);
     const defenseDelay = ref(60);
     const defenseDuration = ref(1);
@@ -349,7 +413,6 @@
         altitude: 0.0000
     })
     const simulationLevel = ref(100);
-    const driveAwayAngle = ref(10);
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
@@ -449,7 +512,7 @@
             updateOptoelectronicDeviceStatus();
         }, 100000000); // 每秒更新一次
         
-        // 这里应该是从实际数据源获取目标信息
+        // 这里该是从实际数据源获取目标信息
         currentTarget.value = {
             id: 'UAV-001',
             type: '无人机',
@@ -555,7 +618,7 @@
             });
     }
     
-    // 添加切换函数
+    // 添加切函数
     function toggleServo() {
         // 检查是否有可用的设备ID
         if (!currentPhotoelectricId.value) {
@@ -603,7 +666,7 @@
             }
         } catch (error) {
             console.error('通道切换请求失败:', error);
-            alert('通道切换失败，请检查网络连接');
+            alert('通道切换失败，检查网络连接');
         }
     }
     
@@ -669,7 +732,7 @@
                 trackingMode.value = !trackingMode.value;
                 alert(trackingMode.value ? '切换到自动模式成功' : '切换到人工模式成功');
             } else {
-                alert(response.data.msg || '跟踪模式切换失败');
+                alert(response.data.msg || '跟踪模式切换败');
             }
         } catch (error) {
             console.error('跟踪模式切换请求失败:', error);
@@ -821,7 +884,7 @@
     // 添加雷达数据获取方法
     async function updateRadarData() {
         try {
-            // TODO: 调用后端API获取雷达数据
+            // TODO: 调用后端API获取雷达数
             // const response = await api.getRadarData();
             // radarData.value = {
             //     longitude: response.longitude,
@@ -869,7 +932,7 @@
                 if (photoelectricDevices.value.length > 0) {
                     currentPhotoelectricId.value = photoelectricDevices.value[0].id;
                 }
-                console.log('光电设备初始化成功:', photoelectricDevices.value);
+                console.log('电设备初始化成功:', photoelectricDevices.value);
             } else {
                 console.error('获取光电设备数据失败:', response.data.msg);
             }
@@ -878,7 +941,7 @@
         }
     }
     
-    // 添加状态更新函数（预留接口）
+    // 添加状态更新函数预留接口）
     async function updateEmissionStatus() {
         try {
             // TODO: 调用后端 API 获取当前发射状态
@@ -892,9 +955,6 @@
     }
     
     // 在 script setup 部分添加新的响应式变量
-    const emissionStatus = ref('停止'); // 可能的值：'停止' 或 '就近'
-    
-    // 添加新的状态变量
     const laserEmissionStatus = ref(false);
     
     // 添加捕获处理函数
@@ -975,7 +1035,7 @@
         }
     }
     
-    // 添加移动控制相关的状态
+    // 添加移动控制关的状态
     const isMoving = ref(false);
     const moveDirection = ref(null);
     const moveInterval = ref(null);
@@ -1024,7 +1084,7 @@
         moveDirection.value = direction;
         
         // 显示移动提示弹窗
-        moveAlert.value = alert(`正在向${getDirectionText(direction)}移动`);
+        moveAlert.value = alert(`正向${getDirectionText(direction)}移动`);
         
         // 启动持续移动
         moveInterval.value = setInterval(() => {
@@ -1195,6 +1255,26 @@
     // 计算属性控制按钮状态
     const isDeceptionDisabled = computed(() => isEmitting.value && emissionType.value !== 'deception');
     const isCaptureDisabled = computed(() => isEmitting.value && emissionType.value !== 'capture');
+
+    function sendDriveAwayCommand() {
+        // TODO: 调用后端 API 发送驱离命令
+        console.log('发送驱离命令:', driveAwayAngle.value);
+    }
+
+    function toggleInterference() {
+        // TODO: 调用后端 API 切换干扰状态
+        console.log('切换干扰状态:', interferenceEnabled.value);
+    }
+
+    function sendNoFlyCommand() {
+        // TODO: 调用后端 API 发送禁飞命令
+        console.log('发送禁飞命令');
+    }
+
+    function toggleDefense() {
+        // TODO: 调用后端 API 切换防御状态
+        console.log('切换防御状态:', defenseEnabled.value);
+    }
 </script>
 
 <style scoped>
@@ -1621,103 +1701,219 @@
     }
     
     .coordinates-section {
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
-    
-    .coordinate-container {
-        display: flex;
-        gap: 20px;
-        justify-content: space-between;
+
+    .gps-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
     }
-    
-    .coordinate-container .control-section {
-        flex: 1;
-    }
-    
-    .drive-away-section {
-        margin-top: 0 !important;
-        border-top: none !important;
-        padding-top: 0 !important;
-    }
-    
-    .angle-input-container {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-    
-    .angle-input {
-        flex: 1;
-        background: rgba(0, 0, 0, 0.3);
+
+    .gps-table th, .gps-table td {
         border: 1px solid #00ffff;
-        border-radius: 4px;
-        color: #ffffff;
         padding: 5px;
-    }
-    
-    .drive-away-btn {
-        padding: 5px 15px;
-        background: #005a8c;
-        color: #ffffff;
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    .drive-away-btn:hover {
-        background: #007acc;
-    }
-    
-    .coordinates-display {
-        display: flex;
-        gap: 10px;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 8px;
-        border-radius: 4px;
-    }
-    
-    .coordinate {
-        flex: 1;
         text-align: center;
         color: #00ffff;
-        font-family: monospace;
+    }
+
+    .power-slider-section {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .power-slider {
+        flex: 1;
+        background-color: #333;
+    }
+
+    .small-tabs-content {
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .small-tabs {
+        margin-bottom: 10px;
+    }
+
+    .small-tabs-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+    .small-tab {
+        flex: 1;
+        background-color: transparent;
+        color: #ffffff;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
         font-size: 14px;
     }
 
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-top: 20px;
+    .small-tab.active {
+        background-color: rgba(0, 255, 255, 0.3);
+        color: #00ffff;
     }
 
-    .action-btn.primary {
+    .small-tab-content {
         flex: 1;
+        background-color: rgba(0, 31, 63, 0.8);
+        border-radius: 5px;
+        padding: 10px;
+        color: #ffffff;
+    }
+
+    .drive-away-content, .interference-content, .defense-content, .capture-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .coordinate-inputs {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .coordinate-inputs input {
+        flex: 1;
+        padding: 5px;
+        border: 1px solid #00ffff;
+        border-radius: 3px;
+        background-color: #333;
+        color: #ffffff;
+    }
+
+    .icon-button {
         background-color: #007acc;
-        color: white;
-        padding: 12px 20px;
-        font-size: 16px;
+        border: none;
+        border-radius: 3px;
+        padding: 5px;
+        cursor: pointer;
+        color: #ffffff;
+    }
+
+    .ambiguity-input {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .ambiguity-input input {
+        width: 100px;
+        padding: 5px;
+        border: 1px solid #00ffff;
+        border-radius: 3px;
+        background-color: #333;
+        color: #ffffff;
+    }
+
+    .operation-buttons {
+        display: flex;
+        gap: 5px;
+    }
+
+    .operation-button {
+        flex: 1;
+        background-color: #003856;
+        color: #ffffff;
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        padding: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .operation-button.active {
+        background-color: #007acc;
+    }
+
+    .operation-button:hover {
+        background-color: #007acc;
+    }
+
+    .send-button {
+        background-color: #007acc;
+        color: #ffffff;
         border: none;
         border-radius: 5px;
+        padding: 10px;
         cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
+        transition: background-color 0.3s;
     }
 
-    .action-btn.primary.disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .action-btn.primary.disabled:hover {
-        background-color: #cccccc;
-        transform: none;
-    }
-
-    .action-btn.primary:not(.disabled):hover {
+    .send-button:hover {
         background-color: #0090ea;
-        transform: translateY(-2px);
+    }
+
+    .switch-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 34px;
+        height: 20px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 20px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #00ffff;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(14px);
+    }
+
+    .centered-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 18px;
     }
 </style>
 

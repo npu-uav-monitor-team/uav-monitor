@@ -187,7 +187,7 @@
     const mapOptions = ref({
         zoomControl: false,
         minZoom: 0,  // 限制最小缩放级别
-        maxZoom: 17,  // 限制最大缩放级别
+        maxZoom: 19,  // 限制最大缩放级别
         preferCanvas: true,
         attributionControl: false,
     })
@@ -380,8 +380,8 @@
         tileSize: 256,
         crossOrigin: true,
         detectRetina: true,
-        maxNativeZoom: 15,
-        maxZoom: 17,
+        maxNativeZoom: 17,
+        maxZoom: 19,
         minZoom: 0,
         bounds: [
             [22.67, 114.32],  // 南西角
