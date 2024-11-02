@@ -33,12 +33,10 @@ export const getElectronicUavList = async () => {
 // 雷达引导
 export const useRadarGuide = async (targetDistance, targetAzimuth, targetElevation) => {
     try {
-        const {data} = await axios.get('/api/v0/photoelectrics/radarAndElectric', {
-            params: {
-                targetDistance: targetDistance,
-                targetAzimuth: targetAzimuth,
-                targetElevation: targetElevation
-            }
+        const {data} = await axios.post('/api/v0/photoelectrics/radarAndElectric', {
+            targetDistance: targetDistance,
+            targetAzimuth: targetAzimuth,
+            targetElevation: targetElevation
         })
         if (data.code !== null && data.code === 0 && data.data !== null) {
             return data.data
