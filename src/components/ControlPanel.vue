@@ -226,7 +226,7 @@
                             :class="{ disabled: isCaptureDisabled }"
                         >捕获</button>
                         <button 
-                            @click="handleStopEmission" 
+                            @click="stopLaunch" 
                             class="action-btn primary"
                             :disabled="!isEmitting"
                             :class="{ disabled: !isEmitting }"
