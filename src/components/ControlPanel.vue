@@ -334,7 +334,7 @@
 
 <script setup>
     import { onMounted, onUnmounted, ref, computed } from "vue";
-    import axios from "axios";
+    import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
