@@ -413,6 +413,8 @@
         altitude: 0.0000
     })
     const simulationLevel = ref(100);
+    const bootStrapTimerId = ref(null);
+    const launchCaptureFlag = ref(false);
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
@@ -799,6 +801,9 @@
     async function sendCommand(cmdWord) {
         let updateCommandRequestDto
         if (cmdWord === 4352) {
+            if(!launchCaptureFlag.value){
+                sendCommand(8192)
+            }
              updateCommandRequestDto = {
                 CmdWord: cmdWord,
                 CommandDto: {
@@ -817,43 +822,42 @@
             updateCommandRequestDto = {
                 cmdWord: 4097,
                 commandDto: {
-                    category: 15,
-                    driveAngle: 10,
-                    isInterferenceEmitted: false,
-                    noFly: {
-                        state: false,
-                        position: {
-                            Longitude: 116.397548,
-                            Latitude: 39.907685,
-                            Altitude: 0
-                        }
-                    },
-                    defense: false,
-                    transmitPower: {
-                        state: 1,
-                        power: 0,
-                        sinr: 10
-                    },
-                    capture: {
-                        position: {
-                            Latitude: 39.907685,
-                            Longitude: 116.397548,
-                            Altitude: 0
-                        },
-                        captureAmbiguity: 100,
-                        operate: false
-                    },
-                    BootstrapPosition: {
-                        timestamp: 0,
-                        targetType: 0
-                    },
-                    turntableAngle: {
-                        pitchAngle: 0,
-                        horizontalAngle: 0
-                    },
-                    turntableMode: false
+                    driveAngle: 10
                 }
             }
+        } else if(cmdWord == 8192){
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    bootstrapPosition: {
+                        targetType: 0,
+                        Position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
+                        },
+                    }
+                }
+            }
+        }
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        if (res) {
+            // 要求捕获命令前发送一条8192命令，通过flag来判断捕获发送前有没有发送8192
+            // 如果发送了别的命令，先硬把flag置false
+            launchCaptureFlag.value = cmdWord == 8192
+            return true
+        }
+        
+        // 更新数据
+        await clickDeception()
+    }
+
+    async function stopLaunch() {
+        let updateCommandRequestDto = {
+            cmdWord: 4096,
+                commandDto: {
+                    category: 0
+                }
         }
         const res = await deceptionService.updateCommand(updateCommandRequestDto)
         if (res) {
@@ -915,6 +919,12 @@
             gpsData.value.altitude = connectRes.data.data.locatedPosition.altitude.toFixed(5)
             gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
             gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
+
+            // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
+            if(bootStrapTimerId.value)clearInterval(bootStrapTimerId.value);
+            bootStrapTimerId.value = setInterval(() => {
+                if(activeTab.value === 'deception')sendCommand(8192)
+            }, 30000);
         }
     }
     

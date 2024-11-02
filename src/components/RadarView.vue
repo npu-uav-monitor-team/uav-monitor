@@ -123,7 +123,10 @@
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
             <button @click="handleInterference">干扰</button>
-            <button @click="handleDeception">诱骗</button>
+            <button @click="handlePointCapture">定点捕获</button>
+            <button @click="handleDriveAway">驱离</button>
+            <button @click="handleNoFly">禁飞</button>
+            <button @click="handleDefense">防御</button>
         </div>
         <!-- 设置弹窗 -->
         <div v-if="showSettings" class="settings-modal">
@@ -333,8 +336,20 @@
         console.log('执行干扰操作');
     };
 
-    const handleDeception = () => {
-        console.log('执行诱骗操作');
+    const handlePointCapture = () => {
+        console.log('执行定点捕获操作');
+    };
+
+    const handleDriveAway = () => {
+        console.log('执行驱离操作');
+    };
+
+    const handleNoFly = () => {
+        console.log('执行禁飞操作');
+    };
+
+    const handleDefense = () => {
+        console.log('执行防御操作');
     };
 </script>
 
@@ -722,5 +737,28 @@
         padding: 0 10px;
         flex-grow: 1;
         text-align: center;
+    }
+
+    .control-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .control-buttons button {
+        flex: 1;
+        padding: 8px 15px;
+        background-color: rgba(0, 122, 204, 0.8);
+        color: white;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    .control-buttons button:hover {
+        background-color: rgba(0, 144, 234, 0.8);
     }
 </style>
