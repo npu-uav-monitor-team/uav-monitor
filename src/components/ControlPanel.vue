@@ -799,10 +799,33 @@
         }
     }
     
-    function toggleFrequency() {
-        frequency.value = !frequency.value;
-        // TODO: 调用后端 API
-        console.log(`频率: ${frequency.value ? '5Hz' : '12.5Hz'}`);
+    async function toggleFrequency() {
+        if (!currentPhotoelectricId.value) {
+            alert('未找到可用的光电设备');
+            return;
+        }
+
+        try {
+            const frequencyType = frequency.value ? 2 : 3; // 5Hz对应2，12.5Hz对应3
+            
+            const response = await axios.put(`/api/v0/photoelectrics/laserenergy`, {
+                type: frequencyType
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data.code === 0) {
+                frequency.value = !frequency.value;
+                alert(`切换到${frequency.value ? '5Hz' : '12.5Hz'}成功`);
+            } else {
+                alert(response.data.msg || '频率切换失败');
+            }
+        } catch (error) {
+            console.error('频率切换请求失败:', error);
+            alert('频率切换失败，请检查网络连接');
+        }
     }
     
     async function sendCommand(cmdWord) {
@@ -849,7 +872,7 @@
         }
         const res = await deceptionService.updateCommand(updateCommandRequestDto)
         if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag��判断捕获发送前有��有发送8192
+            // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有没发送8192
             // 如果发送了别的命令，先硬把flag置false
             launchCaptureFlag.value = cmdWord == 8192
             return true
