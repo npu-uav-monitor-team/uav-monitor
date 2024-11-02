@@ -862,7 +862,7 @@
             gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
             gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
 
-            // 每3秒发送一次这个指令，捕获指���发送前需要这个发送这个指令
+            // 每3秒发送一次这个指令，捕获发送前需要这个发送这个指令
             if(bootStrapTimerId.value)clearInterval(bootStrapTimerId.value);
             bootStrapTimerId.value = setInterval(() => {
                 if(activeTab.value === 'deception')sendCommand(8192)
@@ -1229,6 +1229,23 @@
             simulationLevel.value = 50;
         }
     };
+
+    async function toggleInfrared() {
+        try {
+            const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
+            
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                infraredStatus.value = !infraredStatus.value;
+                alert(infraredStatus.value ? '红外开机成功' : '红外关机成功');
+            } else {
+                alert(response.data.msg || '红外开关操作失败');
+            }
+        } catch (error) {
+            console.error('红外开关请求失败:', error);
+            alert('红外开关操作失败，请检查网络连接');
+        }
+    }
 </script>
 
 <script>
@@ -1286,7 +1303,7 @@ async function sendCommand(cmdWord) {
                 defense: true
             }
         }
-    } else if(cmdWord === 4098){
+    } else if(cmdWord === 4098){    
         // 干扰
         updateCommandRequestDto = {
             CmdWord: cmdWord,
