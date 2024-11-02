@@ -2,8 +2,7 @@
     <div class="full-screen-view">
       <h2>光电设备视频</h2>
       <div class="video-container" id="player-con">
-        <div v-if="isLoading" class="loading-spinner"></div>
-        <video v-else :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
+        <video :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
       </div>
       <div class="controls">
         <select v-model="selectedCamera" @change="changeCamera">
@@ -20,17 +19,18 @@
       import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
       
       const selectedCamera = ref(1); // 默认选择第一个摄像头
-      const isLoading = ref(true); // 添加加载状态
+      const photoElectronicRtspUrl = import.meta.env.VITE_PHOTOELECTRONIC_VIDEO_URL
+      
       const cameras = [
-        { id: 1, name: '摄像头 1', src: 'rtsp://192.168.10.80:8554/easy.live' }, // 替换为你的RTSP地址
-        { id: 2, name: '摄像头 2', src: 'rtsp://your-rtsp-address-2' }, // 替换为你的RTSP地址
-        { id: 3, name: '摄像头 3', src: 'rtsp://your-rtsp-address-3' }, // 替换为你的RTSP地址
+        { id: 1, name: '摄像头 1', src: photoElectronicRtspUrl }, // 替换为你的RTSP地址
+        { id: 2, name: '摄像头 2', src: photoElectronicRtspUrl }, // 替换为你的RTSP地址
+        { id: 3, name: '摄像头 3', src: photoElectronicRtspUrl }, // 替换为你的RTSP地址
       ];
       
       let webRtcServer = null;
       
       // 从环境变量获取 WebRTC URL
-      const WEBRTC_URL = import.meta.env.VITE_WEBRTC_URL;
+      const WEBRTC_URL = import.meta.env.VITE_PHOTOELECTRONIC_WEBRTC_URL;
       
       const changeCamera = () => {
         if (webRtcServer) {
@@ -41,16 +41,13 @@
       };
       
       const refreshVideo = async () => {
-        isLoading.value = true; // 开始加载
         const rtspStr = cameras.find(camera => camera.id === selectedCamera.value).src;
         if (rtspStr) {
           await nextTick(); // 确保DOM加载完毕
           const videoElement = document.getElementById(`video-${selectedCamera.value}`);
+            // eslint-disable-next-line no-undef
           webRtcServer = new WebRtcStreamer(videoElement, WEBRTC_URL);
           webRtcServer.connect(rtspStr, null, `rtptransport=tcp&timeout=60`);
-          webRtcServer.on('connected', () => {
-            isLoading.value = false; // 加载完成
-          });
         }
       };
       

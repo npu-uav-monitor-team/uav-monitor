@@ -15,8 +15,7 @@
             </div>
             <div class="device-display">
                 <div class="video-container" id="radar-video-con">
-                    <div v-if="isLoading" class="loading-spinner"></div>
-                    <video v-else id="radar-video" autoplay width="100%" height="100%"></video>
+                    <video id="radar-video" autoplay width="100%" height="100%"></video>
                 </div>
             </div>
             <div class="device-controls">
@@ -24,7 +23,7 @@
                     <!-- 雷制 -->
                     
                     <!-- 详细设置按钮 -->
-                   
+                
                 </div>
             </div>
         </div>
@@ -61,9 +60,9 @@
                     <tbody>
                     <tr v-for="aircraft in aircraftData" :key="aircraft.id">
                         <td>
-                            <input 
-                                type="radio" 
-                                :value="aircraft.id" 
+                            <input
+                                type="radio"
+                                :value="aircraft.id"
                                 v-model="selectedAircraftId"
                                 name="aircraft-selection"
                             >
@@ -142,101 +141,50 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue';
-    
+    import { nextTick, onMounted, onUnmounted, ref } from 'vue';
     const selectedStream = ref('1'); // 默认选择全景视频1
-    const isLoading = ref(true);
     let webRtcServer = null;
-
     // 从环境变量获取视频流 URL
-    const RADAR_VIDEO_URL_1 = import.meta.env.VITE_RADAR_VIDEO_URL_1;
-    const RADAR_VIDEO_URL_2 = import.meta.env.VITE_RADAR_VIDEO_URL_2;
-
+    const PANORAMIC_VIDEO_URL_1 = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
+    const PANORAMIC_VIDEO_URL_2 = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
+    
     const getVideoUrl = () => {
-        return selectedStream.value === '1' ? RADAR_VIDEO_URL_1 : RADAR_VIDEO_URL_2;
+        return selectedStream.value === '1' ? PANORAMIC_VIDEO_URL_1 : PANORAMIC_VIDEO_URL_2;
     };
-
+    
     const refreshVideo = async () => {
-        isLoading.value = true;
         await nextTick();
         const videoElement = document.getElementById('radar-video');
         const videoUrl = getVideoUrl();
         if (webRtcServer) {
             webRtcServer.disconnect();
         }
-        webRtcServer = new WebRtcStreamer(videoElement, videoUrl);
+        const panoramicRtcBackendUrl = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
+        // eslint-disable-next-line no-undef
+        webRtcServer = new WebRtcStreamer(videoElement, panoramicRtcBackendUrl);
         webRtcServer.connect(videoUrl, null, `rtptransport=tcp&timeout=60`);
-        webRtcServer.on('connected', () => {
-            isLoading.value = false;
-        });
     };
-
+    
     const changeStream = () => {
         refreshVideo();
     };
-
+    
     onMounted(() => {
         refreshVideo();
     });
-
+    
     onUnmounted(() => {
         if (webRtcServer) {
             webRtcServer.disconnect();
         }
     });
     
-    const loadDeviceData = (deviceId) => {
-        console.log('加载设备数据:', deviceId);
-    };
-    
     const refresh = () => {
         console.log('刷新数据');
     };
     
-    const highlightAircraft = (id) => {
-        activeTarget.value = illegalAircraft.value.find(aircraft => aircraft.id === id);
-    };
-    
-    const unhighlightAircraft = () => {
-        activeTarget.value = null;
-    };
-    
     const showSettings = ref(false);
-    const scanRange = ref(50);
-    const scanMode = ref('normal');
     
-    const openSettings = () => {
-        showSettings.value = true;
-    };
-    
-    const handleStandby = () => {
-        console.log('执行待机操作');
-    };
-
-    const handleSearch = () => {
-        console.log('执行搜索操作');
-    };
-
-    const handleTrack = () => {
-        console.log('执行跟踪操作');
-    };
-
-    const handleTest = () => {
-        console.log('执行调试操作');
-    };
-
-    const handlePowerAll = () => {
-        console.log('执行一体机上电操作');
-    };
-
-    const handlePowerFront = () => {
-        console.log('执行前端上电操作');
-    };
-
-    const handlePowerSystem = () => {
-        console.log('执行系统上电操作');
-    };
-
     const settings = ref({
         silentZone: {
             enabled: true,
@@ -265,33 +213,29 @@
             angle: 0
         }
     });
-
+    
     const incrementStartAngle = () => {
         settings.value.silentZone.startAngle = Math.min(360, settings.value.silentZone.startAngle + 1);
     };
-
+    
     const decrementStartAngle = () => {
         settings.value.silentZone.startAngle = Math.max(0, settings.value.silentZone.startAngle - 1);
     };
-
+    
     const incrementEndAngle = () => {
         settings.value.silentZone.endAngle = Math.min(360, settings.value.silentZone.endAngle + 1);
     };
-
+    
     const decrementEndAngle = () => {
         settings.value.silentZone.endAngle = Math.max(0, settings.value.silentZone.endAngle - 1);
     };
-
+    
     const closeSettings = () => {
         showSettings.value = false;
     };
-
+    
     const selectedAircraftId = ref(null);
-
-    const handleButtonClick = () => {
-        console.log('选中的飞行物ID:', selectedAircraftId.value);
-    };
-
+    
     const handleRadarGuide = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -299,7 +243,7 @@
         }
         console.log('执行雷达引导操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleElectronicGuide = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -307,7 +251,7 @@
         }
         console.log('执行电侦引导操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleFusionGuide = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -315,7 +259,7 @@
         }
         console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleInterference = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -323,7 +267,7 @@
         }
         console.log('执行干扰操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handlePointCapture = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -331,7 +275,7 @@
         }
         console.log('执行定点捕获操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleDriveAway = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -339,7 +283,7 @@
         }
         console.log('执行驱离操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleNoFly = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -347,7 +291,7 @@
         }
         console.log('执行禁飞操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const handleDefense = () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
@@ -355,7 +299,7 @@
         }
         console.log('执行防御操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     // 添加模拟数据
     const aircraftData = ref([
         {
@@ -726,7 +670,7 @@
         margin-top: 15px;
         padding: 10px;
     }
-
+    
     .button-group button {
         flex: 1;
         padding: 12px 20px;
@@ -740,12 +684,12 @@
         font-size: 16px;
         font-weight: 500;
     }
-
+    
     .button-group button:hover {
         background-color: rgba(0, 144, 234, 0.8);
         transform: translateY(-2px);
     }
-
+    
     .close-btn {
         position: absolute;
         right: 10px;
@@ -762,11 +706,11 @@
         justify-content: center;
         border-radius: 4px;
     }
-
+    
     .close-btn:hover {
         background-color: rgba(0, 255, 255, 0.1);
     }
-
+    
     .video-container {
         flex: 1;
         display: flex;
@@ -775,7 +719,7 @@
         overflow: hidden;
         position: relative;
     }
-
+    
     .loading-spinner {
         display: flex;
         justify-content: center;
@@ -787,18 +731,22 @@
         height: 40px;
         animation: spin 1s linear infinite;
     }
-
+    
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
-
+    
     video {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-
+    
     h2 {
         color: #00ffff;
         margin: 0;
@@ -806,13 +754,13 @@
         flex-grow: 1;
         text-align: center;
     }
-
+    
     .control-buttons {
         display: flex;
         gap: 10px;
         margin-top: 10px;
     }
-
+    
     .control-buttons button {
         flex: 1;
         padding: 8px 15px;
@@ -825,20 +773,20 @@
         white-space: nowrap;
         font-size: 14px;
     }
-
+    
     .control-buttons button:hover {
         background-color: rgba(0, 144, 234, 0.8);
     }
-
+    
     tbody tr:hover {
         background-color: rgba(0, 255, 255, 0.1);
     }
-
+    
     input[type="radio"] {
         cursor: pointer;
         margin-right: 5px;
     }
-
+    
     /* 让第一列稍微宽一点，以适应单选框 */
     td:first-child {
         min-width: 60px;
