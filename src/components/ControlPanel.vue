@@ -511,7 +511,7 @@
         const statusInterval = setInterval(() => {
             updateWirelessDeviceStatus();
             updateOptoelectronicDeviceStatus();
-        }, 5000); // 每秒更新一次
+        }, 50); // 每秒更新一次
         
         // 这里该是从实际数据源获取目标信息
         currentTarget.value = {
