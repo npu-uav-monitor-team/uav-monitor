@@ -1,6 +1,6 @@
 export class deceptionService {
   static async updateCommand(updateCommandRequestDto) {
-    return fetch('/UAV/UpdateCommand', {
+    return fetch('http://localhost:8848/UAV/UpdateCommand', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ export class deceptionService {
   }
 
   static async updateConnectSetting(udpSettingsDto){
-    return fetch('/UAV/updateConnectSetting', {
+    return fetch('http://localhost:8848/UAV/updateConnectSetting', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
