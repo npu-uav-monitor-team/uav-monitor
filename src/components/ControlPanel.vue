@@ -471,15 +471,10 @@
     
     async function updateOptoelectronicDeviceStatus() {
         // 检查是否有设备ID
-        if (!currentPhotoelectricId.value) {
-            console.warn('未找到光电设备ID');
-            optoelectronicDeviceOnline.value = false;
-            optoelectronicDeviceNormal.value = false;
-            return;
-        }
+      
         
         try {
-            const response = await axios.get(`/api/v0/photoelectrics/${currentPhotoelectricId.value}`);
+            const response = await axios.get(`/api/v0/photoelectrics}`);
             if (response.data.code === 0 && response.data.result?.photoelectrics?.[0]) {
                 const device = response.data.result.photoelectrics[0];
                 
@@ -513,7 +508,6 @@
     onMounted(() => {
         updateWirelessDeviceStatus();
         updateOptoelectronicDeviceStatus();
-        initPhotoelectrics();
         
         // 添加定时器，定期新状态
         const statusInterval = setInterval(() => {
@@ -607,7 +601,7 @@
     
     // 执行防御
     function defend() {
-        // TODO: 调用后端 API 执行防御
+        // TODO: 调用后端 API 执行防
         window.location.href = 'http://192.168.10.188:8081/#/Index'
     }
     
@@ -630,14 +624,11 @@
     // 添加切函数
     function toggleServo() {
         // 检查是否有可用的设备ID
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+
         
         const apiEndpoint = servoStatus.value ?
-            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweroff` :
-            `/api/v0/photoelectrics/servo/${currentPhotoelectricId.value}/poweron`;
+            `/api/v0/photoelectrics/servo/poweroff` :
+            `/api/v0/photoelectrics/servo/poweron`;
         
         axios.post(apiEndpoint)
             .then(response => {
@@ -656,14 +647,10 @@
     
     // 修改通道切换函数
     async function toggleChannel() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
         
         const apiEndpoint = channelType.value ?
-            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/tv` :
-            `/api/v0/photoelectrics/channel/${currentPhotoelectricId.value}/ir`;
+            `/api/v0/photoelectrics/channel/tv` :
+            `/api/v0/photoelectrics/channel/ir`;
         
         try {
             const response = await axios.post(apiEndpoint);
@@ -681,13 +668,10 @@
     
     // 修改归零函数
     async function resetOptoelectronic() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+
         
         try {
-            const response = await axios.post(`/api/v0/photoelectrics/zero/${currentPhotoelectricId.value}`);
+            const response = await axios.post(`/api/v0/photoelectrics/zero`);
             if (response.data.code === 0) {
                 alert('归零成功');
             } else {
@@ -701,14 +685,11 @@
     
     // 修改目标颜色切换函数
     async function toggleTargetColor() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+
         
         const apiEndpoint = targetColor.value ?
-            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/black` :
-            `/api/v0/photoelectrics/polarity/${currentPhotoelectricId.value}/white`;
+            `/api/v0/photoelectrics/polarity/black` :
+            `/api/v0/photoelectrics/polarity/white`;
         
         try {
             const response = await axios.post(apiEndpoint);
@@ -726,22 +707,18 @@
     
     // 修改跟踪模式切换函数
     async function toggleTrackingMode() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
-        
-        const apiEndpoint = trackingMode.value ?
-            `/api/v0/photoelectrics/tracking/${currentPhotoelectricId.value}/manual` :
-            `/api/v0/photoelectrics/tracking/${currentPhotoelectricId.value}/auto`;
-        
+        const apiEndpoint = `/api/v0/photoelectrics/workWay`;
+        const type = trackingMode.value ? '2' : '1'; // 1自动, 2人工
+
         try {
-            const response = await axios.post(apiEndpoint);
+            const response = await axios.post(apiEndpoint, null, {
+                params: { type }
+            });
             if (response.data.code === 0) {
                 trackingMode.value = !trackingMode.value;
                 alert(trackingMode.value ? '切换到自动模式成功' : '切换到人工模式成功');
             } else {
-                alert(response.data.msg || '跟踪模式切换败');
+                alert(response.data.msg || '跟踪模式切换失败');
             }
         } catch (error) {
             console.error('跟踪模式切换请求失败:', error);
@@ -751,14 +728,11 @@
     
     // 修改红外颜色切换函数
     async function toggleInfraredColor() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+
         
         const apiEndpoint = infraredColor.value ?
-            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/black` :
-            `/api/v0/photoelectrics/polarityir/${currentPhotoelectricId.value}/white`;
+            `/api/v0/photoelectrics/polarityir/black` :
+            `/api/v0/photoelectrics/polarityir/white`;
         
         try {
             const response = await axios.post(apiEndpoint);
@@ -776,15 +750,12 @@
     
     // 修改激光开关函数
     async function toggleLaser() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+
         
         const apiEndpoint = laserStatus.value ?
-            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweroff` :
-            `/api/v0/photoelectrics/lazar/${currentPhotoelectricId.value}/poweron`;
-        
+            `/api/v0/photoelectrics/lazar/poweroff` :
+            `/api/v0/photoelectrics/lazar/poweron`;
+
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -800,10 +771,6 @@
     }
     
     async function toggleFrequency() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
 
         try {
             const frequencyType = frequency.value ? 2 : 3; // 5Hz对应2，12.5Hz对应3
@@ -903,7 +870,7 @@
         }
         const res = await deceptionService.updateCommand(updateCommandRequestDto)
         if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag��判断捕获发送前有��有发送8192
+            // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有没发送8192
             // 如果发送了别的命令，先硬把flag置false
             launchCaptureFlag.value = cmdWord == 8192
             return true
@@ -981,7 +948,7 @@
             gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
             gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
 
-            // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
+            // 每3秒发送一次这个指令，捕获指���发送前需要这个发送这个指令
             if(bootStrapTimerId.value)clearInterval(bootStrapTimerId.value);
             bootStrapTimerId.value = setInterval(() => {
                 if(activeTab.value === 'deception')sendCommand(8192)
@@ -990,27 +957,24 @@
     }
     
     // 在 script setup 部分添加新的响应式变量
-    const photoelectricDevices = ref([]);
-    const currentPhotoelectricId = ref(''); // 存储当前选中的设备ID
+    // const photoelectricDevices = ref([]);
+    // const currentPhotoelectricId = ref(''); // 存储当前选中的设备ID
     
     // 添加初始化光电设备的函数
-    async function initPhotoelectrics() {
-        try {
-            const response = await axios.get('/api/v0/photoelectrics');
-            if (response.data.code === 0 && response.data.result?.photoelectrics) {
-                photoelectricDevices.value = response.data.result.photoelectrics;
-                // 如果有设备，默认选择第一个设备的ID
-                if (photoelectricDevices.value.length > 0) {
-                    currentPhotoelectricId.value = photoelectricDevices.value[0].id;
-                }
-                console.log('电设备初始化成功:', photoelectricDevices.value);
-            } else {
-                console.error('获取光电设备数据失败:', response.data.msg);
-            }
-        } catch (error) {
-            console.error('获取光电设备信息请求失败:', error);
-        }
-    }
+    // async function initPhotoelectrics() {
+    //     try {
+    //         const response = await axios.get('/api/v0/photoelectrics');
+    //         if (response.data.code === 0 && response.data.result?.photoelectrics) {
+    //             photoelectricDevices.value = response.data.result.photoelectrics;
+    //             currentPhotoelectricId.value = photoelectricDevices.value.id;
+    //             console.log('电设备初始化成功:', photoelectricDevices.value);
+    //         } else {
+    //             console.error('获取光电设备数据失败:', response.data.msg);
+    //         }
+    //     } catch (error) {
+    //         console.error('获取光电设备信息请求失败:', error);
+    //     }
+    // }
     
     // 添加状态更新函数预留口）
     async function updateEmissionStatus() {
@@ -1062,47 +1026,38 @@
     }
     
     // 添加跟踪处理函数
-    async function handleTracking() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
+    // async function handleTracking() {
+
         
-        try {
-            const response = await axios.post(`/api/v0/photoelectrics/track/${currentPhotoelectricId.value}`);
-            if (response.data.code === 0) {
-                alert('跟踪开始成功');
-            } else {
-                alert(response.data.msg || '跟踪开始失败');
-            }
-        } catch (error) {
-            console.error('跟踪请求失败:', error);
-            alert('跟踪失败，请检查网络连接');
-        }
-    }
+    //     try {
+    //         const response = await axios.post(`/api/v0/photoelectrics/track`);
+    //         if (response.data.code === 0) {
+    //             alert('跟踪开始成功');
+    //         } else {
+    //             alert(response.data.msg || '跟踪开始失败');
+    //         }
+    //     } catch (error) {
+    //         console.error('跟踪请求失败:', error);
+    //         alert('跟踪失败，请检查网络连接');
+    //     }
+    // }
     
     // 添加激光发射处理函数
     async function handleLaserEmission() {
-        if (!currentPhotoelectricId.value) {
-            alert('未找到可用的光电设备');
-            return;
-        }
         
-        const apiEndpoint = laserEmissionStatus.value ?
-            `/api/v0/photoelectrics/laser-emission/${currentPhotoelectricId.value}/stop` :
-            `/api/v0/photoelectrics/laser-emission/${currentPhotoelectricId.value}/start`;
+        const apiEndpoint = `/api/v0/photoelectrics/laser/launchOrStop?status=${laserEmissionStatus.value ? 1 : 2}`;
         
         try {
-            const response = await axios.post(apiEndpoint);
+            const response = await axios.get(apiEndpoint);
             if (response.data.code === 0) {
                 laserEmissionStatus.value = !laserEmissionStatus.value;
-                alert(laserEmissionStatus.value ? '激光发射开始' : '激光发射停止');
+                alert(laserEmissionStatus.value ? '激光发射停止' : '激光发射开始');
             } else {
                 alert(response.data.msg || '激光发射控制失败');
             }
         } catch (error) {
             console.error('激光发射控制请求失败:', error);
-            alert('激光发射制失败，请检查网络连接');
+            alert('激光发射控制失败，请检查网络连接');
         }
     }
     
