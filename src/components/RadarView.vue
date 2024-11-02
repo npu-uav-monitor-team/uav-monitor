@@ -59,59 +59,31 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>01</td>
-                        <td>1KM</td>
-                        <td>50°</td>
-                        <td>160°</td>
-                        <td>300km/h</td>
-                        <td>25.4562</td>
-                        <td>113.2456</td>
-                        <td>2.4G</td>
-                        <td>Mavic3</td>
-                        <td>无人机</td>
-                        <td>强</td>
-                        <td>25.4562</td>
-                        <td>113.2456</td>
-                        <td>25.4562</td>
-                        <td>113.2456</td>
-                        <td>52°</td>
-                    </tr>
-                    <tr>
-                        <td>02</td>
-                        <td>2KM</td>
-                        <td>60°</td>
-                        <td>150°</td>
-                        <td>250km/h</td>
-                        <td>26.1234</td>
-                        <td>114.5678</td>
-                        <td>5.8G</td>
-                        <td>Phantom4</td>
-                        <td>无人机</td>
-                        <td>中</td>
-                        <td>26.1234</td>
-                        <td>114.5678</td>
-                        <td>26.1234</td>
-                        <td>114.5678</td>
-                        <td>60°</td>
-                    </tr>
-                    <tr>
-                        <td>03</td>
-                        <td>3KM</td>
-                        <td>70°</td>
-                        <td>140°</td>
-                        <td>200km/h</td>
-                        <td>27.9876</td>
-                        <td>115.6789</td>
-                        <td>1.2G</td>
-                        <td>Inspire2</td>
-                        <td>无人机</td>
-                        <td>弱</td>
-                        <td>27.9876</td>
-                        <td>115.6789</td>
-                        <td>27.9876</td>
-                        <td>115.6789</td>
-                        <td>70°</td>
+                    <tr v-for="aircraft in aircraftData" :key="aircraft.id">
+                        <td>
+                            <input 
+                                type="radio" 
+                                :value="aircraft.id" 
+                                v-model="selectedAircraftId"
+                                name="aircraft-selection"
+                            >
+                            {{ aircraft.id }}
+                        </td>
+                        <td>{{ aircraft.distance }}</td>
+                        <td>{{ aircraft.azimuth }}</td>
+                        <td>{{ aircraft.pitch }}</td>
+                        <td>{{ aircraft.speed }}</td>
+                        <td>{{ aircraft.longitude1 }}</td>
+                        <td>{{ aircraft.latitude1 }}</td>
+                        <td>{{ aircraft.frequency }}</td>
+                        <td>{{ aircraft.model }}</td>
+                        <td>{{ aircraft.source }}</td>
+                        <td>{{ aircraft.signalStrength }}</td>
+                        <td>{{ aircraft.longitude2 }}</td>
+                        <td>{{ aircraft.latitude2 }}</td>
+                        <td>{{ aircraft.longitude3 }}</td>
+                        <td>{{ aircraft.latitude3 }}</td>
+                        <td>{{ aircraft.fusionAzimuth }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -321,36 +293,126 @@
     };
 
     const handleRadarGuide = () => {
-        console.log('执行雷达引导操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行雷达引导操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleElectronicGuide = () => {
-        console.log('执行电侦引导操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行电侦引导操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleFusionGuide = () => {
-        console.log('执行融合引导操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleInterference = () => {
-        console.log('执行干扰操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行干扰操作，目标ID:', selectedAircraftId.value);
     };
 
     const handlePointCapture = () => {
-        console.log('执行定点捕获操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行定点捕获操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleDriveAway = () => {
-        console.log('执行驱离操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行驱离操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleNoFly = () => {
-        console.log('执行禁飞操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行禁飞操作，目标ID:', selectedAircraftId.value);
     };
 
     const handleDefense = () => {
-        console.log('执行防御操作');
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
+        console.log('执行防御操作，目标ID:', selectedAircraftId.value);
     };
+
+    // 添加模拟数据
+    const aircraftData = ref([
+        {
+            id: '01',
+            distance: '1KM',
+            azimuth: '50°',
+            pitch: '160°',
+            speed: '300km/h',
+            longitude1: '25.4562',
+            latitude1: '113.2456',
+            frequency: '2.4G',
+            model: 'Mavic3',
+            source: '无人机',
+            signalStrength: '强',
+            longitude2: '25.4562',
+            latitude2: '113.2456',
+            longitude3: '25.4562',
+            latitude3: '113.2456',
+            fusionAzimuth: '52°'
+        },
+        {
+            id: '02',
+            distance: '2KM',
+            azimuth: '60°',
+            pitch: '150°',
+            speed: '250km/h',
+            longitude1: '26.1234',
+            latitude1: '114.5678',
+            frequency: '5.8G',
+            model: 'Phantom4',
+            source: '无人机',
+            signalStrength: '中',
+            longitude2: '26.1234',
+            latitude2: '114.5678',
+            longitude3: '26.1234',
+            latitude3: '114.5678',
+            fusionAzimuth: '60°'
+        },
+        {
+            id: '03',
+            distance: '3KM',
+            azimuth: '70°',
+            pitch: '140°',
+            speed: '200km/h',
+            longitude1: '27.9876',
+            latitude1: '115.6789',
+            frequency: '1.2G',
+            model: 'Inspire2',
+            source: '无人机',
+            signalStrength: '弱',
+            longitude2: '27.9876',
+            latitude2: '115.6789',
+            longitude3: '27.9876',
+            latitude3: '115.6789',
+            fusionAzimuth: '70°'
+        }
+    ]);
 </script>
 
 <style scoped>
@@ -766,5 +828,19 @@
 
     .control-buttons button:hover {
         background-color: rgba(0, 144, 234, 0.8);
+    }
+
+    tbody tr:hover {
+        background-color: rgba(0, 255, 255, 0.1);
+    }
+
+    input[type="radio"] {
+        cursor: pointer;
+        margin-right: 5px;
+    }
+
+    /* 让第一列稍微宽一点，以适应单选框 */
+    td:first-child {
+        min-width: 60px;
     }
 </style>
