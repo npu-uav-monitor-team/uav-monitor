@@ -1029,6 +1029,23 @@
             simulationLevel.value = 50;
         }
     };
+
+    async function toggleInfrared() {
+        try {
+            const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
+            
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                infraredStatus.value = !infraredStatus.value;
+                alert(infraredStatus.value ? '红外开机成功' : '红外关机成功');
+            } else {
+                alert(response.data.msg || '红外开关操作失败');
+            }
+        } catch (error) {
+            console.error('红外开关请求失败:', error);
+            alert('红外开关操作失败，请检查网络连接');
+        }
+    }
 </script>
 
 <script>
@@ -1092,7 +1109,7 @@ async function sendCommand(cmdWord) {
                 defense: true
             }
         }
-    } else if(cmdWord === 4098){
+    } else if(cmdWord === 4098){    
         // 干扰
         updateCommandRequestDto = {
             CmdWord: cmdWord,
