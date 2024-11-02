@@ -834,7 +834,7 @@
             if(!launchCaptureFlag.value){
                 sendCommand(8192)
             }
-             updateCommandRequestDto = {
+            updateCommandRequestDto = {
                 CmdWord: cmdWord,
                 CommandDto: {
                     Capture: {
@@ -855,7 +855,7 @@
                     driveAngle: 10
                 }
             }
-        } else if(cmdWord == 8192){
+        } else if(cmdWord === 8192){
             updateCommandRequestDto = {
                 CmdWord: cmdWord,
                 CommandDto: {
@@ -869,17 +869,48 @@
                     }
                 }
             }
+        } else if(cmdWord === 4100){
+            // 防御
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    defense: true
+                }
+            }
+        } else if(cmdWord === 4098){
+            // 干扰
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    IsInterferenceEmitted: true
+                }
+            }
+        } else if(cmdWord === 4099){
+            // 禁飞
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    nofly: {
+                        state: true,
+                        Position: {
+                            Latitude: 0,
+                            Longitude: 0,
+                            Altitude: 0
+                        },
+                    }
+                }
+            }
         }
         const res = await deceptionService.updateCommand(updateCommandRequestDto)
         if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有没发送8192
+            // 要求捕获命令前发送一条8192命令，通过flag��判断捕获发送前有��有发送8192
             // 如果发送了别的命令，先硬把flag置false
             launchCaptureFlag.value = cmdWord == 8192
             return true
         }
         
-        // 更新数据
-        await clickDeception()
+        // // 更新数据
+        // await clickDeception()
     }
 
     async function stopLaunch() {
