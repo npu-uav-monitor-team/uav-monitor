@@ -334,7 +334,7 @@
 
 <script setup>
     import { onMounted, onUnmounted, ref, computed } from "vue";
-    import axios from "axios";
+    import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
@@ -605,7 +605,6 @@
             .then(response => {
                 if (response.data.code === 0) {
                     servoStatus.value = !servoStatus.value;
-                    alert(servoStatus.value ? '伺服关机成功' : '伺服开机成功');
                 } else {
                     alert(response.data.msg || (servoStatus.value ? '伺服关机失败' : '伺服开机失败'));
                 }
@@ -627,7 +626,6 @@
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 channelType.value = !channelType.value;
-                alert(channelType.value ? '切换到红外通道成功' : '切换到电视通道成功');
             } else {
                 alert(response.data.msg || '通道切换失败');
             }
@@ -644,7 +642,6 @@
         try {
             const response = await axios.post(`/api/v0/photoelectrics/zero`);
             if (response.data.code === 0) {
-                alert('归零成功');
             } else {
                 alert(response.data.msg || '归零失败');
             }
@@ -666,7 +663,6 @@
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 targetColor.value = !targetColor.value;
-                alert(targetColor.value ? '切换到目标白成功' : '切换到目标黑成功');
             } else {
                 alert(response.data.msg || '目标颜色切换失败');
             }
@@ -687,7 +683,6 @@
             });
             if (response.data.code === 0) {
                 trackingMode.value = !trackingMode.value;
-                alert(trackingMode.value ? '切换到自动模式成功' : '切换到人工模式成功');
             } else {
                 alert(response.data.msg || '跟踪模式切换失败');
             }
@@ -709,7 +704,6 @@
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 infraredColor.value = !infraredColor.value;
-                alert(infraredColor.value ? '切换到红外热黑成功' : '切换到红外热白成功');
             } else {
                 alert(response.data.msg || '红外颜色切换失败');
             }
@@ -731,7 +725,6 @@
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 laserStatus.value = !laserStatus.value;
-                alert(laserStatus.value ? '激光关闭成功' : '激光开启成功');
             } else {
                 alert(response.data.msg || '激光控制失败');
             }
@@ -756,7 +749,6 @@
 
             if (response.data.code === 0) {
                 frequency.value = !frequency.value;
-                alert(`切换到${frequency.value ? '5Hz' : '12.5Hz'}成功`);
             } else {
                 alert(response.data.msg || '频率切换失败');
             }
@@ -886,7 +878,6 @@
             const response = await axios.get(apiEndpoint);
             if (response.data.code === 0) {
                 laserEmissionStatus.value = !laserEmissionStatus.value;
-                alert(laserEmissionStatus.value ? '激光发射停止' : '激光发射开始');
             } else {
                 alert(response.data.msg || '激光发射控制失败');
             }
@@ -896,14 +887,18 @@
         }
     }
     
-    // 添加移动控制关的状态
+   // 修改移动控制相关的状态变量
     const isMoving = ref(false);
     const moveDirection = ref(null);
     const moveInterval = ref(null);
-    const moveAlert = ref(null); // 添加弹窗引用
+    const LONG_PRESS_DELAY = 300; // 长按判定延时（毫秒）
+    let pressTimer = null; // 用于判断长按的定时器
     
-    // 键盘按下事件处理
-    function handleKeyDown(event) {
+    // 添加接口响应类型定义
+    const API_SUCCESS_CODE = 0; // API成功响应码
+
+    // 修改键盘按下事件处理
+    async function handleKeyDown(event) {
         // 只在光电设备控制标签页激活时处理键盘事件
         if (activeTab.value !== 'optoelectronic') return;
         
@@ -916,13 +911,31 @@
             case 'ArrowLeft':
             case 'ArrowRight':
                 event.preventDefault(); // 阻止默认滚动行为
-                startMove(event.key);
+
+                // 清除之前的定时器（如果存在）
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                }
+
+                // 先发送点击指令
+                await sendMoveCommand(event.key, false);
+                isMoving.value = true;
+                moveDirection.value = event.key;
+
+                // 设置长按检测定时器
+                pressTimer = setTimeout(async () => {
+                    // 到达长按时间阈值，发送长按指令
+                    if (isMoving.value && moveDirection.value === event.key) {
+                        await sendMoveCommand(event.key, true);
+                    }
+                }, LONG_PRESS_DELAY);
+
                 break;
         }
     }
-    
-    // 键盘松开事件处理
-    function handleKeyUp(event) {
+
+    // 修改键盘松开事件处理
+    async function handleKeyUp(event) {
         if (activeTab.value !== 'optoelectronic') return;
         
         switch (event.key) {
@@ -930,52 +943,79 @@
             case 'ArrowDown':
             case 'ArrowLeft':
             case 'ArrowRight':
+                // 清除长按检测定时器
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+
                 if (moveDirection.value === event.key) {
-                    stopMove();
+                    // 发送停止移动指令
+                    await sendMoveCommand(event.key, false);
+                    isMoving.value = false;
+                    moveDirection.value = null;
+                    showToast('停止移动', true);
                 }
                 break;
         }
     }
-    
-    // 开始移动
-    function startMove(direction) {
-        if (isMoving.value) return;
-        
-        isMoving.value = true;
-        moveDirection.value = direction;
-        
-        // 显示移动提示弹窗
-        moveAlert.value = alert(`正向${getDirectionText(direction)}移动`);
-        
-        // 启动持续移动
-        moveInterval.value = setInterval(() => {
-            moveOptoelectronic(direction);
-        }, 100); // 每100ms执行一次移动
-    }
-    
-    // 停止移动
-    function stopMove() {
-        if (!isMoving.value) return;
-        
-        clearInterval(moveInterval.value);
-        isMoving.value = false;
-        moveDirection.value = null;
-        
-        // 关闭移动提示弹窗
-        if (moveAlert.value) {
-            moveAlert.value.close();
-            moveAlert.value = null;
-        }
-    }
-    
-    // 获取方向文本
-    function getDirectionText(direction) {
-        switch (direction) {
-            case 'ArrowUp': return '上';
-            case 'ArrowDown': return '下';
-            case 'ArrowLeft': return '左';
-            case 'ArrowRight': return '右';
-            default: return '';
+
+    // 修改发送移动指令的函数
+    async function sendMoveCommand(direction, isLongPress = false) {
+        try {
+            let type;
+            let message;
+            switch (direction) {
+                case 'ArrowLeft':
+                    type = 1; // 方位量左
+                    message = '正在向左移动';
+                    break;
+                case 'ArrowRight':
+                    type = 2; // 方位量右
+                    message = '正在向右移动';
+                    break;
+                case 'ArrowUp':
+                    type = 3; // 俯仰量上
+                    message = '正在向上移动';
+                    break;
+                case 'ArrowDown':
+                    type = 4; // 俯仰量下
+                    message = '正在向下移动';
+                    break;
+                default:
+                    return false;
+            }
+
+            const response = await axios.post(
+                '/api/v0/photoelectrics/manipulate',
+                null,
+                {
+                    params: {
+                        type: type,
+                        longPressStatus: isLongPress ? 2 : 1
+                    },
+                    timeout: 0
+                }
+            );
+
+            if (response.status === 200) {
+                const data = response.data;
+                if (data.code === 0) {
+                    showToast(message, false);
+                    return true;
+                } else {
+                    console.error('API错误:', data.msg);
+
+                    showToast(data.msg || '操作失败', true);
+                    return false;
+                }
+            } else {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('移动指令请求失败:', error);
+            showToast('移动指令请求失败，请检查网络连接', true);
+            return false;
         }
     }
     
@@ -1015,7 +1055,7 @@
     async function toggleInfrared() {
         try {
             const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
-            
+
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 infraredStatus.value = !infraredStatus.value;
@@ -1104,7 +1144,7 @@ async function sendCommand(cmdWord) {
                 defense: true
             }
         }
-    } else if(cmdWord === 4098){    
+    } else if(cmdWord === 4098){
         // 干扰
         updateCommandRequestDto = {
             CmdWord: cmdWord,
