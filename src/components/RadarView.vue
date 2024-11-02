@@ -142,6 +142,8 @@
 
 <script setup>
     import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+    import { useRadarGuide } from "@/api/radar.js";
+    
     const selectedStream = ref('1'); // 默认选择全景视频1
     let webRtcServer = null;
     // 从环境变量获取视频流 URL
@@ -234,7 +236,7 @@
         showSettings.value = false;
     };
     
-    const selectedAircraftId = ref(null);
+    const selectedAircraftId = ref();
     
     const handleRadarGuide = () => {
         if (!selectedAircraftId.value) {
@@ -242,6 +244,13 @@
             return;
         }
         console.log('执行雷达引导操作，目标ID:', selectedAircraftId.value);
+        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+        console.log(aircraft)
+        // 方位角和俯仰角要把文字最后的°去掉 然后转数字
+        const data = useRadarGuide(aircraft.distance,
+            parseFloat(aircraft.azimuth.slice(0, -1)),
+            parseFloat(aircraft.pitch.slice(0, -1)))
+        console.log(data)
     };
     
     const handleElectronicGuide = () => {
@@ -303,8 +312,8 @@
     // 添加模拟数据
     const aircraftData = ref([
         {
-            id: '01',
-            distance: '1KM',
+            id: 1,
+            distance: 1000,
             azimuth: '50°',
             pitch: '160°',
             speed: '300km/h',
@@ -321,8 +330,8 @@
             fusionAzimuth: '52°'
         },
         {
-            id: '02',
-            distance: '2KM',
+            id: 2,
+            distance: 2000,
             azimuth: '60°',
             pitch: '150°',
             speed: '250km/h',
@@ -339,8 +348,8 @@
             fusionAzimuth: '60°'
         },
         {
-            id: '03',
-            distance: '3KM',
+            id: 3,
+            distance: 3000,
             azimuth: '70°',
             pitch: '140°',
             speed: '200km/h',
