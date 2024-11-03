@@ -160,7 +160,7 @@
     import { nextTick, onMounted, onUnmounted, ref } from 'vue';
     import { useRGuide } from "@/api/radar.js";
     import { sendCommand, stopLaunch_1 } from '@/components/ControlPanel.vue'
-    import axios from './index.js';
+    import axios from '@/api/index.js';
     
     const selectedStream = ref('1'); // 默认选择全景视频1
     const deceptionOperateType = ref('')

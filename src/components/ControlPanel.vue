@@ -355,7 +355,7 @@
 
 <script setup>
     import { onMounted, onUnmounted, ref, computed } from "vue";
-    import axios from "axios";
+    import axios from '@/api/index.js';
     import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
@@ -511,7 +511,7 @@
         const statusInterval = setInterval(() => {
             updateWirelessDeviceStatus();
             updateOptoelectronicDeviceStatus();
-        }, 50); // 每秒更新一次
+        }, 5000); // 每秒更新一次
         
         // 这里该是从实际数据源获取目标信息
         currentTarget.value = {
