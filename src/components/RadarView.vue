@@ -194,7 +194,10 @@
     onMounted(() => {
         refreshVideo();
         updateElectronicData();
+        updateRadarData();
+        
         dataUpdateTimer = setInterval(updateElectronicData, 5000);
+        radarUpdateTimer = setInterval(updateRadarData, 5000);
     });
     
     onUnmounted(() => {
@@ -203,6 +206,9 @@
         }
         if (dataUpdateTimer) {
             clearInterval(dataUpdateTimer);
+        }
+        if (radarUpdateTimer) {
+            clearInterval(radarUpdateTimer);
         }
     });
     
@@ -450,36 +456,161 @@
     const updateElectronicData = async () => {
         try {
             const response = await axios.get('/api/v0/uavs');
-            // 遍历现有的 aircraftData，更新电侦数据
-            aircraftData.value = aircraftData.value.map(aircraft => {
-                // 在 response.data 中查找匹配的 UAV 数据
-                const uavData = response.data.find(uav => uav.id === aircraft.id);
-                if (uavData) {
-                    return {
-                        ...aircraft,
-                        electronicData: {
-                            type: uavData.type || 'UAV',
-                            name: uavData.name || 'Unknown',
-                            speed: uavData.speed?.toString() || '0',
-                            altitude: uavData.altitude?.toString() || '0',
-                            distance: uavData.distance?.toString() || '0',
-                            updateTime: new Date().toLocaleString(),
-                            threadLevel: uavData.threadLevel || 'low',
-                            latitude: uavData.latitude?.toString() || '0',
-                            longitude: uavData.longitude?.toString() || '0',
-                            pitch: `${uavData.pitch || 0}°`,
-                            azimuth: `${uavData.azimuth || 0}°`
+            
+            // 遍历返回的电子侦察目标数据
+            response.data.forEach(uavTarget => {
+                // 查找现有数据中是否存在该目标
+                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                    aircraft.id === uavTarget.id
+                );
+
+                // 构建新的电子侦察数据对象
+                const newElectronicData = {
+                    type: uavTarget.type || 'UAV',
+                    name: uavTarget.name || 'Unknown',
+                    speed: uavTarget.speed?.toString() || '0',
+                    altitude: uavTarget.altitude?.toString() || '0',
+                    distance: uavTarget.distance?.toString() || '0',
+                    updateTime: new Date().toLocaleString(),
+                    threadLevel: uavTarget.threadLevel || 'low',
+                    latitude: uavTarget.lat?.toString() || '0',
+                    longitude: uavTarget.lng?.toString() || '0',
+                    pitch: `${uavTarget.pitchAngle || 0}°`,
+                    azimuth: `${uavTarget.azimuth || 0}°`
+                };
+
+                if (existingIndex !== -1) {
+                    // 更新现有目标的电子侦察数据
+                    aircraftData.value[existingIndex].electronicData = newElectronicData;
+                    // 更新融合数据
+                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
+                        aircraftData.value[existingIndex].radarData,
+                        newElectronicData
+                    );
+                } else {
+                    // 添加新的目标
+                    aircraftData.value.push({
+                        id: uavTarget.id,
+                        radarData: {
+                            distance: '0',
+                            azimuth: '0°',
+                            pitch: '0°',
+                            speed: '0',
+                            longitude: '0',
+                            latitude: '0'
+                        },
+                        electronicData: newElectronicData,
+                        fusionData: {
+                            longitude: uavTarget.lng?.toString() || '0',
+                            latitude: uavTarget.lat?.toString() || '0',
+                            pitch: `${uavTarget.pitchAngle || 0}°`,
+                            azimuth: `${uavTarget.azimuth || 0}°`,
+                            distance: uavTarget.distance?.toString() || '0',
+                            speed: uavTarget.speed?.toString() || '0'
                         }
-                    };
+                    });
                 }
-                return aircraft;
             });
+
+            // 不要移除只有雷达数据的目标
+            aircraftData.value = aircraftData.value.filter(aircraft => 
+                response.data.some(uavTarget => uavTarget.id === aircraft.id) || 
+                aircraft.radarData.distance !== '0'
+            );
+
         } catch (error) {
             console.error('获取UAV数据失败:', error);
         }
     };
 
+    const updateRadarData = async () => {
+        try {
+            const response = await axios.get('/api/v0/radar/targetList');
+            
+            // 遍历返回的雷达目标数据
+            response.data.forEach(radarTarget => {
+                // 查找现有数据中是否存在该目标
+                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                    aircraft.id === radarTarget.targetId
+                );
+
+                // 构建新的雷达数据对象
+                const newRadarData = {
+                    distance: radarTarget.range.toFixed(0),
+                    azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
+                    pitch: `${radarTarget.pitch.toFixed(1)}°`,
+                    speed: radarTarget.speed.toFixed(0),
+                    longitude: radarTarget.targetLon.toFixed(4),
+                    latitude: radarTarget.targetLat.toFixed(4)
+                };
+
+                if (existingIndex !== -1) {
+                    // 更新现有目标的雷达数据
+                    aircraftData.value[existingIndex].radarData = newRadarData;
+                    // 更新融合数据
+                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
+                        newRadarData,
+                        aircraftData.value[existingIndex].electronicData
+                    );
+                } else {
+                    // 添加新的目标
+                    aircraftData.value.push({
+                        id: radarTarget.targetId,
+                        radarData: newRadarData,
+                        electronicData: {
+                            type: 'Unknown',
+                            name: 'Unknown',
+                            speed: '0',
+                            altitude: '0',
+                            distance: '0',
+                            updateTime: new Date().toLocaleString(),
+                            threadLevel: 'unknown',
+                            latitude: '0',
+                            longitude: '0',
+                            pitch: '0°',
+                            azimuth: '0°'
+                        },
+                        fusionData: {
+                            longitude: radarTarget.targetLon.toFixed(4),
+                            latitude: radarTarget.targetLat.toFixed(4),
+                            pitch: `${radarTarget.pitch.toFixed(1)}°`,
+                            azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
+                            distance: radarTarget.range.toFixed(0),
+                            speed: radarTarget.speed.toFixed(0)
+                        }
+                    });
+                }
+            });
+
+            // 移除不再存在的目标
+            aircraftData.value = aircraftData.value.filter(aircraft => 
+                response.data.some(radarTarget => radarTarget.targetId === aircraft.id)
+            );
+
+        } catch (error) {
+            console.error('获取雷达数据失败:', error);
+        }
+    };
+
     let dataUpdateTimer;
+    let radarUpdateTimer;
+
+    // 添加一个计算融合数据的辅助函数
+    const calculateFusionData = (radarData, electronicData) => {
+        // 将角度字符串转换为数值进行计算
+        const parseAngle = (angleStr) => parseFloat(angleStr?.replace('°', '') || 0);
+        // 将字符串数值转换为数字进行计算
+        const parseNumber = (str) => parseFloat(str || 0);
+
+        return {
+            longitude: ((parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2).toFixed(4),
+            latitude: ((parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2).toFixed(4),
+            pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
+            azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
+            distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
+            speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0)
+        };
+    };
 </script>
 
 <style scoped>
