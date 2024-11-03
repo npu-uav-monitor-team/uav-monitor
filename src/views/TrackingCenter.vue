@@ -174,7 +174,7 @@
     import axios from 'axios'; // 引入 axios 用于发送 HTTP 请求
     import { onMounted, ref } from "vue";
     import { useRouter } from "vue-router";
-    import { getElectronicDetectionData } from "@/api/radar.js";
+    import { getElectronicUavList } from "@/api/radar.js";
     
     const router = useRouter()
     
@@ -194,37 +194,44 @@
     })
     const flightPaths = ref([])
     
-    const allAircraft = ref()
+    const allAircraft = ref([])
     
     const updateAircraftData = async () => {
-        //用于从接口获取并且更新无人机数据
-        const newAircraftData = await getElectronicDetectionData()
-        // 更新 allAircraft 数据
-        allAircraft.value = newAircraftData.map(aircraft => ({
-            ...aircraft,
-            lat: parseFloat(aircraft.lat),
-            lng: parseFloat(aircraft.lng),
-            path: aircraft.path.map(point => [parseFloat(point[1]), parseFloat(point[0])]),
-        }));
-        
-        // 更新 threats 数据 (根据威胁等级过滤)
-        threats.value = newAircraftData.filter(aircraft => aircraft.threadLevel !== '低').map(aircraft => ({
-            id: aircraft.id,
-            type: aircraft.type,
-            name: aircraft.name,
-            level: aircraft.threadLevel,
-            speed: aircraft.speed,
-            altitude: aircraft.altitude,
-            distance: aircraft.distance,
-            updateTime: aircraft.updateTime,
-            color: aircraft.color
-        }));
-        // 更新 flightPaths 数据
-        flightPaths.value = allAircraft.value.map(aircraft => ({
-            id: aircraft.id,
-            points: aircraft.path, // 使用接口提供的路径数据
-            color: aircraft.color
-        }));
+        try {
+            const newAircraftData = await getElectronicUavList()
+            if (!newAircraftData) {
+                console.error('No data received from API');
+                return;
+            }
+            
+            allAircraft.value = newAircraftData.map(aircraft => ({
+                ...aircraft,
+                lat: parseFloat(aircraft.lat),
+                lng: parseFloat(aircraft.lng),
+                path: aircraft.path.map(point => [parseFloat(point[1]), parseFloat(point[0])]),
+            }));
+            
+            // 更新 threats 数据 (根据威胁等级过滤)
+            threats.value = newAircraftData.filter(aircraft => aircraft.threadLevel !== '低').map(aircraft => ({
+                id: aircraft.id,
+                type: aircraft.type,
+                name: aircraft.name,
+                level: aircraft.threadLevel,
+                speed: aircraft.speed,
+                altitude: aircraft.altitude,
+                distance: aircraft.distance,
+                updateTime: aircraft.updateTime,
+                color: aircraft.color
+            }));
+            // 更新 flightPaths 数据
+            flightPaths.value = allAircraft.value.map(aircraft => ({
+                id: aircraft.id,
+                points: aircraft.path, // 使用接口提供的路径数据
+                color: aircraft.color
+            }));
+        } catch (error) {
+            console.error('Error updating aircraft data:', error);
+        }
     };
     
     const threats = ref([]);
@@ -271,29 +278,6 @@
     
     function closeAircraftInfo() {
         selectedAircraft.value = null;
-    }
-    
-    function generateRandomPath(startPoint, numPoints = 20) {  // 增加点的数量
-        const path = [startPoint];
-        let prevPoint = startPoint;
-        let prevAngle = Math.random() * Math.PI * 2;
-        
-        for (let i = 1; i < numPoints; i++) {
-            const angleChange = (Math.random() - 0.5) * Math.PI / 6; // 减小角度变化，使路径更平滑
-            const newAngle = prevAngle + angleChange;
-            
-            // 增加距离以创建更长的路径
-            const distance = 0.00001 + Math.random() * 0.0003; // 约200-600米的范围
-            const newLat = prevPoint[0] + distance * Math.cos(newAngle);
-            const newLng = prevPoint[1] + distance * Math.sin(newAngle);
-            
-            path.push([newLat, newLng]);
-            prevPoint = [newLat, newLng];
-            prevAngle = newAngle;
-        }
-        
-        console.log(path)
-        return path;
     }
     
     function getArrowIcon(aircraft) {
@@ -353,14 +337,14 @@
     })
     
     // 添加地图就绪事件处理
-    const onMapReady = (mapInstance) => {
+    const onMapReady = () => {
         console.log('Map is ready');
         // 测试瓦片加载
         const z = 15;
         const x = Math.floor((center.value[1] + 180) * Math.pow(2, z) / 360);
         const y = Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, z - 1));
         
-        const testTileUrl = `/public/tiles/{z}/{x}/{y}/tile.png`;
+        const testTileUrl = `/public/tiles/${z}/${x}/${y}/tile.png`;
         console.log('Testing tile URL:', testTileUrl);
         
         fetch(testTileUrl)
@@ -700,7 +684,7 @@
     
     /* 修改 l-polyline 的样式 */
     ::v-deep .leaflet-interactive {
-        stroke-width: 4px !important; /* 加粗线条 */
+        stroke-width: 4px !important; /* 加粗条 */
         opacity: 0.8 !important; /* 增不透明度 */
     }
     
@@ -826,7 +810,7 @@
     .offline-map-image {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* 改为 cover 以填充���个容器 */
+        object-fit: cover; /* 改为 cover 以填充个容器 */
     }
     
     .threat-list table th:nth-child(5),
