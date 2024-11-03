@@ -68,21 +68,26 @@
                             >
                             {{ aircraft.id }}
                         </td>
-                        <td>{{ aircraft.distance }}</td>
-                        <td>{{ aircraft.azimuth }}</td>
-                        <td>{{ aircraft.pitch }}</td>
-                        <td>{{ aircraft.speed }}</td>
-                        <td>{{ aircraft.longitude1 }}</td>
-                        <td>{{ aircraft.latitude1 }}</td>
-                        <td>{{ aircraft.frequency }}</td>
-                        <td>{{ aircraft.model }}</td>
-                        <td>{{ aircraft.source }}</td>
-                        <td>{{ aircraft.signalStrength }}</td>
-                        <td>{{ aircraft.longitude2 }}</td>
-                        <td>{{ aircraft.latitude2 }}</td>
-                        <td>{{ aircraft.longitude3 }}</td>
-                        <td>{{ aircraft.latitude3 }}</td>
-                        <td>{{ aircraft.fusionAzimuth }}</td>
+                        <!-- 雷达数据 -->
+                        <td>{{ aircraft.radarData.distance }}</td>
+                        <td>{{ aircraft.radarData.azimuth }}</td>
+                        <td>{{ aircraft.radarData.pitch }}</td>
+                        <td>{{ aircraft.radarData.speed }}</td>
+                        <td>{{ aircraft.radarData.longitude }}</td>
+                        <td>{{ aircraft.radarData.latitude }}</td>
+                        
+                        <!-- 电侦数据 (只显示部分关键信息) -->
+                        <td>{{ aircraft.electronicData.type }}</td>
+                        <td>{{ aircraft.electronicData.name }}</td>
+                        <td>{{ aircraft.electronicData.threadLevel }}</td>
+                        <td>{{ aircraft.electronicData.distance }}</td>
+                        <td>{{ aircraft.electronicData.longitude }}</td>
+                        <td>{{ aircraft.electronicData.latitude }}</td>
+                        
+                        <!-- 融合数据 (只显示关键位置信息) -->
+                        <td>{{ aircraft.fusionData.longitude }}</td>
+                        <td>{{ aircraft.fusionData.latitude }}</td>
+                        <td>{{ aircraft.fusionData.azimuth }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -153,8 +158,9 @@
 
 <script setup>
     import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-    import { useRadarGuide } from "@/api/radar.js";
+    import { useRGuide } from "@/api/radar.js";
     import { sendCommand, stopLaunch_1 } from '@/components/ControlPanel.vue'
+    import axios from './index.js';
     
     const selectedStream = ref('1'); // 默认选择全景视频1
     const deceptionOperateType = ref('')
@@ -187,11 +193,16 @@
     
     onMounted(() => {
         refreshVideo();
+        updateElectronicData();
+        dataUpdateTimer = setInterval(updateElectronicData, 5000);
     });
     
     onUnmounted(() => {
         if (webRtcServer) {
             webRtcServer.disconnect();
+        }
+        if (dataUpdateTimer) {
+            clearInterval(dataUpdateTimer);
         }
     });
     
@@ -257,29 +268,42 @@
             alert('请先选择一个目标');
             return;
         }
-        console.log('执行雷达引导操作，目标ID:', selectedAircraftId.value);
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
-        console.log(aircraft)
-        // 方位角和俯仰角要把文字最后的°去掉 然后转数字
-        const data = await useRadarGuide(aircraft.distance,
-            parseFloat(aircraft.azimuth.slice(0, -1)),
-            parseFloat(aircraft.pitch.slice(0, -1)))
-        console.log(data)
+        const data = await useRGuide(
+            aircraft.radarData.distance,
+            parseFloat(aircraft.radarData.azimuth.slice(0, -1)),
+            parseFloat(aircraft.radarData.pitch.slice(0, -1))
+        );
+        console.log(data);
     };
     
-    const handleElectronicGuide = () => {
+    const handleElectronicGuide = async () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+        const data = await useRGuide(
+            aircraft.electronicData.distance,
+            parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
+            parseFloat(aircraft.electronicData.pitch.slice(0, -1))
+        );
+        console.log(data);
         console.log('执行电侦引导操作，目标ID:', selectedAircraftId.value);
     };
     
-    const handleFusionGuide = () => {
+    const handleFusionGuide = async() => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
+        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+        const data = await useRGuide(
+            aircraft.electronicData.distance,
+            parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
+            parseFloat(aircraft.fusionData.pitch.slice(0, -1))
+        );
+        console.log(data);
         console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
     
@@ -359,59 +383,103 @@
     const aircraftData = ref([
         {
             id: 1,
-            distance: 1000,
-            azimuth: '50°',
-            pitch: '160°',
-            speed: '300km/h',
-            longitude1: '25.4562',
-            latitude1: '113.2456',
-            frequency: '2.4G',
-            model: 'Mavic3',
-            source: '无人机',
-            signalStrength: '强',
-            longitude2: '25.4562',
-            latitude2: '113.2456',
-            longitude3: '25.4562',
-            latitude3: '113.2456',
-            fusionAzimuth: '52°'
+            radarData: {
+                distance: 1000,
+                azimuth: '50°',
+                pitch: '30°',
+                speed: '300',
+                longitude: '113.2456',
+                latitude: '25.4562'
+            },
+            electronicData: {
+                type: 'UAV',
+                name: 'Mavic3',
+                speed: '280',
+                altitude: '1200',
+                distance: '1100',
+                updateTime: '2024-03-21 14:30:00',
+                threadLevel: 'high',
+                latitude: '25.4564',
+                longitude: '113.2458',
+                pitch: '32°',
+                azimuth: '52°'
+            },
+            fusionData: {
+                longitude: '113.2457', // (113.2456 + 113.2458) / 2
+                latitude: '25.4563',   // (25.4562 + 25.4564) / 2
+                pitch: '31°',          // (30° + 32°) / 2
+                azimuth: '51°',        // (50° + 52°) / 2
+                distance: 1050,        // (1000 + 1100) / 2
+                speed: 290            // (300 + 280) / 2
+            }
         },
         {
             id: 2,
-            distance: 2000,
-            azimuth: '60°',
-            pitch: '150°',
-            speed: '250km/h',
-            longitude1: '26.1234',
-            latitude1: '114.5678',
-            frequency: '5.8G',
-            model: 'Phantom4',
-            source: '无人机',
-            signalStrength: '中',
-            longitude2: '26.1234',
-            latitude2: '114.5678',
-            longitude3: '26.1234',
-            latitude3: '114.5678',
-            fusionAzimuth: '60°'
-        },
-        {
-            id: 3,
-            distance: 3000,
-            azimuth: '70°',
-            pitch: '140°',
-            speed: '200km/h',
-            longitude1: '27.9876',
-            latitude1: '115.6789',
-            frequency: '1.2G',
-            model: 'Inspire2',
-            source: '无人机',
-            signalStrength: '弱',
-            longitude2: '27.9876',
-            latitude2: '115.6789',
-            longitude3: '27.9876',
-            latitude3: '115.6789',
-            fusionAzimuth: '70°'
+            radarData: {
+                distance: 2000,
+                azimuth: '60°',
+                pitch: '25°',
+                speed: '250',
+                longitude: '113.3456',
+                latitude: '25.5562'
+            },
+            electronicData: {
+                type: 'UAV',
+                name: 'Phantom4',
+                speed: '240',
+                altitude: '800',
+                distance: '2100',
+                updateTime: '2024-03-21 14:30:00',
+                threadLevel: 'medium',
+                latitude: '25.5564',
+                longitude: '113.3458',
+                pitch: '27°',
+                azimuth: '62°'
+            },
+            fusionData: {
+                longitude: '113.3457',
+                latitude: '25.5563',
+                pitch: '26°',
+                azimuth: '61°',
+                distance: 2050,
+                speed: 245
+            }
         }
     ]);
+
+    const updateElectronicData = async () => {
+        try {
+            const response = await axios.get('/api/v0/uavs');
+            // 遍历现有的 aircraftData，更新电侦数据
+            aircraftData.value = aircraftData.value.map(aircraft => {
+                // 在 response.data 中查找匹配的 UAV 数据
+                const uavData = response.data.find(uav => uav.id === aircraft.id);
+                if (uavData) {
+                    return {
+                        ...aircraft,
+                        electronicData: {
+                            type: uavData.type || 'UAV',
+                            name: uavData.name || 'Unknown',
+                            speed: uavData.speed?.toString() || '0',
+                            altitude: uavData.altitude?.toString() || '0',
+                            distance: uavData.distance?.toString() || '0',
+                            updateTime: new Date().toLocaleString(),
+                            threadLevel: uavData.threadLevel || 'low',
+                            latitude: uavData.latitude?.toString() || '0',
+                            longitude: uavData.longitude?.toString() || '0',
+                            pitch: `${uavData.pitch || 0}°`,
+                            azimuth: `${uavData.azimuth || 0}°`
+                        }
+                    };
+                }
+                return aircraft;
+            });
+        } catch (error) {
+            console.error('获取UAV数据失败:', error);
+        }
+    };
+
+    let dataUpdateTimer;
 </script>
 
 <style scoped>
