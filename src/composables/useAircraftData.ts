@@ -1,0 +1,316 @@
+import { ref, onMounted, onUnmounted } from 'vue'
+import axios from '@/api/index.js'
+
+export interface RadarData {
+    distance: string | number
+    azimuth: string  //以转台0度为基准
+    azimuth2: string //以正北0度为基准
+    pitch: string
+    speed: string | number
+    longitude: string | number
+    latitude: string | number
+}
+
+export interface ElectronicData {
+    type: string
+    name: string
+    speed: string
+    altitude: string | number
+    distance: string
+    updateTime: string
+    threadLevel: string
+    latitude: string
+    longitude: string
+    pitch: string
+    azimuth: string
+    color: string
+    path: [number, number][]
+}
+
+export interface FusionData {
+    longitude: string
+    latitude: string
+    pitch: string
+    azimuth: string
+    distance: string | number
+    speed: string | number
+}
+
+export interface Aircraft {
+    id: number
+    radarData: RadarData
+    electronicData: ElectronicData
+    fusionData: FusionData
+}
+
+// 初始化模拟数据
+const initialAircraftData: Aircraft[] = [
+    {
+        id: 1,
+        radarData: {
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    }
+]
+
+const aircraftData = ref<Aircraft[]>(initialAircraftData)
+
+// 计算融合数据的辅助函数
+const calculateFusionData = (radarData: RadarData, electronicData: ElectronicData): FusionData => {
+    // 将角度字符串转换为数值进行计算
+    const parseAngle = (angleStr?: string) => parseFloat(angleStr?.replace('°', '') || '0')
+    // 将字符串数值转换为数字进行计算
+    const parseNumber = (str?: string | number) => parseFloat(str?.toString() || '0')
+
+    return {
+        longitude: ((parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2).toFixed(4),
+        latitude: ((parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2).toFixed(4),
+        pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
+        azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
+        distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
+        speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0)
+    }
+}
+
+// 创建一个单例来追踪是否已经启动了更新
+let isUpdateStarted = false;
+let updateTimer = null;
+let radarTimer = null;
+
+export function useAircraftData() {
+    const updateElectronicData = async () => {
+        try {
+            const response = await axios.get('/api/v0/uavs')
+            
+            response.data.forEach(uavTarget => {
+                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                    aircraft.id === uavTarget.id
+                )
+
+                const newElectronicData: ElectronicData = {
+                    type: uavTarget.type || 'UAV',
+                    name: uavTarget.name || 'Unknown',
+                    speed: uavTarget.speed?.toString() || '0',
+                    altitude: uavTarget.altitude || 0,
+                    distance: uavTarget.distance?.toString() || '0',
+                    updateTime: new Date().toLocaleString(),
+                    threadLevel: uavTarget.threadLevel || 'low',
+                    latitude: uavTarget.lat?.toString() || '0',
+                    longitude: uavTarget.lng?.toString() || '0',
+                    pitch: `${uavTarget.pitchAngle || 0}°`,
+                    azimuth: `${uavTarget.azimuth || 0}°`,
+                    color: uavTarget.color || '#FF0000',
+                    path: uavTarget.path || []
+                }
+
+                if (existingIndex !== -1) {
+                    aircraftData.value[existingIndex].electronicData = newElectronicData
+                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
+                        aircraftData.value[existingIndex].radarData,
+                        newElectronicData
+                    )
+                } else {
+                    aircraftData.value.push({
+                        id: uavTarget.id,
+                        radarData: {
+                            distance: '0',
+                            azimuth: '0°',
+                            azimuth2: '0°',
+                            pitch: '0°',
+                            speed: '0',
+                            longitude: '0',
+                            latitude: '0'
+                        },
+                        electronicData: newElectronicData,
+                        fusionData: {
+                            longitude: uavTarget.lng?.toString() || '0',
+                            latitude: uavTarget.lat?.toString() || '0',
+                            pitch: `${uavTarget.pitchAngle || 0}°`,
+                            azimuth: `${uavTarget.azimuth || 0}°`,
+                            distance: uavTarget.distance?.toString() || '0',
+                            speed: uavTarget.speed?.toString() || '0'
+                        }
+                    })
+                }
+            })
+
+            aircraftData.value = aircraftData.value.filter(aircraft => 
+                response.data.some(uavTarget => uavTarget.id === aircraft.id) || 
+                aircraft.radarData.distance !== '0'
+            )
+        } catch (error) {
+            console.error('获取UAV数据失败:', error)
+        }
+    }
+
+    const updateRadarData = async () => {
+        try {
+            const response = await axios.get('/api/v0/radar/targetList')
+            
+            response.data.forEach(radarTarget => {
+                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                    aircraft.id === radarTarget.targetId
+                )
+
+                const newRadarData: RadarData = {
+                    distance: radarTarget.range.toFixed(0),
+                    azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
+                    azimuth2: `${radarTarget.azimuth2.toFixed(1)}°`,
+                    pitch: `${radarTarget.pitch.toFixed(1)}°`,
+                    speed: radarTarget.speed.toFixed(0),
+                    longitude: radarTarget.targetLon.toFixed(4),
+                    latitude: radarTarget.targetLat.toFixed(4)
+                }
+
+                if (existingIndex !== -1) {
+                    aircraftData.value[existingIndex].radarData = newRadarData
+                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
+                        newRadarData,
+                        aircraftData.value[existingIndex].electronicData
+                    )
+                } else {
+                    aircraftData.value.push({
+                        id: radarTarget.targetId,
+                        radarData: newRadarData,
+                        electronicData: {
+                            type: 'Unknown',
+                            name: 'Unknown',
+                            speed: '0',
+                            altitude: 0,
+                            distance: '0',
+                            updateTime: new Date().toLocaleString(),
+                            threadLevel: 'unknown',
+                            latitude: '0',
+                            longitude: '0',
+                            pitch: '0°',
+                            azimuth: '0°',
+                            color: '#808080',
+                            path: []
+                        },
+                        fusionData: {
+                            longitude: radarTarget.targetLon.toFixed(4),
+                            latitude: radarTarget.targetLat.toFixed(4),
+                            pitch: `${radarTarget.pitch.toFixed(1)}°`,
+                            azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
+                            distance: radarTarget.range.toFixed(0),
+                            speed: radarTarget.speed.toFixed(0)
+                        }
+                    })
+                }
+            })
+
+            aircraftData.value = aircraftData.value.filter(aircraft => 
+                response.data.some(radarTarget => radarTarget.targetId === aircraft.id)
+            )
+        } catch (error) {
+            console.error('获取雷达数据失败:', error)
+        }
+    }
+
+    // 添加启动和停止更新的方法
+    const startUpdating = () => {
+        if (isUpdateStarted) return;
+        
+        isUpdateStarted = true;
+        // 立即执行一次更新
+        updateElectronicData();
+        updateRadarData();
+        
+        // 设置定时器
+        updateTimer = setInterval(updateElectronicData, 5000);
+        radarTimer = setInterval(updateRadarData, 5000);
+        
+        console.log('Started aircraft data updates');
+    };
+
+    const stopUpdating = () => {
+        if (updateTimer) {
+            clearInterval(updateTimer);
+            updateTimer = null;
+        }
+        if (radarTimer) {
+            clearInterval(radarTimer);
+            radarTimer = null;
+        }
+        isUpdateStarted = false;
+        console.log('Stopped aircraft data updates');
+    };
+
+    // 在组件卸载时检查是否需要停止更新
+    onUnmounted(() => {
+        // 这里可以添加一些逻辑来决定是否要停止更新
+        // 比如可以维护一个计数器，只有当所有使用该 composable 的组件都卸载时才停止
+    });
+
+    return {
+        aircraftData,
+        updateElectronicData,
+        updateRadarData,
+        startUpdating,
+        stopUpdating
+    }
+} 

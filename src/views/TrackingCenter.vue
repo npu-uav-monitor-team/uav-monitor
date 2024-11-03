@@ -60,7 +60,7 @@
                         <div class="aircraft-tooltip">
                             <h4>{{ aircraft.name }}</h4>
                             <p>类型: {{ aircraft.type }}</p>
-                            <p>速度: {{ aircraft.speed }} km/h</p>
+                            <p>: {{ aircraft.speed }} km/h</p>
                             <p>高度: {{ aircraft.altitude }} m</p>
                             <p>距离: {{ aircraft.distance }} km</p>
                         </div>
@@ -89,7 +89,7 @@
                         <th>目标ID</th>
                         <th>型号</th>
                         <th>来源</th>
-                        <th>报告类型</th>
+                        <th>告类型</th>
                         <th>链接目标ID</th>
                         <th>探测</th>
                         <th>停留时长（分:秒）</th>
@@ -117,7 +117,7 @@
         </div>
         
         <div class="floating-panel all-aircraft-list" :class="{ 'panel-hidden': !showAllAircraftList }">
-            <h2>飞行物列表
+            <h2>飞物列表
                 <button @click="toggleAllAircraftList" class="toggle-btn">{{
                         showAllAircraftList ? '隐藏' : '显示'
                     }}
@@ -171,17 +171,16 @@
     import 'leaflet/dist/leaflet.css'
     import { LCircle, LCircleMarker, LMap, LMarker, LPolyline, LTileLayer, LTooltip } from '@vue-leaflet/vue-leaflet'
     import L from 'leaflet'
-    import axios from 'axios'; // 引入 axios 用于发送 HTTP 请求
-    import { onMounted, ref } from "vue";
+    import { onMounted, ref, computed } from "vue";
     import { useRouter } from "vue-router";
-    import { getElectronicUavList } from "@/api/radar.js";
+    import { useAircraftData } from "@/composables/useAircraftData";
     
     const router = useRouter()
     
     const map = ref()
     
     const zoom = ref(15) // 保持不变
-    const center = ref([22.695519, 114.437709]) // 更新为深圳市坪山区的坐标
+    const center = ref([22.695519, 114.437709]) // 更新为深圳的坐
     const url = ref('/public/tiles/{z}/{x}/{y}/tile.png')  // 修改为相对路径
     const fallbackUrl = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     const attribution = ref('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
@@ -192,49 +191,41 @@
         preferCanvas: true,
         attributionControl: false,
     })
-    const flightPaths = ref([])
     
-    const allAircraft = ref([])
+    const { aircraftData, updateElectronicData, updateRadarData } = useAircraftData();
     
-    const updateAircraftData = async () => {
-        try {
-            const newAircraftData = await getElectronicUavList()
-            if (!newAircraftData) {
-                console.error('No data received from API');
-                return;
-            }
-            
-            allAircraft.value = newAircraftData.map(aircraft => ({
-                ...aircraft,
-                lat: parseFloat(aircraft.lat),
-                lng: parseFloat(aircraft.lng),
-                path: aircraft.path.map(point => [parseFloat(point[1]), parseFloat(point[0])]),
-            }));
-            
-            // 更新 threats 数据 (根据威胁等级过滤)
-            threats.value = newAircraftData.filter(aircraft => aircraft.threadLevel !== '低').map(aircraft => ({
+    const allAircraft = computed(() => {
+        return aircraftData.value.map(aircraft => ({
+            id: aircraft.id,
+            type: aircraft.electronicData.type,
+            name: aircraft.electronicData.name,
+            speed: aircraft.fusionData.speed,
+            altitude: aircraft.electronicData.altitude,
+            distance: aircraft.fusionData.distance,
+            updateTime: aircraft.electronicData.updateTime,
+            lat: parseFloat(aircraft.fusionData.latitude),
+            lng: parseFloat(aircraft.fusionData.longitude),
+            color: aircraft.electronicData.color,
+            path: aircraft.electronicData.path
+        }));
+    });
+    
+    const threats = computed(() => {
+        return aircraftData.value
+            .filter(aircraft => aircraft.electronicData.threadLevel !== 'low')
+            .map(aircraft => ({
                 id: aircraft.id,
-                type: aircraft.type,
-                name: aircraft.name,
-                level: aircraft.threadLevel,
-                speed: aircraft.speed,
-                altitude: aircraft.altitude,
-                distance: aircraft.distance,
-                updateTime: aircraft.updateTime,
-                color: aircraft.color
+                type: aircraft.electronicData.type,
+                name: aircraft.electronicData.name,
+                level: aircraft.electronicData.threadLevel,
+                speed: aircraft.fusionData.speed,
+                altitude: aircraft.electronicData.altitude,
+                distance: aircraft.fusionData.distance,
+                updateTime: aircraft.electronicData.updateTime,
+                color: aircraft.electronicData.color
             }));
-            // 更新 flightPaths 数据
-            flightPaths.value = allAircraft.value.map(aircraft => ({
-                id: aircraft.id,
-                points: aircraft.path, // 使用接口提供的路径数据
-                color: aircraft.color
-            }));
-        } catch (error) {
-            console.error('Error updating aircraft data:', error);
-        }
-    };
+    });
     
-    const threats = ref([]);
     const selectedAircraft = ref(null);
     const infoPosition = ref({left: '0px', top: '0px'});
     const noFlyZone = ref({
@@ -244,14 +235,13 @@
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
     
-    const goToControlCenter = async () => {
-        await router.push('/control-center')
-    }
+    const goToControlCenter = () => {
+        router.push('/control-center');
+    };
     
     function getIconClass(type) {
         switch (type) {
             case 'UAV':
-                // fas fa-drone-alt不显示，暂时跟下面一样
                 return 'fas fa-plane';
             case 'aircraft':
                 return 'fas fa-plane';
@@ -264,12 +254,10 @@
     
     function showAircraftInfo(aircraft, event) {
         selectedAircraft.value = aircraft;
-        // 计算tooltip的位置
         const map = event.target._map;
         const latLng = [aircraft.lat, aircraft.lng];
         const point = map.latLngToContainerPoint(latLng);
         
-        // 添加一些偏移，使tooltip显示在目标旁边
         infoPosition.value = {
             left: `${point.x + 15}px`,
             top: `${point.y - 30}px`
@@ -280,8 +268,26 @@
         selectedAircraft.value = null;
     }
     
+    const flightPaths = computed(() => {
+        return allAircraft.value.map(aircraft => ({
+            id: aircraft.id,
+            points: aircraft.path || [],
+            color: aircraft.color
+        }));
+    });
+    
     function getArrowIcon(aircraft) {
-        const lastTwoPoints = flightPaths.value.find(path => path.id === aircraft.id).points.slice(-2);
+        const path = flightPaths.value.find(p => p.id === aircraft.id);
+        if (!path || !path.points || path.points.length < 2) {
+            return L.divIcon({
+                html: '', // 如果没有路径点，返回空图标
+                className: 'arrow-icon',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+        }
+        
+        const lastTwoPoints = path.points.slice(-2);
         const angle = calculateAngle(lastTwoPoints[0], lastTwoPoints[1]);
         const svgIcon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${aircraft.color}" width="36px" height="36px" style="transform: rotate(${angle}deg);">
@@ -305,11 +311,11 @@
     }
     
     function toggleThreatList() {
-        showThreatList.value = !showThreatList.value
+        showThreatList.value = !showThreatList.value;
     }
     
     function toggleAllAircraftList() {
-        showAllAircraftList.value = !showAllAircraftList.value
+        showAllAircraftList.value = !showAllAircraftList.value;
     }
     
     // 添加调试信息
@@ -336,7 +342,7 @@
         ]
     })
     
-    // 添加地图就绪事件处理
+    // 添加地图就事件处理
     const onMapReady = () => {
         console.log('Map is ready');
         // 测试瓦片加载
@@ -356,44 +362,43 @@
             .catch(error => console.error('Test tile loading failed:', error));
     }
     
-    onMounted(() => {
-        // 注释掉写死的无人机数据
-        // const allAircraft = ref([
-        //     {
-        //         id: 1,
-        //         type: 'uav',
-        //         name: 'UAV-001',
-        //         speed: 120,
-        //         altitude: 500,
-        //         distance: 2.5,
-        //         updateTime: '2023/4/10 10:30:00',
-        //         lat: 22.695519,
-        //         lng: 114.437709,
-        //         color: 'red'
-        //     },
-        //     // ... other aircraft data ...
-        // ])
-        
-        // 注释掉随机生成轨迹的代码
-        // onMounted(() => {
-        //     allAircraft.value.forEach((aircraft) => {
-        //         const startPoint = [
-        //             22.695519 + (Math.random() - 0.5) * 0.02,
-        //             114.437709 + (Math.random() - 0.5) * 0.02
-        //         ];
-        //         const path = generateRandomPath(startPoint, 30);
-        //         flightPaths.value.push({
-        //             id: aircraft.id,
-        //             points: path,
-        //             color: aircraft.color
-        //         });
-        //         const lastPoint = path[path.length - 1];
-        //         aircraft.lat = lastPoint[0];
-        //         aircraft.lng = lastPoint[1];
-        //     });
-        //     // ... existing code ...
-        // })
-        
+    const checkInternetConnection = async () => {
+        try {
+            // 尝试访问在线地图的一个瓦片来测试是否能访问互联网
+            const response = await fetch('https://a.tile.openstreetmap.org/1/1/1.png', {
+                method: 'HEAD',
+                mode: 'no-cors',
+                // 设置较短的超时时间
+                signal: AbortSignal.timeout(3000)
+            });
+            return true;
+        } catch (error) {
+            console.log('Internet connection test failed:', error);
+            return false;
+        }
+    };
+    
+    const ONLINE_MAP_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const OFFLINE_MAP_URL = '/public/tiles/{z}/{x}/{y}/tile.png';
+    
+    const updateMapUrl = async () => {
+        const hasInternet = await checkInternetConnection();
+        console.log('Internet connection status:', hasInternet);
+        url.value = hasInternet ? ONLINE_MAP_URL : OFFLINE_MAP_URL;
+    };
+    
+    // 修改网络状态监听逻辑
+    window.addEventListener('online', () => {
+        console.log('Network status changed to online');
+        updateMapUrl();
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('Network status changed to offline');
+        url.value = OFFLINE_MAP_URL;
+    });
+    
+    onMounted(async () => {
         noFlyZone.value = {
             center: [22.695519, 114.437709],
             radius: 500
@@ -401,8 +406,6 @@
         
         center.value = [22.7087, 114.3671];
         
-        updateAircraftData();
-        setInterval(updateAircraftData, 5000); // 每 5 秒更新一次数据
         // 添加调试信息
         console.log('Map center:', center.value);
         console.log('Initial zoom:', zoom.value);
@@ -419,30 +422,15 @@
             .catch(error => {
                 console.error('Test tile loading failed:', error);
             });
-    })
-    
-    
-    // Define URLs for online and offline maps
-    const onlineUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';  //https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png 卫星地图，但数据有点老
-    const offlineUrl = '/public/tiles/{z}/{x}/{y}/tile.png';
-    
-    // Function to update the map URL based on network status
-    const updateMapUrl = () => {
-        url.value = navigator.onLine ? onlineUrl : offlineUrl;
-    };
-    
-    // Watch for changes in network status
-    window.addEventListener('online', updateMapUrl);
-    window.addEventListener('offline', updateMapUrl);
-    
-    // Initialize map URL based on current network status
-    updateMapUrl();
+        
+        await updateMapUrl();
+    });
 </script>
 
 <style scoped>
     .tracking-view {
         height: calc(100vh - 10px); /* 适当减少上下的空白边框 */
-        width: calc(100vw - 20px); /* 适当减少左右的空白宽度 */
+        width: calc(100vw - 20px); /* 适当减少右的空白宽度 */
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -691,7 +679,7 @@
     .arrow-icon {
         background: none;
         border: none;
-        pointer-events: none; /* 使箭头图标不响应鼠标事件 */
+        pointer-events: none; /* 使箭图标不响应鼠标事件 */
     }
     
     /* 增加箭头图标的可见性 */
@@ -699,7 +687,7 @@
         filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.5));
     }
     
-    /* 移除最大高度限制 */
+    /* 移除最���高度限制 */
     .threat-list, .all-aircraft-list {
         max-height: none;
     }

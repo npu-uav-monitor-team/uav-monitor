@@ -444,7 +444,7 @@
       
         
         try {
-            const response = await axios.get(`/api/v0/photoelectrics}`);
+            const response = await axios.get(`/api/v0/photoelectrics/info`);
             if (response.data.code === 0) {
                 const device = response.data.result.photoelectrics;
                 
