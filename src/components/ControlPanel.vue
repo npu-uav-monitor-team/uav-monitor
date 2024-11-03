@@ -16,7 +16,7 @@
             <button
                 @click="clickDeception"
                 :class="{ active: activeTab === 'deception' }"
-            >
+            >   
                 诱骗和干扰
             </button>
         </div>
@@ -169,18 +169,18 @@
                             <th>高度</th>
                         </tr>
                         <tr>
-                            <td>{{ gpsData.longitude }}°</td>
-                            <td>{{ gpsData.latitude }}°</td>
-                            <td>{{ gpsData.altitude || 0 }}m</td>
+                            <td>{{ gpsData.longitude.toFixed(6) }}°</td>
+                            <td>{{ gpsData.latitude.toFixed(6) }}°</td>
+                            <td>{{ gpsData.altitude.toFixed(6) || 0 }}m</td>
                         </tr>
                     </table>
                 </div>
 
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
-                    <input type="range" class="power-slider" v-model="powerValue" min="0" max="100" step="1">
+                    <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
-                    <button @click="handlePowerConfirm" class="power-confirm-btn">确定</button>
+                    <button @click="sendCommand(4101)" class="power-confirm-btn">确定</button>
                 </div>
 
                 <div class="small-tabs-content">
@@ -192,27 +192,6 @@
                                 class="small-tab"
                             >
                                 驱离
-                            </button>
-                            <button
-                                @click="activeSmallTab = 'interference'"
-                                :class="{ active: activeSmallTab === 'interference' }"
-                                class="small-tab"
-                            >
-                                干扰
-                            </button>
-                            <button
-                                @click="activeSmallTab = 'noFly'"
-                                :class="{ active: activeSmallTab === 'noFly' }"
-                                class="small-tab"
-                            >
-                                禁飞
-                            </button>
-                            <button
-                                @click="activeSmallTab = 'defense'"
-                                :class="{ active: activeSmallTab === 'defense' }"
-                                class="small-tab"
-                            >
-                                防御
                             </button>
                             <button
                                 @click="activeSmallTab = 'capture'"
@@ -262,8 +241,8 @@
                             <div class="capture-content">
                                 <div class="coordinate-inputs">
                                     <label>经纬度</label>
-                                    <input type="text" v-model="gpsData.latitude" placeholder="纬度">
-                                    <input type="text" v-model="gpsData.longitude" placeholder="经度">
+                                    <input type="text" v-model="capturePositionData.latitude" placeholder="纬度">
+                                    <input type="text" v-model="capturePositionData.longitude" placeholder="经度">
                                     <button class="icon-button"><i class="icon-target"></i></button>
                                 </div>
                                 <div class="ambiguity-input">
@@ -355,13 +334,12 @@
 
 <script setup>
     import { onMounted, onUnmounted, ref, computed } from "vue";
-    import axios from '@/api/index.js';
+    import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
     const powerLevel = ref(0);
-    const driveAwayAngle = ref(0);
     const interferenceEnabled = ref(false);
     const defenseEnabled = ref(false);
     const emissionStatus = ref('停止');
@@ -414,12 +392,6 @@
     const deviceOnline = ref(true);
     const deviceNormal = ref(true);
     
-    const gpsData = ref({
-        longitude: 0.0000,
-        latitude: 0.0000,
-        altitude: 0.0000
-    })
-    const simulationLevel = ref(100);
     const bootStrapTimerId = ref(null);
     
     // 预留的控制接口
@@ -784,22 +756,6 @@
             alert('频率切换失败，请检查网络连接');
         }
     }
-
-    async function stopLaunch_1() {
-        let updateCommandRequestDto = {
-            cmdWord: 4096,
-                commandDto: {
-                    category: 0
-                }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            return true
-        }
-        
-        // 更新数据
-        await clickDeception()
-    }
     
     // 保存设置
     function saveSettings() {
@@ -848,12 +804,9 @@
         const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
         console.log(connectRes)
         if (connectRes.isSuccess) {
-            // 经纬度都截取到小数点后六位
-            gpsData.value.altitude = connectRes.data.data.locatedPosition.altitude.toFixed(5)
-            gpsData.value.latitude = connectRes.data.data.locatedPosition.latitude.toFixed(5)
-            gpsData.value.longitude = connectRes.data.data.locatedPosition.longitude.toFixed(5)
+            maxPower.value = connectRes.data.data.maxRadPower;
 
-            // 每3秒发送一次这个指令，捕获指发送前需要这个发送这个指令
+            // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
             if(bootStrapTimerId.value)clearInterval(bootStrapTimerId.value);
             bootStrapTimerId.value = setInterval(() => {
                 if(activeTab.value === 'deception')sendCommand(8192)
@@ -896,39 +849,7 @@
     
     // 在 script setup 部分添加新的响应式变量
     const laserEmissionStatus = ref(false);
-    
-    // 添加捕获处理函数
-    async function handleCapture() {
-        try {
-            const updateCommandRequestDto = {
-                CmdWord: 4352,
-                CommandDto: {
-                    Capture: {
-                        Position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
-                        },
-                        CaptureAmbiguity: simulationLevel.value,
-                        Operate: true
-                    }
-                }
-            };
-            
-            const res = await deceptionService.updateCommand(updateCommandRequestDto);
-            if (res) {
-                alert('捕获指令发送成功');
-            } else {
-                alert('捕获指令发送失败');
-            }
-            
-            // 更新数据
-            await clickDeception();
-        } catch (error) {
-            console.error('捕获指令发送失败:', error);
-            alert('捕获指令发送失败，请检查网络连接');
-        }
-    }
+
     
     // 添加跟踪处理函数
     // async function handleTracking() {
@@ -1094,126 +1015,6 @@
         // const apiEndpoint = `/api/v0/photoelectrics/move/${currentPhotoelectricId.value}/${direction}`;
         console.log(`光电设备${getDirectionText(direction)}移动`);
     }
-//  点击诱骗或捕获后，另一个按钮会被禁用变灰
-// 此时只有停止发射按钮可用
-// 点击停止发射后，诱骗和捕获按钮都会重新变为可用状态
-// 停止发射按钮只在有发射进行时才可用
-    // 添加诱骗处理函数
-    async function handleDeception() {
-        try {
-            const updateCommandRequestDto = {
-                cmdWord: 4097,
-                commandDto: {
-                    category: 15,
-                    driveAngle: 10,
-                    isInterferenceEmitted: true, // 开启干扰发射
-                    noFly: {
-                        state: false,
-                        position: {
-                            Longitude: gpsData.value.longitude,
-                            Latitude: gpsData.value.latitude,
-                            Altitude: gpsData.value.altitude
-                        }
-                    },
-                    defense: false,
-                    transmitPower: {
-                        state: 1,
-                        power: 0,
-                        sinr: 10
-                    },
-                    capture: {
-                        position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
-                        },
-                        captureAmbiguity: simulationLevel.value,
-                        operate: false
-                    },
-                    BootstrapPosition: {
-                        timestamp: 0,
-                        targetType: 0
-                    },
-                    turntableAngle: {
-                        pitchAngle: 0,
-                        horizontalAngle: 0
-                    },
-                    turntableMode: false
-                }
-            };
-            
-            const res = await deceptionService.updateCommand(updateCommandRequestDto);
-            if (res) {
-            } else {
-                alert('诱骗指令发送失败');
-            }
-            
-            // 更新数据
-            await clickDeception();
-        } catch (error) {
-            
-            console.error('诱骗指令发送失败:', error);
-            alert('诱骗指令发送失败，请检查网络连接');
-        }
-    }
-
-    // 添加停止发射处理函数
-    async function handleStopEmission() {
-        try {
-            const updateCommandRequestDto = {
-                cmdWord: 4097,
-                commandDto: {
-                    category: 15,
-                    driveAngle: 10,
-                    isInterferenceEmitted: false, // 关闭干扰发射
-                    noFly: {
-                        state: false,
-                        position: {
-                            Longitude: gpsData.value.longitude,
-                            Latitude: gpsData.value.latitude,
-                            Altitude: gpsData.value.altitude
-                        }
-                    },
-                    defense: false,
-                    transmitPower: {
-                        state: 1,
-                        power: 0,
-                        sinr: 10
-                    },
-                    capture: {
-                        position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
-                        },
-                        captureAmbiguity: simulationLevel.value,
-                        operate: false
-                    },
-                    BootstrapPosition: {
-                        timestamp: 0,
-                        targetType: 0
-                    },
-                    turntableAngle: {
-                        pitchAngle: 0,
-                        horizontalAngle: 0
-                    },
-                    turntableMode: false
-                }
-            };
-            
-            const res = await deceptionService.updateCommand(updateCommandRequestDto);
-            if (res) {
-            } else {
-                alert('停止发射指令发送失败');
-            }
-            
-            // 更新数据
-            await clickDeception();
-        } catch (error) {
-            console.error('停止发射指令发送失败:', error);
-            alert('停止发射指令发送失败，请检查网络连接');
-        }
-    }
 
     // 添加状态控制变量
     const isEmitting = ref(false); // 是否正在发射
@@ -1225,43 +1026,57 @@
 
     function sendDriveAwayCommand() {
         // TODO: 调用后端 API 发送驱离命令
-        console.log('发送驱离命令:', driveAwayAngle.value);
-    }
-
-    function toggleInterference() {
-        // TODO: 调用后端 API 切换干扰状态
-        console.log('切换干扰状态:', interferenceEnabled.value);
+        console.log('保存驱离角度完成');
     }
 
     function sendNoFlyCommand() {
         // TODO: 调用后端 API 发送禁飞命令
         console.log('发送禁飞命令');
     }
+    const maxPower = ref(0)
 
-    function toggleDefense() {
-        // TODO: 调用后端 API 切换防御状态
-        console.log('切换防御状态:', defenseEnabled.value);
-    }
+    async function toggleInfrared() {
+        try {
+            const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
 
-    const powerValue = ref(0);
-
-    const handlePowerConfirm = () => {
-        // TODO: 调用后端 API 设置发射功率
-        console.log('设置发射功率:', powerValue.value);
-    };
-
-    // 添加验证函数
-    const validateSimulationLevel = () => {
-        if (simulationLevel.value < 50) {
-            simulationLevel.value = 50;
+            const response = await axios.post(apiEndpoint);
+            if (response.data.code === 0) {
+                infraredStatus.value = !infraredStatus.value;
+                alert(infraredStatus.value ? '红外开机成功' : '红外关机成功');
+            } else {
+                alert(response.data.msg || '红外开关操作失败');
+            }
+        } catch (error) {
+            console.error('红外开关请求失败:', error);
+            alert('红外开关操作失败，请检查网络连接');
         }
-    };
+    }
 </script>
 
 <script>
     
-    import { deceptionService } from "../service/deceptionService";
-    const launchCaptureFlag = ref(false)
+import { deceptionService } from "../service/deceptionService";
+const launchCaptureFlag = ref(false)
+const driveAwayAngle = ref(0);
+const capturePositionData = ref({
+    longitude: 0.0000,
+    latitude: 0.0000,
+    altitude: 0.0000
+})
+const gpsData = ref({
+    longitude: 0.0000,
+    latitude: 0.0000,
+    altitude: 0.0000
+})
+const simulationLevel = ref(100);
+const powerValue = ref(0);
+
+// 添加验证函数
+const validateSimulationLevel = () => {
+    if (simulationLevel.value < 50) {
+        simulationLevel.value = 50;
+    }
+};
 async function sendCommand(cmdWord) {
     let updateCommandRequestDto
     if (cmdWord === 4352) {
@@ -1274,9 +1089,9 @@ async function sendCommand(cmdWord) {
             CommandDto: {
                 Capture: {
                     Position: {
-                        Latitude: gpsData.value.latitude,
-                        Longitude: gpsData.value.longitude,
-                        Altitude: gpsData.value.altitude
+                        Latitude: capturePositionData.value.latitude,
+                        Longitude: capturePositionData.value.longitude,
+                        Altitude: capturePositionData.value.altitude
                     },
                     CaptureAmbiguity: simulationLevel.value,
                     Operate: true
@@ -1336,6 +1151,18 @@ async function sendCommand(cmdWord) {
                 }
             }
         }
+    } else if(cmdWord ===  4101){
+        // 手动功率设置
+        updateCommandRequestDto = {
+            CmdWord: cmdWord,
+            CommandDto: {
+                transmitPower: {
+                    state: 1,
+                    power: powerValue.value,
+                    sinr: 10,
+                }
+            }
+        }
     }
     const res = await deceptionService.updateCommand(updateCommandRequestDto)
     if (res) {
@@ -1348,21 +1175,23 @@ async function sendCommand(cmdWord) {
     // // 更新数据
     // await clickDeception()
 }   
-    async function stopLaunch_1() {
-        let updateCommandRequestDto = {
-            cmdWord: 4096,
-                commandDto: {
-                    category: 0
-                }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            return true
-        }
-        
-        // 更新数据
-        await clickDeception()
+async function stopLaunch_1() {
+    let updateCommandRequestDto = {
+        cmdWord: 4096,
+            commandDto: {
+                category: 0
+            }
     }
+    const res = await deceptionService.updateCommand(updateCommandRequestDto)
+    if (res) {
+        return true
+    }
+}
+
+const handlePowerConfirm = () => {
+    // TODO: 调用后端 API 设置发射功率
+    console.log('设置发射功率:', powerValue.value);
+};
 // 在这里导出需要的函数
 export { sendCommand, stopLaunch_1 }
 </script>
