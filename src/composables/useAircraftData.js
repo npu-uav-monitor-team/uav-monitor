@@ -82,7 +82,7 @@ const initialAircraftData = [
 const aircraftData = ref(initialAircraftData)
 
 // 维护一个自增的原子int
-let idCounter = 0;
+let idCounter = 1;
 
 // 计算融合数据的辅助函数
 const calculateFusionData = (radarData, electronicData) => {

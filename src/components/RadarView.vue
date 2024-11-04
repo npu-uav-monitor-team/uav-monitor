@@ -63,7 +63,7 @@
                             <input
                                 type="radio"
                                 :value="aircraft.id"
-                                v-model="selectedAircraftId"
+                                @change="selectedAircraftId = aircraft.id"
                                 name="aircraft-selection"
                             >
                             {{ aircraft.id }}
@@ -189,7 +189,7 @@
     const refreshVideo = async () => {
         const videoUrl = getVideoUrl();
         const panoramicRtcBackendUrl = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
-
+        
         await nextTick() // 待dom加载完毕
         let videoDocument = document.getElementById('radar-video')
         // eslint-disable-next-line no-undef
@@ -271,7 +271,7 @@
         showSettings.value = false;
     };
     
-    const selectedAircraftId = ref();
+    const selectedAircraftId = ref(1);
     
     const handleRadarGuide = async () => {
         if (!selectedAircraftId.value) {
@@ -281,7 +281,7 @@
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
             1,
-            aircraft.radarData.distance,
+            parseInt(aircraft.radarData.distance),
             parseFloat(aircraft.radarData.azimuth.slice(0, -1)),
             parseFloat(aircraft.radarData.pitch.slice(0, -1))
         );
@@ -296,7 +296,7 @@
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
             2,
-            aircraft.electronicData.distance,
+            parseInt(aircraft.electronicData.distance),
             parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
             parseFloat(aircraft.electronicData.pitch.slice(0, -1))
         );
@@ -312,14 +312,14 @@
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
             1,
-            aircraft.electronicData.distance,
+            parseInt(aircraft.electronicData.distance),
             parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
             parseFloat(aircraft.fusionData.pitch.slice(0, -1))
         );
         console.log(data);
         console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
-
+    
     const cancelGuide = async () => {
         await axios.post('/api/v0/photoelectrics/radarAndElectricCancel')
     }
