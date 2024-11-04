@@ -45,10 +45,11 @@ export const getElectronicUavList = async () => {
 // @param targetDistance: 目标距离
 // @param targetAzimuth: 目标方位角
 // @param targetElevation: 目标俯仰角
-export const useRGuide = async (targetDistance, targetAzimuth, targetElevation) => {
+export const useRGuide = async (type, targetDistance, targetAzimuth, targetElevation) => {
     try {
         // 向后端发送POST请求，传递目标的三维坐标信息
         const {data} = await axios.post('/api/v0/photoelectrics/radarAndElectric', {
+            type: type,
             targetDistance: targetDistance,    // 目标距离
             targetAzimuth: targetAzimuth,     // 目标方位角
             targetElevation: targetElevation  // 目标俯仰角

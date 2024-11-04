@@ -277,6 +277,7 @@
         }
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
+            1,
             aircraft.radarData.distance,
             parseFloat(aircraft.radarData.azimuth.slice(0, -1)),
             parseFloat(aircraft.radarData.pitch.slice(0, -1))
@@ -291,6 +292,7 @@
         }
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
+            2,
             aircraft.electronicData.distance,
             parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
             parseFloat(aircraft.electronicData.pitch.slice(0, -1))
@@ -306,6 +308,7 @@
         }
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
         const data = await useRGuide(
+            1,
             aircraft.electronicData.distance,
             parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
             parseFloat(aircraft.fusionData.pitch.slice(0, -1))
