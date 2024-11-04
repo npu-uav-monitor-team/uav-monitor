@@ -24,22 +24,22 @@ export const getRadarUavList = async () => {
 }
 
 // 获取电子侦察探测到的无人机列表
-export const getElectronicUavList = async () => {
-    try {
-        // 向后端发送GET请求获取电子侦察目标列表
-        const {data} = await axios.get('/api/v0/uavs')
-        // 检查返回数据的有效性
-        if (data.code !== null && data.code === 0 && data.data !== null) {
-            return data
-        } else if (data.code !== null) {
-            return null
-        }
-        return null
-    } catch (e) {
-        console.log(e)
-    }
-    return null
-}
+// export const getElectronicUavList = async () => {
+//     try {
+//         // 向后端发送GET请求获取电子侦察目标列表
+//         const {data} = await axios.get('/api/v0/uavs')
+//         // 检查返回数据的有效性
+//         if (data.code !== null && data.code === 0 && data.data !== null) {
+//             return data
+//         } else if (data.code !== null) {
+//             return null
+//         }
+//         return null
+//     } catch (e) {
+//         console.log(e)
+//     }
+//     return null
+// }
 
 // 雷达引导功能
 // @param targetDistance: 目标距离

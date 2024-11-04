@@ -82,7 +82,7 @@ const initialAircraftData = [
 const aircraftData = ref(initialAircraftData)
 
 // 维护一个自增的原子int
-let idCounter = -1;
+let idCounter = 0;
 
 // 计算融合数据的辅助函数
 const calculateFusionData = (radarData, electronicData) => {
@@ -335,7 +335,11 @@ export function useAircraftData() {
     // 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
     async function updateFusionData() {
         const electricResponse = await axios.get('/api/v0/uavs')
-        electricResponse.data.forEach(uavTarget => {
+        if (electricResponse.data != null && aircraftData.value[0].electronicData.updateTime === '2024-03-21 14:30:00') {
+            // 清空
+            aircraftData.value = []
+        }
+        electricResponse.data.data.forEach(uavTarget => {
             const existingIndex = aircraftData.value.findIndex(aircraft =>
                 aircraft.electronicData.electronicId === uavTarget.id
             )
@@ -385,7 +389,7 @@ export function useAircraftData() {
             }
         })
         const radarResponse = await axios.get('/api/v0/radar/targetList')
-        radarResponse.data.forEach(radarTarget => {
+        radarResponse.data.data.forEach(radarTarget => {
             const newRadarData = {
                 radarId: radarTarget.targetId,
                 distance: radarTarget.range.toFixed(0),

@@ -73,20 +73,20 @@
                         <td>{{ aircraft.radarData.azimuth }}</td>
                         <td>{{ aircraft.radarData.pitch }}</td>
                         <td>{{ aircraft.radarData.speed }}</td>
-                        <td>{{ aircraft.radarData.longitude }}</td>
-                        <td>{{ aircraft.radarData.latitude }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.longitude).toFixed(4) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.latitude).toFixed(4) }}</td>
                         
                         <!-- 电侦数据 (只显示部分关键信息) -->
                         <td>{{ aircraft.electronicData.type }}</td>
                         <td>{{ aircraft.electronicData.name }}</td>
                         <td>{{ aircraft.electronicData.threadLevel }}</td>
                         <td>{{ aircraft.electronicData.distance }}</td>
-                        <td>{{ aircraft.electronicData.longitude }}</td>
-                        <td>{{ aircraft.electronicData.latitude }}</td>
+                        <td>{{ parseFloat(aircraft.electronicData.longitude).toFixed(4) }}</td>
+                        <td>{{ parseFloat(aircraft.electronicData.latitude).toFixed(4) }}</td>
                         
                         <!-- 融合数据 (只显示关键位置信息) -->
-                        <td>{{ aircraft.fusionData.longitude }}</td>
-                        <td>{{ aircraft.fusionData.latitude }}</td>
+                        <td>{{ parseFloat(aircraft.fusionData.longitude).toFixed(4) }}</td>
+                        <td>{{ parseFloat(aircraft.fusionData.latitude).toFixed(4) }}</td>
                         <td>{{ aircraft.fusionData.azimuth }}</td>
                     </tr>
                     </tbody>
@@ -98,6 +98,7 @@
             <button @click="handleRadarGuide">雷达引导</button>
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
+            <button @click="cancelGuide">取消引导</button>
             <button @click="handleInterference"
                     :class="{active: deceptionOperateType == 'interference',
             not_active: deceptionOperateType != 'interference'}"
@@ -168,6 +169,7 @@
 
 <script setup>
     import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+    import axios from "@/api/index.js"
     import { useRGuide } from "@/api/radar.js";
     import { sendCommand, stopLaunch_1 } from '@/components/ControlPanel.vue'
     import { useAircraftData } from '@/composables/useAircraftData'
@@ -177,21 +179,22 @@
     
     let webRtcServer = null;
     // 从环境变量获取视频流 URL
-    const PANORAMIC_VIDEO_URL_1 = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
-    const PANORAMIC_VIDEO_URL_2 = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
+    const PANORAMIC_VIDEO_URL_1 = import.meta.env.VITE_PANORAMIC_VIDEO_URL
+    const PANORAMIC_VIDEO_URL_2 = import.meta.env.VITE_PANORAMIC_VIDEO_URL
     
     const getVideoUrl = () => {
         return selectedStream.value === '1' ? PANORAMIC_VIDEO_URL_1 : PANORAMIC_VIDEO_URL_2;
     };
     
     const refreshVideo = async () => {
-        await nextTick();
-        const videoElement = document.getElementById('radar-video');
         const videoUrl = getVideoUrl();
         const panoramicRtcBackendUrl = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
+
+        await nextTick() // 待dom加载完毕
+        let videoDocument = document.getElementById('radar-video')
         // eslint-disable-next-line no-undef
-        webRtcServer = new WebRtcStreamer(videoElement, panoramicRtcBackendUrl);
-        webRtcServer.connect(videoUrl, null, `rtptransport=tcp&timeout=60`);
+        webRtcServer = new WebRtcStreamer(videoDocument, panoramicRtcBackendUrl)
+        webRtcServer.connect(videoUrl, null, `rtptransport=tcp&timeout=60`)
     };
     
     const changeStream = () => {
@@ -316,6 +319,10 @@
         console.log(data);
         console.log('执行融合引导操作，目标ID:', selectedAircraftId.value);
     };
+
+    const cancelGuide = async () => {
+        await axios.post('/api/v0/photoelectrics/radarAndElectricCancel')
+    }
     
     const handleInterference = async () => {
         if (deceptionOperateType.value !== 'stopLaunch') {
