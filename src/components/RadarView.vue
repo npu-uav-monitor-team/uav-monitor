@@ -188,9 +188,6 @@
         await nextTick();
         const videoElement = document.getElementById('radar-video');
         const videoUrl = getVideoUrl();
-        if (webRtcServer) {
-            webRtcServer.disconnect();
-        }
         const panoramicRtcBackendUrl = import.meta.env.VITE_PANORAMIC_WEBRTC_URL
         // eslint-disable-next-line no-undef
         webRtcServer = new WebRtcStreamer(videoElement, panoramicRtcBackendUrl);
