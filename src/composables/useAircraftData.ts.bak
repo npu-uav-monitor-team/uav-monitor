@@ -145,9 +145,9 @@ export function useAircraftData() {
     const updateElectronicData = async () => {
         try {
             const response = await axios.get('/api/v0/uavs')
-            
+
             response.data.forEach(uavTarget => {
-                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                const existingIndex = aircraftData.value.findIndex(aircraft =>
                     aircraft.id === uavTarget.id
                 )
 
@@ -198,8 +198,8 @@ export function useAircraftData() {
                 }
             })
 
-            aircraftData.value = aircraftData.value.filter(aircraft => 
-                response.data.some(uavTarget => uavTarget.id === aircraft.id) || 
+            aircraftData.value = aircraftData.value.filter(aircraft =>
+                response.data.some(uavTarget => uavTarget.id === aircraft.id) ||
                 aircraft.radarData.distance !== '0'
             )
         } catch (error) {
@@ -210,9 +210,9 @@ export function useAircraftData() {
     const updateRadarData = async () => {
         try {
             const response = await axios.get('/api/v0/radar/targetList')
-            
+
             response.data.forEach(radarTarget => {
-                const existingIndex = aircraftData.value.findIndex(aircraft => 
+                const existingIndex = aircraftData.value.findIndex(aircraft =>
                     aircraft.id === radarTarget.targetId
                 )
 
@@ -263,7 +263,7 @@ export function useAircraftData() {
                 }
             })
 
-            aircraftData.value = aircraftData.value.filter(aircraft => 
+            aircraftData.value = aircraftData.value.filter(aircraft =>
                 response.data.some(radarTarget => radarTarget.targetId === aircraft.id)
             )
         } catch (error) {
@@ -274,16 +274,16 @@ export function useAircraftData() {
     // 添加启动和停止更新的方法
     const startUpdating = () => {
         if (isUpdateStarted) return;
-        
+
         isUpdateStarted = true;
         // 立即执行一次更新
         updateElectronicData();
         updateRadarData();
-        
+
         // 设置定时器
         updateTimer = setInterval(updateElectronicData, 5000);
         radarTimer = setInterval(updateRadarData, 5000);
-        
+
         console.log('Started aircraft data updates');
     };
 
@@ -313,4 +313,4 @@ export function useAircraftData() {
         startUpdating,
         stopUpdating
     }
-} 
+}

@@ -16,7 +16,7 @@
             <button
                 @click="clickDeception"
                 :class="{ active: activeTab === 'deception' }"
-            >   
+            >
                 诱骗和干扰
             </button>
         </div>
@@ -43,12 +43,12 @@
                     <h4>Defense Settings</h4>
                     <div class="input-group-container">
                         <div class="input-group">
-                            <label>Defense delay (sec)</label>
+                            <label>主动防御延迟 (秒)</label>
                             <input type="number" v-model="defenseDelay">
                             <button @click="confirmDefenseDelay">确认</button>
                         </div>
                         <div class="input-group">
-                            <label>Defense duration (min)</label>
+                            <label>主动防御间隔 (分钟)</label>
                             <input type="number" v-model="defenseDuration">
                             <button @click="confirmDefenseDuration">确认</button>
                         </div>
@@ -74,7 +74,7 @@
                     </table>
                 </div>
                 <div class="auto-defense">
-                    <span>Auto Defense</span>
+                    <span>电侦主动防御</span>
                     <label class="switch">
                         <input type="checkbox" v-model="autoDefense" @change="toggleAutoDefense">
                         <span class="slider round"></span>
@@ -135,9 +135,12 @@
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
                         <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
-                        <button @click="handleCapture">捕获</button>
-                        <button @click="handleTracking">跟踪</button>
-                        <button @click="handleLaserEmission">{{ laserEmissionStatus ? '激光停止' : '激光发射' }}</button>
+                        <button @click="handleCapture">{{ captureStatus === 2 ? '待机' : '捕获' }}</button>
+                        <button @click="handleTracking">{{ trackingStatus === 2 ? '停止跟踪' : '跟踪' }}</button>
+                        <button @click="handleLaserEmission">{{
+                                laserEmissionStatus ? '激光停止' : '激光发射'
+                            }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -175,14 +178,14 @@
                         </tr>
                     </table>
                 </div>
-
+                
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
                     <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
                     <button @click="sendCommand(4101)" class="power-confirm-btn">确定</button>
                 </div>
-
+                
                 <div class="small-tabs-content">
                     <div class="small-tabs">
                         <div class="small-tabs-container">
@@ -247,9 +250,9 @@
                                 </div>
                                 <div class="ambiguity-input">
                                     <label>模糊度</label>
-                                    <input 
-                                        type="number" 
-                                        v-model="simulationLevel" 
+                                    <input
+                                        type="number"
+                                        v-model="simulationLevel"
                                         @blur="validateSimulationLevel"
                                         placeholder="米"
                                         min="50"
@@ -339,7 +342,6 @@
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
-    const powerLevel = ref(0);
     const interferenceEnabled = ref(false);
     const defenseEnabled = ref(false);
     const emissionStatus = ref('停止');
@@ -363,8 +365,6 @@
         elevation: '',
         speed: ''
     });
-    const currentMode = ref('visible');
-    const currentPanoramaMode = ref('visible');
     
     // 添加新的状态变量
     const servoStatus = ref(false);
@@ -436,13 +436,9 @@
                 wirelessDeviceOnline.value = false
                 wirelessDeviceNormal.value = false
             });
-        // wirelessDeviceOnline.value = response.online;
-        // wirelessDeviceNormal.value = response.normal;
     }
     
     async function updateOptoelectronicDeviceStatus() {
-      
-        
         try {
             const response = await axios.get(`/api/v0/photoelectrics/info`);
             if (response.data.code === 0) {
@@ -494,9 +490,9 @@
             distance: 2.5
         };
         
-        updateRadarData();
-        // 定期更雷达数据
-        const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
+        // updateRadarData();
+        // // 定期更雷达数据
+        // const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
         
         // 添加发射状态更新
         updateEmissionStatus();
@@ -569,15 +565,8 @@
             });
     }
     
-    // 执行防御
-    function defend() {
-        // TODO: 调用后端 API 执行防
-        window.location.href = 'http://192.168.10.188:8081/#/Index'
-    }
-    
     // 切换自动防御
     function toggleAutoDefense() {
-        // TODO: 调用后端 API 切换自动防御状态
         axios.post('/api/v0/setAttackAuto?did=' + device.value.id + '&isCancel=' + autoDefense.value)
             .then(response => {
                 if (response.data.code === 0) {
@@ -594,7 +583,7 @@
     // 添加切函数
     function toggleServo() {
         // 检查是否有可用的设备ID
-
+        
         
         const apiEndpoint = servoStatus.value ?
             `/api/v0/photoelectrics/servo/poweroff` :
@@ -636,7 +625,7 @@
     
     // 修改归零函数
     async function resetOptoelectronic() {
-
+        
         
         try {
             const response = await axios.post(`/api/v0/photoelectrics/zero`);
@@ -652,8 +641,6 @@
     
     // 修改目标颜色切换函数
     async function toggleTargetColor() {
-
-        
         const apiEndpoint = targetColor.value ?
             `/api/v0/photoelectrics/polarity/black` :
             `/api/v0/photoelectrics/polarity/white`;
@@ -675,10 +662,9 @@
     async function toggleTrackingMode() {
         const apiEndpoint = `/api/v0/photoelectrics/workWay`;
         const type = trackingMode.value ? '2' : '1'; // 1自动, 2人工
-
         try {
             const response = await axios.post(apiEndpoint, null, {
-                params: { type }
+                params: {type}
             });
             if (response.data.code === 0) {
                 trackingMode.value = !trackingMode.value;
@@ -693,8 +679,6 @@
     
     // 修改红外颜色切换函数
     async function toggleInfraredColor() {
-
-        
         const apiEndpoint = infraredColor.value ?
             `/api/v0/photoelectrics/polarityir/black` :
             `/api/v0/photoelectrics/polarityir/white`;
@@ -714,12 +698,12 @@
     
     // 修改激光开关函数
     async function toggleLaser() {
-
+        
         
         const apiEndpoint = laserStatus.value ?
             `/api/v0/photoelectrics/lazar/poweroff` :
             `/api/v0/photoelectrics/lazar/poweron`;
-
+        
         try {
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
@@ -734,7 +718,6 @@
     }
     
     async function toggleFrequency() {
-
         try {
             const frequencyType = frequency.value ? 2 : 3; // 5Hz对应2，12.5Hz对应3
             
@@ -745,11 +728,71 @@
                     'Content-Type': 'application/json'
                 }
             });
-
+            
             if (response.data.code === 0) {
                 frequency.value = !frequency.value;
             } else {
                 alert(response.data.msg || '频率切换失败');
+            }
+        } catch (error) {
+            console.error('频率切换请求失败:', error);
+            alert('频率切换失败，请检查网络连接');
+        }
+    }
+    
+    const captureStatus = ref(0)
+    
+    async function handleCapture() {
+        try {
+            // 捕获0x02 待机0x00
+            const status = captureStatus.value;
+            
+            const response = await axios.put(`/api/v0/photoelectrics/capture`, {
+                status: status
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.data.code === 0) {
+                if (captureStatus.value === 2) {
+                    captureStatus.value = 0;
+                } else {
+                    captureStatus.value = 2;
+                }
+            } else {
+                alert(response.data.msg || '频率切换失败');
+            }
+        } catch (error) {
+            console.error('频率切换请求失败:', error);
+            alert('频率切换失败，请检查网络连接');
+        }
+    }
+    
+    const trackingStatus = ref(0)
+    
+    async function handleTracking() {
+        try {
+            // 捕获0x02 待机0x00
+            const status = trackingStatus.value
+            
+            const response = await axios.put(`/api/v0/photoelectrics/capture`, {
+                status: status
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.data.code === 0) {
+                if (trackingStatus.value === 2) {
+                    trackingStatus.value = 0;
+                } else {
+                    trackingStatus.value = 2;
+                }
+            } else {
+                alert(response.data.msg || '跟踪切换失败');
             }
         } catch (error) {
             console.error('频率切换请求失败:', error);
@@ -805,11 +848,11 @@
         console.log(connectRes)
         if (connectRes.isSuccess) {
             maxPower.value = connectRes.data.data.maxRadPower;
-
+            
             // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
-            if(bootStrapTimerId.value)clearInterval(bootStrapTimerId.value);
+            if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
             bootStrapTimerId.value = setInterval(() => {
-                if(activeTab.value === 'deception')sendCommand(8192)
+                if (activeTab.value === 'deception') sendCommand(8192)
             }, 30000);
         }
     }
@@ -849,12 +892,12 @@
     
     // 在 script setup 部分添加新的响应式变量
     const laserEmissionStatus = ref(false);
-
+    
     
     // 添加跟踪处理函数
     // async function handleTracking() {
-
-        
+    
+    
     //     try {
     //         const response = await axios.post(`/api/v0/photoelectrics/track`);
     //         if (response.data.code === 0) {
@@ -886,16 +929,13 @@
         }
     }
     
-   // 修改移动控制相关的状态变量
+    // 修改移动控制相关的状态变量
     const isMoving = ref(false);
     const moveDirection = ref(null);
     const moveInterval = ref(null);
     const LONG_PRESS_DELAY = 300; // 长按判定延时（毫秒）
     let pressTimer = null; // 用于判断长按的定时器
     
-    // 添加接口响应类型定义
-    const API_SUCCESS_CODE = 0; // API成功响应码
-
     // 修改键盘按下事件处理
     async function handleKeyDown(event) {
         // 只在光电设备控制标签页激活时处理键盘事件
@@ -932,7 +972,7 @@
                 break;
         }
     }
-
+    
     // 修改键盘松开事件处理
     async function handleKeyUp(event) {
         if (activeTab.value !== 'optoelectronic') return;
@@ -957,7 +997,7 @@
                 break;
         }
     }
-
+    
     // 修改发送移动指令的函数
     async function sendMoveCommand(direction, isLongPress = false) {
         try {
@@ -978,7 +1018,7 @@
                 default:
                     return false;
             }
-
+            
             const response = await axios.post(
                 '/api/v0/photoelectrics/manipulate',
                 null,
@@ -990,7 +1030,7 @@
                     timeout: 0
                 }
             );
-
+            
             if (response.status === 200) {
                 const data = response.data;
                 if (data.code === 0) {
@@ -1015,30 +1055,31 @@
         // const apiEndpoint = `/api/v0/photoelectrics/move/${currentPhotoelectricId.value}/${direction}`;
         console.log(`光电设备${getDirectionText(direction)}移动`);
     }
-
+    
     // 添加状态控制变量
     const isEmitting = ref(false); // 是否正在发射
     const emissionType = ref(null); // 'deception' 或 'capture' 或 null
-
+    
     // 计算属性控制按钮状态
     const isDeceptionDisabled = computed(() => isEmitting.value && emissionType.value !== 'deception');
     const isCaptureDisabled = computed(() => isEmitting.value && emissionType.value !== 'capture');
-
+    
     function sendDriveAwayCommand() {
         // TODO: 调用后端 API 发送驱离命令
         console.log('保存驱离角度完成');
     }
-
+    
     function sendNoFlyCommand() {
         // TODO: 调用后端 API 发送禁飞命令
         console.log('发送禁飞命令');
     }
+    
     const maxPower = ref(0)
-
+    
     async function toggleInfrared() {
         try {
             const apiEndpoint = `/api/v0/photoelectrics/polarityir/powerOnOrOff?status=${infraredStatus.value ? 1 : 2}`;
-
+            
             const response = await axios.post(apiEndpoint);
             if (response.data.code === 0) {
                 infraredStatus.value = !infraredStatus.value;
@@ -1055,145 +1096,149 @@
 
 <script>
     
-import { deceptionService } from "../service/deceptionService";
-const launchCaptureFlag = ref(false)
-const driveAwayAngle = ref(0);
-const capturePositionData = ref({
-    longitude: 0.0000,
-    latitude: 0.0000,
-    altitude: 0.0000
-})
-const gpsData = ref({
-    longitude: 0.0000,
-    latitude: 0.0000,
-    altitude: 0.0000
-})
-const simulationLevel = ref(100);
-const powerValue = ref(0);
-
-// 添加验证函数
-const validateSimulationLevel = () => {
-    if (simulationLevel.value < 50) {
-        simulationLevel.value = 50;
-    }
-};
-async function sendCommand(cmdWord) {
-    let updateCommandRequestDto
-    if (cmdWord === 4352) {
-        if(!launchCaptureFlag.value){
-            sendCommand(8192)
+    import { deceptionService } from "../service/deceptionService";
+    import { ref } from "vue";
+    
+    const launchCaptureFlag = ref(false)
+    const driveAwayAngle = ref(0);
+    const capturePositionData = ref({
+        longitude: 0.0000,
+        latitude: 0.0000,
+        altitude: 0.0000
+    })
+    const gpsData = ref({
+        longitude: 0.0000,
+        latitude: 0.0000,
+        altitude: 0.0000
+    })
+    const simulationLevel = ref(100);
+    const powerValue = ref(0);
+    
+    // 添加验证函数
+    const validateSimulationLevel = () => {
+        if (simulationLevel.value < 50) {
+            simulationLevel.value = 50;
         }
-        // todu: 注意更改position绑定的数据
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                Capture: {
-                    Position: {
-                        Latitude: capturePositionData.value.latitude,
-                        Longitude: capturePositionData.value.longitude,
-                        Altitude: capturePositionData.value.altitude
-                    },
-                    CaptureAmbiguity: simulationLevel.value,
-                    Operate: true
+    };
+    
+    async function sendCommand(cmdWord) {
+        let updateCommandRequestDto
+        if (cmdWord === 4352) {
+            if (!launchCaptureFlag.value) {
+                sendCommand(8192)
+            }
+            // todu: 注意更改position绑定的数据
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    Capture: {
+                        Position: {
+                            Latitude: capturePositionData.value.latitude,
+                            Longitude: capturePositionData.value.longitude,
+                            Altitude: capturePositionData.value.altitude
+                        },
+                        CaptureAmbiguity: simulationLevel.value,
+                        Operate: true
+                    }
+                }
+            }
+        } else if (cmdWord === 4097) {
+            updateCommandRequestDto = {
+                cmdWord: 4097,
+                commandDto: {
+                    driveAngle: driveAwayAngle.value
+                }
+            }
+        } else if (cmdWord === 8192) {
+            // 目标位置引导，在捕获之前需要发送一条这个
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    bootstrapPosition: {
+                        targetType: 0,
+                        Position: {
+                            Latitude: gpsData.value.latitude,
+                            Longitude: gpsData.value.longitude,
+                            Altitude: gpsData.value.altitude
+                        },
+                    }
+                }
+            }
+        } else if (cmdWord === 4100) {
+            // 防御
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    defense: true
+                }
+            }
+        } else if (cmdWord === 4098) {
+            // 干扰
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    IsInterferenceEmitted: true
+                }
+            }
+        } else if (cmdWord === 4099) {
+            // 禁飞
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    nofly: {
+                        state: true,
+                        Position: {
+                            Latitude: 0,
+                            Longitude: 0,
+                            Altitude: 0
+                        },
+                    }
+                }
+            }
+        } else if (cmdWord === 4101) {
+            // 手动功率设置
+            updateCommandRequestDto = {
+                CmdWord: cmdWord,
+                CommandDto: {
+                    transmitPower: {
+                        state: 1,
+                        power: powerValue.value,
+                        sinr: 10,
+                    }
                 }
             }
         }
-    } else if (cmdWord === 4097) {
-        updateCommandRequestDto = {
-            cmdWord: 4097,
-            commandDto: {
-                driveAngle: driveAwayAngle.value
-            }
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        if (res) {
+            // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
+            // 如果发送了别的命令，先硬把flag置false
+            launchCaptureFlag.value = cmdWord == 8192
+            return true
         }
-    } else if(cmdWord === 8192){
-        // 目标位置引导，在捕获之前需要发送一条这个
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                bootstrapPosition: {
-                    targetType: 0,
-                    Position: {
-                        Latitude: gpsData.value.latitude,
-                        Longitude: gpsData.value.longitude,
-                        Altitude: gpsData.value.altitude
-                    },
-                }
-            }
-        }
-    } else if(cmdWord === 4100){
-        // 防御
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                defense: true
-            }
-        }
-    } else if(cmdWord === 4098){
-        // 干扰
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                IsInterferenceEmitted: true
-            }
-        }
-    } else if(cmdWord === 4099){
-        // 禁飞
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                nofly: {
-                    state: true,
-                    Position: {
-                        Latitude: 0,
-                        Longitude: 0,
-                        Altitude: 0
-                    },
-                }
-            }
-        }
-    } else if(cmdWord ===  4101){
-        // 手动功率设置
-        updateCommandRequestDto = {
-            CmdWord: cmdWord,
-            CommandDto: {
-                transmitPower: {
-                    state: 1,
-                    power: powerValue.value,
-                    sinr: 10,
-                }
-            }
-        }
-    }
-    const res = await deceptionService.updateCommand(updateCommandRequestDto)
-    if (res) {
-        // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
-        // 如果发送了别的命令，先硬把flag置false
-        launchCaptureFlag.value = cmdWord == 8192
-        return true
+        
+        // // 更新数据
+        // await clickDeception()
     }
     
-    // // 更新数据
-    // await clickDeception()
-}   
-async function stopLaunch_1() {
-    let updateCommandRequestDto = {
-        cmdWord: 4096,
+    async function stopLaunch_1() {
+        let updateCommandRequestDto = {
+            cmdWord: 4096,
             commandDto: {
                 category: 0
             }
+        }
+        const res = await deceptionService.updateCommand(updateCommandRequestDto)
+        if (res) {
+            return true
+        }
     }
-    const res = await deceptionService.updateCommand(updateCommandRequestDto)
-    if (res) {
-        return true
-    }
-}
-
-const handlePowerConfirm = () => {
-    // TODO: 调用后端 API 设置发射功率
-    console.log('设置发射功率:', powerValue.value);
-};
-// 在这里导出需要的函数
-export { sendCommand, stopLaunch_1 }
+    
+    const handlePowerConfirm = () => {
+        // TODO: 调用后端 API 设置发射功率
+        console.log('设置发射功率:', powerValue.value);
+    };
+    // 在这里导出需要的函数
+    export { sendCommand, stopLaunch_1 }
 </script>
 
 <style scoped>
@@ -1587,13 +1632,13 @@ export { sendCommand, stopLaunch_1 }
         padding: 5px;
         border-radius: 4px;
     }
-
+    
     .coordinate-row {
         display: flex;
         gap: 10px;
         justify-content: center;
     }
-
+    
     .coordinate {
         flex: 1;
         text-align: center;
@@ -1622,32 +1667,32 @@ export { sendCommand, stopLaunch_1 }
     .coordinates-section {
         margin-bottom: 10px;
     }
-
+    
     .gps-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 10px;
     }
-
+    
     .gps-table th, .gps-table td {
         border: 1px solid #00ffff;
         padding: 5px;
         text-align: center;
         color: #00ffff;
     }
-
+    
     .power-slider-section {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
     }
-
+    
     .power-slider {
         flex: 1;
         background-color: #333;
     }
-
+    
     .power-confirm-btn {
         background-color: #007acc;
         color: #ffffff;
@@ -1657,11 +1702,11 @@ export { sendCommand, stopLaunch_1 }
         cursor: pointer;
         transition: background-color 0.3s;
     }
-
+    
     .power-confirm-btn:hover {
         background-color: #0090ea;
     }
-
+    
     .small-tabs-content {
         border: 1px solid #00ffff;
         border-radius: 5px;
@@ -1671,17 +1716,17 @@ export { sendCommand, stopLaunch_1 }
         display: flex;
         flex-direction: column;
     }
-
+    
     .small-tabs {
         margin-bottom: 10px;
     }
-
+    
     .small-tabs-container {
         display: flex;
         justify-content: space-between;
         gap: 5px;
     }
-
+    
     .small-tab {
         flex: 1;
         background-color: transparent;
@@ -1692,12 +1737,12 @@ export { sendCommand, stopLaunch_1 }
         transition: background-color 0.3s, color 0.3s;
         font-size: 14px;
     }
-
+    
     .small-tab.active {
         background-color: rgba(0, 255, 255, 0.3);
         color: #00ffff;
     }
-
+    
     .small-tab-content {
         flex: 1;
         background-color: rgba(0, 31, 63, 0.8);
@@ -1705,19 +1750,19 @@ export { sendCommand, stopLaunch_1 }
         padding: 10px;
         color: #ffffff;
     }
-
+    
     .drive-away-content, .interference-content, .defense-content, .capture-content {
         display: flex;
         flex-direction: column;
         gap: 10px;
     }
-
+    
     .coordinate-inputs {
         display: flex;
         align-items: center;
         gap: 5px;
     }
-
+    
     .coordinate-inputs input {
         flex: 1;
         padding: 5px;
@@ -1726,7 +1771,7 @@ export { sendCommand, stopLaunch_1 }
         background-color: #333;
         color: #ffffff;
     }
-
+    
     .icon-button {
         background-color: #007acc;
         border: none;
@@ -1735,13 +1780,13 @@ export { sendCommand, stopLaunch_1 }
         cursor: pointer;
         color: #ffffff;
     }
-
+    
     .ambiguity-input {
         display: flex;
         align-items: center;
         gap: 5px;
     }
-
+    
     .ambiguity-input input {
         width: 100px;
         padding: 5px;
@@ -1750,12 +1795,12 @@ export { sendCommand, stopLaunch_1 }
         background-color: #333;
         color: #ffffff;
     }
-
+    
     .operation-buttons {
         display: flex;
         gap: 5px;
     }
-
+    
     .operation-button {
         flex: 1;
         background-color: #003856;
@@ -1766,15 +1811,15 @@ export { sendCommand, stopLaunch_1 }
         cursor: pointer;
         transition: background-color 0.3s;
     }
-
+    
     .operation-button.active {
         background-color: #007acc;
     }
-
+    
     .operation-button:hover {
         background-color: #007acc;
     }
-
+    
     .send-button {
         background-color: #007acc;
         color: #ffffff;
@@ -1784,30 +1829,30 @@ export { sendCommand, stopLaunch_1 }
         cursor: pointer;
         transition: background-color 0.3s;
     }
-
+    
     .send-button:hover {
         background-color: #0090ea;
     }
-
+    
     .switch-container {
         display: flex;
         align-items: center;
         gap: 10px;
     }
-
+    
     .switch {
         position: relative;
         display: inline-block;
         width: 34px;
         height: 20px;
     }
-
+    
     .switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
-
+    
     .slider {
         position: absolute;
         cursor: pointer;
@@ -1819,7 +1864,7 @@ export { sendCommand, stopLaunch_1 }
         transition: .4s;
         border-radius: 20px;
     }
-
+    
     .slider:before {
         position: absolute;
         content: "";
@@ -1831,15 +1876,15 @@ export { sendCommand, stopLaunch_1 }
         transition: .4s;
         border-radius: 50%;
     }
-
+    
     input:checked + .slider {
         background-color: #00ffff;
     }
-
+    
     input:checked + .slider:before {
         transform: translateX(14px);
     }
-
+    
     .centered-content {
         display: flex;
         flex-direction: column;

@@ -79,7 +79,8 @@
         </div>
         
         <div class="floating-panel threat-list" :class="{ 'panel-hidden': !showThreatList }">
-            <h2>电侦列表
+            <h2>
+                电侦飞行物列表
                 <button @click="toggleThreatList" class="toggle-btn">{{ showThreatList ? '隐藏' : '显示' }}</button>
             </h2>
             <div v-if="showThreatList" class="table-container">
@@ -97,19 +98,19 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(threat, index) in threats" :key="threat.id">
+                    <tr v-for="(edUav, index) in EDUavs" :key="edUav.id">
                         <td>{{ index + 1 }}</td>
                         <td>
-                            <span class="color-indicator" :style="{ backgroundColor: threat.color }"></span>
-                            <i :class="getIconClass(threat.type)"></i>
+                            <span class="color-indicator" :style="{ backgroundColor: edUav.color }"></span>
+                            <i :class="getIconClass(edUav.type)"></i>
                         </td>
-                        <td>{{ threat.name }}</td>
-                        <td>{{ threat.type }}</td>
-                        <td :class="'threat-level-' + threat.level">{{ threat.level }}</td>
-                        <td>{{ threat.speed }}</td>
-                        <td>{{ threat.altitude }}</td>
-                        <td>{{ threat.distance }}</td>
-                        <td>{{ threat.updateTime }}</td>
+                        <td>{{ edUav.name }}</td>
+                        <td>{{ edUav.type }}</td>
+                        <td :class="'threat-level-' + edUav.level">{{ edUav.level }}</td>
+                        <td>{{ edUav.speed }}</td>
+                        <td>{{ edUav.altitude }}</td>
+                        <td>{{ edUav.distance }}</td>
+                        <td>{{ edUav.updateTime }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -117,7 +118,7 @@
         </div>
         
         <div class="floating-panel all-aircraft-list" :class="{ 'panel-hidden': !showAllAircraftList }">
-            <h2>飞物列表
+            <h2>融合飞行物列表
                 <button @click="toggleAllAircraftList" class="toggle-btn">{{
                         showAllAircraftList ? '隐藏' : '显示'
                     }}
@@ -134,6 +135,7 @@
                         <th>速度(km/h)</th>
                         <th>高度(m)</th>
                         <th>距离(km)</th>
+                        <th>方位角</th>
                         <th>更新时间</th>
                     </tr>
                     </thead>
@@ -149,6 +151,7 @@
                         <td>{{ aircraft.speed }}</td>
                         <td>{{ aircraft.altitude }}</td>
                         <td>{{ aircraft.distance }}</td>
+                        <td>{{ aircraft.pitch }}</td>
                         <td>{{ aircraft.updateTime }}</td>
                     </tr>
                     </tbody>
@@ -192,7 +195,7 @@
         attributionControl: false,
     })
     
-    const { aircraftData, updateElectronicData, updateRadarData } = useAircraftData();
+    const { aircraftData } = useAircraftData();
     
     const allAircraft = computed(() => {
         return aircraftData.value.map(aircraft => ({
@@ -205,12 +208,14 @@
             updateTime: aircraft.electronicData.updateTime,
             lat: parseFloat(aircraft.fusionData.latitude),
             lng: parseFloat(aircraft.fusionData.longitude),
+            pitch: aircraft.fusionData.pitch,
             color: aircraft.electronicData.color,
             path: aircraft.electronicData.path
         }));
     });
     
-    const threats = computed(() => {
+    // 电侦UAV列表
+    const EDUavs = computed(() => {
         return aircraftData.value
             .filter(aircraft => aircraft.electronicData.threadLevel !== 'low')
             .map(aircraft => ({
