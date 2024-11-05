@@ -98,30 +98,31 @@
             <button @click="handleRadarGuide">雷达引导</button>
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
-            <button @click="handleInterference"
-                    :class="{active: deceptionOperateType == 'interference',
-            not_active: deceptionOperateType != 'interference'}"
-            >干扰
-            </button>
+            <button @click="todofunction">通信干扰</button>
             <button @click="handlePointCapture"
                     :class="{active: deceptionOperateType == 'capture',
                      not_active: deceptionOperateType != 'capture'}"
-            >定点捕获
+            >定点诱降
             </button>
             <button @click="handleDriveAway"
                     :class="{active: deceptionOperateType == 'driveAway',
                     not_active: deceptionOperateType != 'driveAway'}"
-            >驱离
-            </button>
-            <button @click="handleNoFly"
-                    :class="{active: deceptionOperateType == 'noFly',
-                    not_active: deceptionOperateType != 'noFly'}"
-            >禁飞
+            >指引驱离
             </button>
             <button @click="handleDefense"
                     :class="{active: deceptionOperateType == 'defense',
                     not_active: deceptionOperateType != 'defense'}"
-            >防御
+            >金钟罩防御
+            </button>
+            <button @click="handleNoFly"
+                    :class="{active: deceptionOperateType == 'noFly',
+                    not_active: deceptionOperateType != 'noFly'}"
+            >禁飞迫降
+            </button>
+            <button @click="handleInterference"
+                    :class="{active: deceptionOperateType == 'interference',
+            not_active: deceptionOperateType != 'interference'}"
+            >导航干扰
             </button>
             <button @click="stopLaunch" class="active">取消发射</button>
         </div>

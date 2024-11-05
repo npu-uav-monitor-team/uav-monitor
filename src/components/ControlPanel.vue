@@ -17,7 +17,7 @@
                 @click="clickDeception"
                 :class="{ active: activeTab === 'deception' }"
             >
-                诱骗和干扰
+                导航诱骗
             </button>
         </div>
         
@@ -164,7 +164,7 @@
                 </div>
                 
                 <div class="coordinates-section">
-                    <h4>GPS接收器</h4>
+                    <h4>待诱骗目标GPS位置</h4>
                     <table class="gps-table">
                         <tr>
                             <th>经度</th>
@@ -243,7 +243,7 @@
                         <div v-else-if="activeSmallTab === 'capture'">
                             <div class="capture-content">
                                 <div class="coordinate-inputs">
-                                    <label>经纬度</label>
+                                    <label>诱降位置经纬度</label>
                                     <input type="text" v-model="capturePositionData.latitude" placeholder="纬度">
                                     <input type="text" v-model="capturePositionData.longitude" placeholder="经度">
                                     <button class="icon-button"><i class="icon-target"></i></button>
@@ -471,7 +471,7 @@
     }
     
     // 在组件挂载时获取设备状态
-    onMounted(() => {
+    onMounted(async () => {
         updateWirelessDeviceStatus();
         updateOptoelectronicDeviceStatus();
         
@@ -501,22 +501,34 @@
         // 添加键盘事件监听
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
+
+        await sendCommand(4101)
+            
+        // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
+        if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
+        bootStrapTimerId.value = setInterval(() => {
+            if (activeTab.value === 'deception') sendCommand(8192)
+        }, 30000);
+
+        // todo 设置开启四个定位系统
+
+    });
         
-        // 组件卸载时清除定时器
-        onUnmounted(() => {
-            clearInterval(statusInterval);
-            clearInterval(updateInterval);
-            clearInterval(emissionStatusInterval);
-            
-            // 移除键盘事件监听
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-            
-            // 清除可能存在的移动定时器
-            if (moveInterval.value) {
-                clearInterval(moveInterval.value);
-            }
-        });
+    // 组件卸载时清除定时器
+    onUnmounted(() => {
+        clearInterval(statusInterval);
+        clearInterval(updateInterval);
+        clearInterval(emissionStatusInterval);
+        clearInterval(bootStrapTimerId.value);
+        
+        // 移除键盘事件监听
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        
+        // 清除可能存在的移动定时器
+        if (moveInterval.value) {
+            clearInterval(moveInterval.value);
+        }
     });
     
     // 切换频段
@@ -847,13 +859,7 @@
         const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
         console.log(connectRes)
         if (connectRes.isSuccess) {
-            maxPower.value = connectRes.data.data.maxRadPower;
-            
-            // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
-            if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
-            bootStrapTimerId.value = setInterval(() => {
-                if (activeTab.value === 'deception') sendCommand(8192)
-            }, 30000);
+            if(connectRes.data?.data?.maxRadPower)maxPower.value = connectRes.data.data.maxRadPower;
         }
     }
     
@@ -1074,7 +1080,7 @@
         console.log('发送禁飞命令');
     }
     
-    const maxPower = ref(0)
+    const maxPower = ref(40)
     
     async function toggleInfrared() {
         try {
@@ -1112,7 +1118,7 @@
         altitude: 0.0000
     })
     const simulationLevel = ref(100);
-    const powerValue = ref(0);
+    const powerValue = ref(30);
     
     // 添加验证函数
     const validateSimulationLevel = () => {
@@ -1232,11 +1238,6 @@
             return true
         }
     }
-    
-    const handlePowerConfirm = () => {
-        // TODO: 调用后端 API 设置发射功率
-        console.log('设置发射功率:', powerValue.value);
-    };
     // 在这里导出需要的函数
     export { sendCommand, stopLaunch_1 }
 </script>
