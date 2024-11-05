@@ -199,137 +199,23 @@ export function useAircraftData() {
         }
     }
 
-    /*const updateElectronicData = async () => {
-        try {
-            const response = await axios.get('/api/v0/uavs')
+    function convertToHex(colorStr) {
+        // 正则表达式提取 r, g, b 的值
+        const regex = /r=(\d+),g=(\d+),b=(\d+)/;
+        const match = colorStr.match(regex);
 
-            response.data.forEach(uavTarget => {
-                const existingIndex = aircraftData.value.findIndex(aircraft =>
-                    aircraft.electronicData.electronicId === uavTarget.id
-                )
+        if (match) {
+            // 提取 r, g, b 的值
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
 
-                const newElectronicData = {
-                    electronicId: uavTarget.id,
-                    type: uavTarget.type || 'UAV',
-                    name: uavTarget.name || 'Unknown',
-                    speed: uavTarget.speed?.toString() || '0',
-                    altitude: uavTarget.altitude || 0,
-                    distance: uavTarget.distance?.toString() || '0',
-                    updateTime: new Date().toLocaleString(),
-                    threadLevel: uavTarget.threadLevel || 'low',
-                    latitude: uavTarget.lat?.toString() || '0',
-                    longitude: uavTarget.lng?.toString() || '0',
-                    pitch: `${uavTarget.pitchAngle || 0}°`,
-                    azimuth: `${uavTarget.azimuth || 0}°`,
-                    color: uavTarget.color || '#FF0000',
-                    path: uavTarget.path || []
-                }
-
-                if (existingIndex !== -1) {
-                    aircraftData.value[existingIndex].electronicData = newElectronicData
-                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
-                        aircraftData.value[existingIndex].radarData,
-                        newElectronicData
-                    )
-                } else {
-                    aircraftData.value.push({
-                        id: idCounter++,
-                        radarData: {
-                            distance: '0',
-                            azimuth: '0°',
-                            azimuth2: '0°',
-                            pitch: '0°',
-                            speed: '0',
-                            longitude: '0',
-                            latitude: '0'
-                        },
-                        electronicData: newElectronicData,
-                        fusionData: {
-                            longitude: uavTarget.lng?.toString() || '0',
-                            latitude: uavTarget.lat?.toString() || '0',
-                            pitch: `${uavTarget.pitchAngle || 0}°`,
-                            azimuth: `${uavTarget.azimuth || 0}°`,
-                            distance: uavTarget.distance?.toString() || '0',
-                            speed: uavTarget.speed?.toString() || '0'
-                        }
-                    })
-                }
-            })
-
-            aircraftData.value = aircraftData.value.filter(aircraft =>
-                response.data.some(uavTarget => uavTarget.id === aircraft.id) ||
-                aircraft.radarData.distance !== '0'
-            )
-        } catch (error) {
-            console.error('获取UAV数据失败:', error)
+            // 转换为十六进制并返回以 '#' 开头的颜色代码
+            return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
         }
+
+        return null; // 如果格式不符合预期，返回 null
     }
-
-    const updateRadarData = async () => {
-        try {
-            const response = await axios.get('/api/v0/radar/targetList')
-
-            response.data.forEach(radarTarget => {
-                const existingIndex = aircraftData.value.findIndex(aircraft =>
-                    aircraft.radarData.radarId === radarTarget.targetId
-                )
-
-                const newRadarData = {
-                    radarId: radarTarget.targetId,
-                    distance: radarTarget.range.toFixed(0),
-                    azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
-                    azimuth2: `${radarTarget.azimuth2.toFixed(1)}°`,
-                    pitch: `${radarTarget.pitch.toFixed(1)}°`,
-                    speed: radarTarget.speed.toFixed(0),
-                    longitude: radarTarget.targetLon.toFixed(4),
-                    latitude: radarTarget.targetLat.toFixed(4)
-                }
-
-                if (existingIndex !== -1) {
-                    aircraftData.value[existingIndex].radarData = newRadarData
-                    aircraftData.value[existingIndex].fusionData = calculateFusionData(
-                        newRadarData,
-                        aircraftData.value[existingIndex].electronicData
-                    )
-                } else {
-                    aircraftData.value.push({
-                        id: idCounter++,
-                        radarData: newRadarData,
-                        electronicData: {
-                            type: 'Unknown',
-                            name: 'Unknown',
-                            speed: '0',
-                            altitude: 0,
-                            distance: '0',
-                            updateTime: new Date().toLocaleString(),
-                            threadLevel: 'unknown',
-                            latitude: '0',
-                            longitude: '0',
-                            pitch: '0°',
-                            azimuth: '0°',
-                            color: '#808080',
-                            path: []
-                        },
-                        fusionData: {
-                            longitude: radarTarget.targetLon.toFixed(4),
-                            latitude: radarTarget.targetLat.toFixed(4),
-                            pitch: `${radarTarget.pitch.toFixed(1)}°`,
-                            azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
-                            distance: radarTarget.range.toFixed(0),
-                            speed: radarTarget.speed.toFixed(0)
-                        }
-                    })
-                }
-            })
-
-            aircraftData.value = aircraftData.value.filter(aircraft =>
-                response.data.some(radarTarget => radarTarget.targetId === aircraft.id)
-            )
-        } catch (error) {
-            console.error('获取雷达数据失败:', error)
-        }
-    }
-*/
 
     // 1. 获取电侦数据 根据targetId塞进去
     // 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
@@ -343,6 +229,8 @@ export function useAircraftData() {
             const existingIndex = aircraftData.value.findIndex(aircraft =>
                 aircraft.electronicData.electronicId === uavTarget.id
             )
+
+            console.log(convertToHex(uavTarget.color))
 
             const newElectronicData = {
                 electronicId: uavTarget.id,
@@ -358,7 +246,7 @@ export function useAircraftData() {
                 longitude: uavTarget.lng?.toString() || '0',
                 pitch: `${uavTarget.pitchAngle || 0}°`,
                 azimuth: `${uavTarget.azimuth || 0}°`,
-                color: uavTarget.color || '#FF0000',
+                color: convertToHex(uavTarget.color) || '#FF0000',
                 path: uavTarget.path || []
             }
 

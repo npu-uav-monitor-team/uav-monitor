@@ -168,7 +168,8 @@
 </template>
 
 <script setup>
-    import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+    // 对aircraftData[index].electronicData.threatLevel做判断 目前是所有的都要
+    import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
     import axios from "@/api/index.js"
     import { useRGuide } from "@/api/radar.js";
     import { sendCommand, stopLaunch_1 } from '@/components/ControlPanel.vue'
@@ -203,8 +204,9 @@
     
     const {aircraftData} = useAircraftData()
     
-    // 对aircraftData[index].electronicData.threatLevel做判断 目前是所有的都要
-    const threatAirCraftList = reactive(aircraftData.value.filter(item => item.electronicData.threadLevel != null))
+    const threatAirCraftList = computed(() =>
+        aircraftData.value.filter(item => item.electronicData.threadLevel != null)
+    );
     
     onMounted(() => {
         refreshVideo();
