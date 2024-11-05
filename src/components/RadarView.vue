@@ -63,7 +63,7 @@
                             <input
                                 type="radio"
                                 :value="aircraft.id"
-                                @change="selectedAircraftId = aircraft.id"
+                                @change="changeSelectedAircraft(aircraft)"
                                 name="aircraft-selection"
                             >
                             {{ aircraft.id }}
@@ -203,6 +203,12 @@
     };
     
     const {aircraftData} = useAircraftData()
+    const {cachedSelectedAircraft} = useAircraftData()
+    
+    const changeSelectedAircraft = (aircraft) => {
+        selectedAircraftId.value = aircraft.id
+        cachedSelectedAircraft.value = aircraft
+    }
     
     const threatAirCraftList = computed(() =>
         aircraftData.value.filter(item => item.electronicData.threadLevel != null)

@@ -129,6 +129,8 @@ let radarTimer = null;
 
 export function useAircraftData() {
 
+    const cachedSelectedAircraft = ref()
+
     // 采用 Haversine 公式计算两个经纬度之间的距离
     function haversine(lat1, lon1, lat2, lon2) {
         const toRadians = (degree) => degree * (Math.PI / 180);
@@ -365,6 +367,7 @@ export function useAircraftData() {
     });
 
     return {
+        cachedSelectedAircraft,
         aircraftData,
         updateFusionData,
         startUpdating,

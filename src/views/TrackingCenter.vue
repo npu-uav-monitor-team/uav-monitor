@@ -274,7 +274,6 @@
     }
     
     const flightPaths = computed(() => {
-        console.log(allAircraft.value[0].path)
         return allAircraft.value.map(aircraft => ({
             id: aircraft.id,
             points: aircraft.path || [],

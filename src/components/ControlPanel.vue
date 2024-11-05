@@ -166,16 +166,20 @@
                 <div class="coordinates-section">
                     <h4>待诱骗目标GPS位置</h4>
                     <table class="gps-table">
+                        <thead>
                         <tr>
                             <th>经度</th>
                             <th>纬度</th>
                             <th>高度</th>
                         </tr>
+                        </thead>
+                        <tbody>
                         <tr>
                             <td>{{ gpsData.longitude.toFixed(6) }}°</td>
                             <td>{{ gpsData.latitude.toFixed(6) }}°</td>
                             <td>{{ gpsData.altitude.toFixed(6) || 0 }}m</td>
                         </tr>
+                        </tbody>
                     </table>
                 </div>
                 
@@ -336,7 +340,7 @@
 </template>
 
 <script setup>
-    import { onMounted, onUnmounted, ref, computed } from "vue";
+    import { computed, onMounted, onUnmounted, ref } from "vue";
     import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     
@@ -501,19 +505,19 @@
         // 添加键盘事件监听
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
-
+        
         await sendCommand(4101)
-            
+        
         // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
         if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
         bootStrapTimerId.value = setInterval(() => {
             if (activeTab.value === 'deception') sendCommand(8192)
         }, 30000);
-
-        // todo 设置开启四个定位系统
-
-    });
         
+        // todo 设置开启四个定位系统
+        
+    });
+    
     // 组件卸载时清除定时器
     onUnmounted(() => {
         clearInterval(statusInterval);
@@ -855,29 +859,10 @@
         const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
         console.log(connectRes)
         if (connectRes.isSuccess) {
-            if(connectRes.data?.data?.maxRadPower)maxPower.value = connectRes.data.data.maxRadPower;
+            if (connectRes.data?.data?.maxRadPower) maxPower.value = connectRes.data.data.maxRadPower;
         }
     }
     
-    // 在 script setup 部分添加新的响应式变量
-    // const photoelectricDevices = ref([]);
-    // const currentPhotoelectricId = ref(''); // 存储当前选中的设备ID
-    
-    // 添加初始化光电设备的函数
-    // async function initPhotoelectrics() {
-    //     try {
-    //         const response = await axios.get('/api/v0/photoelectrics');
-    //         if (response.data.code === 0 && response.data.result?.photoelectrics) {
-    //             photoelectricDevices.value = response.data.result.photoelectrics;
-    //             currentPhotoelectricId.value = photoelectricDevices.value.id;
-    //             console.log('电设备初始化成功:', photoelectricDevices.value);
-    //         } else {
-    //             console.error('获取光电设备数据失败:', response.data.msg);
-    //         }
-    //     } catch (error) {
-    //         console.error('获取光电设备信息请求失败:', error);
-    //     }
-    // }
     
     // 添加状态更新函数预留口）
     async function updateEmissionStatus() {
@@ -1097,21 +1082,27 @@
 </script>
 
 <script>
-    
     import { deceptionService } from "../service/deceptionService";
-    import { ref } from "vue";
+    import { computed, ref } from "vue";
+    
+    import { useAircraftData } from '@/composables/useAircraftData'
     
     const launchCaptureFlag = ref(false)
     const driveAwayAngle = ref(0);
     const capturePositionData = ref({
-        longitude: 0.0000,
-        latitude: 0.0000,
+        longitude: import.meta.env.VITE_DECEPTION_CAPTURE_LONGITUDE,
+        latitude: import.meta.env.VITE_DECEPTION_CAPTURE_LATITUDE,
         altitude: 0.0000
     })
-    const gpsData = ref({
-        longitude: 0.0000,
-        latitude: 0.0000,
-        altitude: 0.0000
+    
+    const {cachedSelectedAircraft} = useAircraftData()
+    
+    const gpsData = computed(() => {
+        return {
+            longitude: cachedSelectedAircraft.value.fusionData.longitude || '0',
+            latitude: cachedSelectedAircraft.value.fusionData.latitude || '0',
+            altitude: cachedSelectedAircraft.value.radarData.altitude || '0'
+        }
     })
     const simulationLevel = ref(100);
     const powerValue = ref(30);
@@ -1214,7 +1205,7 @@
         if (res) {
             // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
             // 如果发送了别的命令，先硬把flag置false
-            if(res.isSuccess)launchCaptureFlag.value = cmdWord == 8192
+            if (res.isSuccess) launchCaptureFlag.value = cmdWord == 8192
             return res.isSuccess
         }
         
@@ -1234,6 +1225,7 @@
             return true
         }
     }
+    
     // 在这里导出需要的函数
     export { sendCommand, stopLaunch_1 }
 </script>
