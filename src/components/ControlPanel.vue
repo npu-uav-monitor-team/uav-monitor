@@ -1150,9 +1150,9 @@
                     bootstrapPosition: {
                         targetType: 0,
                         Position: {
-                            Latitude: gpsData.value.latitude,
-                            Longitude: gpsData.value.longitude,
-                            Altitude: gpsData.value.altitude
+                            Latitude: gpsData.latitude,
+                            Longitude: gpsData.longitude,
+                            Altitude: gpsData.altitude
                         },
                     }
                 }
