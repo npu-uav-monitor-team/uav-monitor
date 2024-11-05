@@ -14,7 +14,7 @@ export class deceptionService {
         } else {
           // 自行处理
         }
-        return true
+        return data
       })
       .catch((error) => {
         console.error('Error:', error)

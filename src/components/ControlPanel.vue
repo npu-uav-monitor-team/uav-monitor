@@ -1214,8 +1214,8 @@
         if (res) {
             // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
             // 如果发送了别的命令，先硬把flag置false
-            launchCaptureFlag.value = cmdWord == 8192
-            return true
+            if(res.isSuccess)launchCaptureFlag.value = cmdWord == 8192
+            return res.isSuccess
         }
         
         // // 更新数据
