@@ -1098,10 +1098,20 @@
     const {cachedSelectedAircraft} = useAircraftData()
     
     const gpsData = computed(() => {
-        return {
-            longitude: cachedSelectedAircraft.value.fusionData.longitude || '0',
-            latitude: cachedSelectedAircraft.value.fusionData.latitude || '0',
-            altitude: cachedSelectedAircraft.value.radarData.altitude || '0'
+        if (cachedSelectedAircraft.value.fusionData.longitude &&
+            cachedSelectedAircraft.value.fusionData.latitude &&
+            cachedSelectedAircraft.value.radarData.altitude) {
+            return {
+                longitude: cachedSelectedAircraft.value.fusionData.longitude,
+                latitude: cachedSelectedAircraft.value.fusionData.latitude,
+                altitude: cachedSelectedAircraft.value.radarData.altitude
+            }
+        } else {
+            return {
+                longitude: 0,
+                latitude: 0,
+                altitude: 0
+            }
         }
     })
     const simulationLevel = ref(100);
