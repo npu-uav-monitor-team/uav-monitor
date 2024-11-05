@@ -442,7 +442,7 @@
         try {
             const response = await axios.get(`/api/v0/photoelectrics/info`);
             if (response.data.code === 0) {
-                const device = response.data.result.photoelectrics;
+                const device = response.data.data;
                 
                 // 更新设备在线状态（这里假设如果能获取到数据就是在线的）
                 optoelectronicDeviceOnline.value = true;
@@ -519,7 +519,7 @@
         clearInterval(statusInterval);
         clearInterval(updateInterval);
         clearInterval(emissionStatusInterval);
-        clearInterval(bootStrapTimerId.value);
+        // clearInterval(bootStrapTimerId.value);
         
         // 移除键盘事件监听
         window.removeEventListener('keydown', handleKeyDown);
@@ -637,8 +637,6 @@
     
     // 修改归零函数
     async function resetOptoelectronic() {
-        
-        
         try {
             const response = await axios.post(`/api/v0/photoelectrics/zero`);
             if (response.data.code === 0) {
@@ -710,8 +708,6 @@
     
     // 修改激光开关函数
     async function toggleLaser() {
-        
-        
         const apiEndpoint = laserStatus.value ?
             `/api/v0/photoelectrics/lazar/poweroff` :
             `/api/v0/photoelectrics/lazar/poweron`;
