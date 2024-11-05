@@ -1098,15 +1098,17 @@
     const {cachedSelectedAircraft} = useAircraftData()
     
     const gpsData = computed(() => {
-        if (cachedSelectedAircraft.value.fusionData.longitude &&
-            cachedSelectedAircraft.value.fusionData.latitude &&
-            cachedSelectedAircraft.value.radarData.altitude) {
-            return {
-                longitude: cachedSelectedAircraft.value.fusionData.longitude,
-                latitude: cachedSelectedAircraft.value.fusionData.latitude,
-                altitude: cachedSelectedAircraft.value.radarData.altitude
+        try {
+            if (cachedSelectedAircraft.value.fusionData.longitude &&
+                cachedSelectedAircraft.value.fusionData.latitude &&
+                cachedSelectedAircraft.value.radarData.altitude) {
+                return {
+                    longitude: cachedSelectedAircraft.value.fusionData.longitude,
+                    latitude: cachedSelectedAircraft.value.fusionData.latitude,
+                    altitude: cachedSelectedAircraft.value.radarData.altitude
+                }
             }
-        } else {
+        } catch (e) {
             return {
                 longitude: 0,
                 latitude: 0,
