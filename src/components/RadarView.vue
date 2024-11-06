@@ -170,12 +170,12 @@
 
 <script setup>
     // 对aircraftData[index].electronicData.threatLevel做判断 目前是所有的都要
-    import { computed, isRef, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+    import { computed, isRef, nextTick, onMounted, onUnmounted, ref } from 'vue';
     import axios from "@/api/index.js"
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
-    import { getDriveAngle, getBootstrapFlag } from "../composables/deceptionDataStore"
+    import { getBootstrapFlag, getDriveAngle } from "../composables/deceptionDataStore"
     
     const selectedStream = ref('1'); // 默认选择全景视频1
     const deceptionOperateType = ref('')
@@ -212,12 +212,13 @@
         cachedSelectedAircraft.value = aircraft
     }
     
-    const threatAirCraftList = computed(() =>
-        {
-            if (!isRef(aircraftData.value)) {
+    const threatAirCraftList = computed(() => {
+            if (!isRef(aircraftData)) {
                 console.log('[warning] aircraftData is not a ref')
             }
-            return aircraftData.value.filter(item => item.electronicData.threadLevel != null)
+            console.log(aircraftData.value)
+            // 因为后端是写死了所以这里我们暂时不过筛 默认所有的都是威胁
+            return aircraftData.value
         }
     );
     
@@ -304,7 +305,7 @@
                 parseFloat(aircraft.electronicData.pitch.slice(0, -1))
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
-        }, 1000);
+        }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
     };
     
     
@@ -324,7 +325,7 @@
                 parseFloat(aircraft.electronicData.pitch.slice(0, -1))
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
-        })
+        }, import.meta.env.VITE_REQUEST_REFRESH_DURATION)
     };
     
     let fusionGuideTimer = null;
@@ -343,7 +344,7 @@
                 parseFloat(aircraft.fusionData.pitch.slice(0, -1))
             );
             console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
-        });
+        }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
     };
     
     const cancelGuide = async () => {
@@ -391,7 +392,8 @@
                 latitude: cachedSelectedAircraft.value?.fusionData?.latitude ?? 0,
                 altitude: cachedSelectedAircraft.value?.fusionData?.altitude ?? 0
             };
-        } catch (e) {
+        } catch (error) {
+            console.log("caught error while computing capture guide", error)
             // 捕获异常时仍然返回默认值
             bootstrapData = {
                 longitude: 0,

@@ -480,16 +480,19 @@
         await deceptionService.sendCommand(4101, powerValue.value)
     }
     
+    let statusInterval
+    let emissionStatusInterval
+    
     // 在组件挂载时获取设备状态
     onMounted(async () => {
         updateWirelessDeviceStatus();
         updateOptoelectronicDeviceStatus();
         
         // 添加定时器，定期新状态
-        const statusInterval = setInterval(() => {
+        statusInterval = setInterval(() => {
             updateWirelessDeviceStatus();
             updateOptoelectronicDeviceStatus();
-        }, 5000); // 每秒更新一次
+        }, import.meta.env.VITE_REQUEST_REFRESH_DURATION); // 每秒更新一次
         
         // 这里该是从实际数据源获取目标信息
         currentTarget.value = {
@@ -500,13 +503,11 @@
             distance: 2.5
         };
         
-        // updateRadarData();
-        // // 定期更雷达数据
-        // const updateInterval = setInterval(updateRadarData, 5000); // 每5秒更新一次
-        
         // 添加发射状态更新
         updateEmissionStatus();
-        const emissionStatusInterval = setInterval(updateEmissionStatus, 1000);
+        emissionStatusInterval = setInterval(
+            updateEmissionStatus,
+            import.meta.env.VITE_REQUEST_REFRESH_DURATION);
         
         // 添加键盘事件监听
         window.addEventListener('keydown', handleKeyDown);
@@ -530,9 +531,7 @@
     // 组件卸载时清除定时器
     onUnmounted(() => {
         clearInterval(statusInterval);
-        clearInterval(updateInterval);
         clearInterval(emissionStatusInterval);
-        // clearInterval(bootStrapTimerId.value);
         
         // 移除键盘事件监听
         window.removeEventListener('keydown', handleKeyDown);
@@ -544,20 +543,8 @@
         }
     });
     
-    // 切换频段
-    function toggleBand(band) {
-        const index = activeBands.value.indexOf(band);
-        if (index > -1) {
-            activeBands.value.splice(index, 1);
-        } else {
-            activeBands.value.push(band);
-        }
-        // TODO: 调用后端 API 更新频段状态
-    }
-    
     // 更新防御延迟
     function confirmDefenseDelay() {
-        // TODO: 调用后端 API 更新防御延迟
         axios.post('/api/v0/setDefenseConfig?defenseDuration=' + defenseDuration.value + '&defenseDelay=' + defenseDelay.value)
             .then(response => {
                 if (response.data.code === 0) {
@@ -574,7 +561,6 @@
     
     // 更新防御持续时间
     function confirmDefenseDuration() {
-        // TODO: 调用后端 API 更新防御持续时间
         axios.post('/api/v0/setDefenseConfig?defenseDuration=' + defenseDuration.value + '&defenseDelay=' + defenseDelay.value)
             .then(response => {
                 if (response.data.code === 0) {

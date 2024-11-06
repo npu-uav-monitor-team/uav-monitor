@@ -86,7 +86,7 @@ const cachedSelectedAircraft = ref()
 let idCounter = 1;
 
 export function useAircraftData() {
-// 计算融合数据的辅助函数
+    // 计算融合数据的辅助函数
     const calculateFusionData = (radarData, electronicData) => {
         // 将角度字符串转换为数值进行计算
         const parseAngle = (angleStr) => parseFloat(angleStr?.replace('°', '') || '0')
@@ -154,18 +154,6 @@ export function useAircraftData() {
     }
 
     function matchAircraftAndRadar(aircraftData, radarData) {
-        /*
-         * {
-                "targetId": 14544,
-                "range": 642.9944,
-                "azimuth2": 128.45682,
-                "pitch": 5.036616,
-                "speed": 11.582512,
-                "targetLat": 34.134409432233625,
-                "targetLon": 109.15686355844088,
-                "altitude": 0
-            }
-         */
         let minDistance = Number.MAX_VALUE
         let minIndex = -1
 
@@ -344,8 +332,7 @@ export function useAircraftData() {
         updateFusionData()
 
         // 设置定时器
-        updateTimer = setInterval(updateFusionData, 5000);
-        // radarTimer = setInterval(updateRadarData, 5000);
+        updateTimer = setInterval(updateFusionData, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
 
         console.log('Started aircraft data updates');
     };
