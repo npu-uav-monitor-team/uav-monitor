@@ -151,11 +151,23 @@ export function useAircraftData() {
     }
 
     function matchAircraftAndRadar(aircraftData, radarData) {
-        let minDistance = Number.MIN_VALUE
+        /*
+         * {
+                "targetId": 14544,
+                "range": 642.9944,
+                "azimuth2": 128.45682,
+                "pitch": 5.036616,
+                "speed": 11.582512,
+                "targetLat": 34.134409432233625,
+                "targetLon": 109.15686355844088
+            }
+         */
+        let minDistance = Number.MAX_VALUE
         let minIndex = -1
 
         for (let i = 0; i < aircraftData.length; i++) {
-            if (aircraftData[i].electronicData.latitude === '0' && aircraftData[i].electronicData.longitude === '0') {
+            if ((aircraftData[i].electronicData.latitude === '0' && aircraftData[i].electronicData.longitude === '0') ||
+                (aircraftData[i].radarData.longitude !== '0' && aircraftData[i].radarData.latitude !== '0')) {
                 continue
             }
             const distance = haversine(parseNumber(aircraftData[i].electronicData.latitude), parseNumber(aircraftData[i].electronicData.longitude),
@@ -169,13 +181,12 @@ export function useAircraftData() {
         if (minIndex !== -1) {
             aircraftData[minIndex].radarData = {
                 radarId: radarData.targetId,
-                distance: radarData.range.toFixed(0),
-                azimuth: `${radarData.azimuth1.toFixed(1)}°`,
-                azimuth2: `${radarData.azimuth2.toFixed(1)}°`,
-                pitch: `${radarData.pitch.toFixed(1)}°`,
-                speed: radarData.speed.toFixed(0),
-                longitude: radarData.targetLon.toFixed(4),
-                latitude: radarData.targetLat.toFixed(4)
+                distance: parseFloat(radarData.range).toFixed(0),
+                azimuth2: `${parseFloat(radarData.azimuth2).toFixed(1)}°`,
+                pitch: `${parseFloat(radarData.pitch).toFixed(1)}°`,
+                speed: parseFloat(radarData.speed).toFixed(0),
+                longitude: parseFloat(radarData.targetLon).toFixed(4),
+                latitude: parseFloat(radarData.targetLat).toFixed(4)
             }
             aircraftData[minIndex].fusionData = calculateFusionData(aircraftData[minIndex].radarData, aircraftData[minIndex].electronicData)
         }
@@ -211,9 +222,6 @@ export function useAircraftData() {
             const existingIndex = aircraftData.value.findIndex(aircraft =>
                 aircraft.electronicData.electronicId === uavTarget.id
             )
-
-            console.log(convertToHex(uavTarget.color))
-
             const newElectronicData = {
                 electronicId: uavTarget.id,
                 threatLevel: uavTarget.threadLevel || 'low', // 修正拼写错误
@@ -239,7 +247,6 @@ export function useAircraftData() {
                     id: idCounter++,
                     radarData: {
                         distance: '0',
-                        azimuth: '0°',
                         azimuth2: '0°',
                         pitch: '0°',
                         speed: '0',
@@ -262,13 +269,12 @@ export function useAircraftData() {
         radarResponse.data.data.forEach(radarTarget => {
             const newRadarData = {
                 radarId: radarTarget.targetId,
-                distance: radarTarget.range.toFixed(0),
-                azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
-                azimuth2: `${radarTarget.azimuth2.toFixed(1)}°`,
-                pitch: `${radarTarget.pitch.toFixed(1)}°`,
-                speed: radarTarget.speed.toFixed(0),
-                longitude: radarTarget.targetLon.toFixed(4),
-                latitude: radarTarget.targetLat.toFixed(4)
+                distance: parseFloat(radarTarget.range).toFixed(0),
+                azimuth2: `${parseFloat(radarTarget.azimuth2).toFixed(1)}°`,
+                pitch: `${parseFloat(radarTarget.pitch).toFixed(1)}°`,
+                speed: parseFloat(radarTarget.speed).toFixed(0),
+                longitude: parseFloat(radarTarget.targetLon).toFixed(4),
+                latitude: parseFloat(radarTarget.targetLat).toFixed(4)
             }
 
             // 平方和找最接近的
@@ -298,7 +304,7 @@ export function useAircraftData() {
                         longitude: radarTarget.targetLon.toFixed(4),
                         latitude: radarTarget.targetLat.toFixed(4),
                         pitch: `${radarTarget.pitch.toFixed(1)}°`,
-                        azimuth: `${radarTarget.azimuth1.toFixed(1)}°`,
+                        azimuth: `${radarTarget.azimuth2.toFixed(1)}°`,
                         distance: radarTarget.range.toFixed(0),
                         speed: radarTarget.speed.toFixed(0)
                     }

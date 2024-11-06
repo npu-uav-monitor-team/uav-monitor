@@ -70,7 +70,7 @@
                         </td>
                         <!-- 雷达数据 -->
                         <td>{{ aircraft.radarData.distance }}</td>
-                        <td>{{ aircraft.radarData.azimuth }}</td>
+                        <td>{{ aircraft.radarData.azimuth2 }}</td>
                         <td>{{ aircraft.radarData.pitch }}</td>
                         <td>{{ aircraft.radarData.speed }}</td>
                         <td>{{ parseFloat(aircraft.radarData.longitude).toFixed(4) }}</td>
@@ -98,30 +98,31 @@
             <button @click="handleRadarGuide">雷达引导</button>
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
+            <button @click="cancelGuide">取消引导</button>
             <button @click="todofunction">通信干扰</button>
             <button @click="handlePointCapture"
-                    :class="{active: deceptionOperateType == 'capture',
-                     not_active: deceptionOperateType != 'capture'}"
+                    :class="{active: deceptionOperateType === 'capture',
+                     not_active: deceptionOperateType !== 'capture'}"
             >定点诱降
             </button>
             <button @click="handleDriveAway"
-                    :class="{active: deceptionOperateType == 'driveAway',
-                    not_active: deceptionOperateType != 'driveAway'}"
+                    :class="{active: deceptionOperateType === 'driveAway',
+                    not_active: deceptionOperateType !== 'driveAway'}"
             >指引驱离
             </button>
             <button @click="handleDefense"
-                    :class="{active: deceptionOperateType == 'defense',
-                    not_active: deceptionOperateType != 'defense'}"
+                    :class="{active: deceptionOperateType === 'defense',
+                    not_active: deceptionOperateType !== 'defense'}"
             >金钟罩防御
             </button>
             <button @click="handleNoFly"
-                    :class="{active: deceptionOperateType == 'noFly',
-                    not_active: deceptionOperateType != 'noFly'}"
+                    :class="{active: deceptionOperateType === 'noFly',
+                    not_active: deceptionOperateType !== 'noFly'}"
             >禁飞迫降
             </button>
             <button @click="handleInterference"
-                    :class="{active: deceptionOperateType == 'interference',
-            not_active: deceptionOperateType != 'interference'}"
+                    :class="{active: deceptionOperateType === 'interference',
+            not_active: deceptionOperateType !== 'interference'}"
             >导航干扰
             </button>
             <button @click="stopLaunch" class="active">取消发射</button>
@@ -288,13 +289,14 @@
             return;
         }
         const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+        
         const data = await useRGuide(
             1,
             parseInt(aircraft.radarData.distance),
-            parseFloat(aircraft.radarData.azimuth.slice(0, -1)),
+            parseFloat(aircraft.radarData.azimuth2.slice(0, -1)),
             parseFloat(aircraft.radarData.pitch.slice(0, -1))
         );
-        console.log(data);
+        console.log('执行雷达引导操作,目标ID:', selectedAircraftId.value);
     };
     
     const handleElectronicGuide = async () => {
@@ -309,7 +311,6 @@
             parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
             parseFloat(aircraft.electronicData.pitch.slice(0, -1))
         );
-        console.log(data);
         console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
     };
     
@@ -325,7 +326,6 @@
             parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
             parseFloat(aircraft.fusionData.pitch.slice(0, -1))
         );
-        console.log(data);
         console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
     };
     
