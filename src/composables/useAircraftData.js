@@ -284,8 +284,15 @@ export function useAircraftData() {
                 latitude: parseFloat(radarTarget.targetLat).toFixed(4)
             }
 
-            // 平方和找最接近的
-            if (aircraftData.value.length !== 0) {
+            // 找id
+            const existingIndex = aircraftData.value.findIndex(aircraft => {
+                return aircraft.radarData.radarId === radarTarget.targetId
+            })
+
+            if (existingIndex !== -1) {
+                aircraftData.value[existingIndex].radarData = newRadarData
+            } else if (aircraftData.value.length !== 0) {
+                // 新数据 匹配
                 matchAircraftAndRadar(aircraftData.value, radarTarget)
             } else {
                 // 完全没有电侦数据 那就不匹配
@@ -320,6 +327,7 @@ export function useAircraftData() {
             }
         })
 
+        // 重新计算融合数据
         for (let i = 0; i < aircraftData.value.length; i++) {
             const aircraft = aircraftData.value[i]
             aircraft.fusionData = calculateFusionData(aircraft.radarData, aircraft.electronicData)
