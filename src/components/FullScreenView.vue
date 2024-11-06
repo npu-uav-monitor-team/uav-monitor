@@ -74,7 +74,7 @@
         background-color: #001f3f;
         border-radius: 10px;
         padding: 15px;
-        height: 80%;
+        height: 50%;
         display: flex;
         flex-direction: column;
     }

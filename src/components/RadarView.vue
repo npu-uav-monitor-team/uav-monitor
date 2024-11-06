@@ -170,7 +170,7 @@
 
 <script setup>
     // 对aircraftData[index].electronicData.threatLevel做判断 目前是所有的都要
-    import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+    import { computed, isRef, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import axios from "@/api/index.js"
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
@@ -213,7 +213,12 @@
     }
     
     const threatAirCraftList = computed(() =>
-        aircraftData.value.filter(item => item.electronicData.threadLevel != null)
+        {
+            if (!isRef(aircraftData.value)) {
+                console.log('[warning] aircraftData is not a ref')
+            }
+            return aircraftData.value.filter(item => item.electronicData.threadLevel != null)
+        }
     );
     
     onMounted(() => {
@@ -281,55 +286,76 @@
         showSettings.value = false;
     };
     
-    const selectedAircraftId = ref(1);
+    const selectedAircraftId = ref(null);
+    
+    let radarGuideTimer = null;
     
     const handleRadarGuide = async () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
-        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
-        
-        const data = await useRGuide(
-            1,
-            parseInt(aircraft.radarData.distance),
-            parseFloat(aircraft.radarData.azimuth2.slice(0, -1)),
-            parseFloat(aircraft.radarData.pitch.slice(0, -1))
-        );
-        console.log('执行雷达引导操作,目标ID:', selectedAircraftId.value);
+        radarGuideTimer = setInterval(async () => {
+            const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+            await useRGuide(
+                2,
+                parseInt(aircraft.electronicData.distance),
+                parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
+                parseFloat(aircraft.electronicData.pitch.slice(0, -1))
+            );
+            console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
+        }, 1000);
     };
+    
+    
+    let electronicGuideTimer = null;
     
     const handleElectronicGuide = async () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
-        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
-        const data = await useRGuide(
-            2,
-            parseInt(aircraft.electronicData.distance),
-            parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
-            parseFloat(aircraft.electronicData.pitch.slice(0, -1))
-        );
-        console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
+        electronicGuideTimer = setInterval(async () => {
+            const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+            await useRGuide(
+                2,
+                parseInt(aircraft.electronicData.distance),
+                parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
+                parseFloat(aircraft.electronicData.pitch.slice(0, -1))
+            );
+            console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
+        })
     };
+    
+    let fusionGuideTimer = null;
     
     const handleFusionGuide = async () => {
         if (!selectedAircraftId.value) {
             alert('请先选择一个目标');
             return;
         }
-        const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
-        const data = await useRGuide(
-            1,
-            parseInt(aircraft.electronicData.distance),
-            parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
-            parseFloat(aircraft.fusionData.pitch.slice(0, -1))
-        );
-        console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
+        fusionGuideTimer = setInterval(async () => {
+            const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+            await useRGuide(
+                1,
+                parseInt(aircraft.electronicData.distance),
+                parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
+                parseFloat(aircraft.fusionData.pitch.slice(0, -1))
+            );
+            console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
+        });
     };
     
     const cancelGuide = async () => {
+        if (radarGuideTimer) {
+            window.clearInterval(radarGuideTimer);
+        }
+        if (electronicGuideTimer) {
+            window.clearInterval(electronicGuideTimer);
+        }
+        if (fusionGuideTimer) {
+            window.clearInterval(fusionGuideTimer);
+        }
         await axios.post('/api/v0/photoelectrics/radarAndElectricCancel')
     }
     
@@ -374,7 +400,7 @@
             };
         }
         
-        if(getBootstrapFlag() || (!getBootstrapFlag() && await deceptionService.sendCommand(8192, bootstrapData))){
+        if (getBootstrapFlag() || (!getBootstrapFlag() && await deceptionService.sendCommand(8192, bootstrapData))) {
             deceptionOperateType.value = 'capture'
             console.log('执行定点捕获操作,目标ID:', selectedAircraftId.value);
         }
@@ -426,7 +452,7 @@
     };
     
     const stopLaunch = async () => {
-        if(await deceptionService.stopLaunch_1()){
+        if (await deceptionService.stopLaunch_1()) {
             deceptionOperateType.value = 'stopLaunch'
             alert('取消发射成功')
         }
@@ -441,7 +467,7 @@
     }
     
     .radar-content {
-        flex: 2;
+        flex: 1;
         display: flex;
         flex-direction: column;
         padding: 15px;
@@ -608,6 +634,7 @@
         background-color: rgba(0, 31, 63, 0.8);
         border-radius: 0 0 10px 10px;
         overflow-y: auto;
+        max-height: calc(100% - 200px); /* Adjust the height as needed */
     }
     
     .table-container {

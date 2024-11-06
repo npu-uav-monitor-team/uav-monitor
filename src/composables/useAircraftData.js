@@ -1,134 +1,135 @@
 import { onUnmounted, ref } from 'vue'
 import axios from '@/api/index.js'
 
-// 初始化模拟数据
-const initialAircraftData = [
-    {
-        id: 1,
-        radarData: {
-            radarId: 1,
-            distance: 1000,
-            azimuth: '50°',  //以转台0度为基准
-            azimuth2: '140°',  //以正北0度为基准
-            pitch: '30°',
-            speed: '300',
-            longitude: '113.2456',
-            latitude: '25.4562'
-        },
-        electronicData: {
-            electronicId: 1,
-            type: 'UAV',
-            name: 'Mavic3',
-            speed: '280',
-            altitude: 1200,
-            distance: '1100',
-            updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
-            latitude: '25.4564',
-            longitude: '113.2458',
-            pitch: '32°',
-            azimuth: '52°',
-            color: '#FF0000',
-            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
-        },
-        fusionData: {
-            longitude: '113.2457',
-            latitude: '25.4563',
-            pitch: '31°',
-            azimuth: '51°',
-            distance: 1050,
-            speed: 290
-        }
-    },
-    {
-        id: 2,
-        radarData: {
-            radarId: 2,
-            distance: 2000,
-            azimuth: '60°',
-            azimuth2: '150°',
-            pitch: '25°',
-            speed: '250',
-            longitude: '113.3456',
-            latitude: '25.5562'
-        },
-        electronicData: {
-            electronicId: 2,
-            type: 'UAV',
-            name: 'Phantom4',
-            speed: '240',
-            altitude: 800,
-            distance: '2100',
-            updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
-            latitude: '25.5564',
-            longitude: '113.3458',
-            pitch: '27°',
-            azimuth: '62°',
-            color: '#00FF00',
-            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
-        },
-        fusionData: {
-            longitude: '113.3457',
-            latitude: '25.5563',
-            pitch: '26°',
-            azimuth: '61°',
-            distance: 2050,
-            speed: 245
-        }
-    }
-]
-
-const aircraftData = ref(initialAircraftData)
-const cachedSelectedAircraft = ref()
-
-// 维护一个自增的原子int
-let idCounter = 1;
-
-// 计算融合数据的辅助函数
-const calculateFusionData = (radarData, electronicData) => {
-    // 将角度字符串转换为数值进行计算
-    const parseAngle = (angleStr) => parseFloat(angleStr?.replace('°', '') || '0')
-    // 将字符串数值转换为数字进行计算
-    const parseNumber = (str) => parseFloat(str?.toString() || '0')
-
-    // 如果其中一个空，则直接返回另一个
-    if (radarData.longitude === '0' && radarData.latitude === '0') {
-        return {
-            longitude: electronicData.longitude,
-            latitude: electronicData.latitude,
-            pitch: electronicData.pitch,
-            azimuth: electronicData.azimuth,
-            distance: electronicData.distance,
-            speed: electronicData.speed
-        }
-    } else if (electronicData.longitude === '0' && electronicData.latitude === '0') {
-        return {
-            longitude: radarData.longitude,
-            latitude: radarData.latitude,
-            pitch: radarData.pitch,
-            azimuth: radarData.azimuth,
-            distance: radarData.distance,
-            speed: radarData.speed
-        }
-    } else {
-        return {
-            longitude: ((parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2).toFixed(4),
-            latitude: ((parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2).toFixed(4),
-            pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
-            azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
-            distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
-            speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0)
-        }
-    }
-}
-
-// 创建一个单例来追踪是否已经启动了更新
-let isUpdateStarted = false;
-let updateTimer = null;
-let radarTimer = null;
 
 export function useAircraftData() {
+// 初始化模拟数据
+    const initialAircraftData = [
+        {
+            id: 1,
+            radarData: {
+                radarId: 1,
+                distance: 1000,
+                azimuth: '50°',  //以转台0度为基准
+                azimuth2: '140°',  //以正北0度为基准
+                pitch: '30°',
+                speed: '300',
+                longitude: '113.2456',
+                latitude: '25.4562'
+            },
+            electronicData: {
+                electronicId: 1,
+                type: 'UAV',
+                name: 'Mavic3',
+                speed: '280',
+                altitude: 1200,
+                distance: '1100',
+                updateTime: '2024-03-21 14:30:00',
+                threadLevel: 'high',
+                latitude: '25.4564',
+                longitude: '113.2458',
+                pitch: '32°',
+                azimuth: '52°',
+                color: '#FF0000',
+                path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+            },
+            fusionData: {
+                longitude: '113.2457',
+                latitude: '25.4563',
+                pitch: '31°',
+                azimuth: '51°',
+                distance: 1050,
+                speed: 290
+            }
+        },
+        {
+            id: 2,
+            radarData: {
+                radarId: 2,
+                distance: 2000,
+                azimuth: '60°',
+                azimuth2: '150°',
+                pitch: '25°',
+                speed: '250',
+                longitude: '113.3456',
+                latitude: '25.5562'
+            },
+            electronicData: {
+                electronicId: 2,
+                type: 'UAV',
+                name: 'Phantom4',
+                speed: '240',
+                altitude: 800,
+                distance: '2100',
+                updateTime: '2024-03-21 14:30:00',
+                threadLevel: 'medium',
+                latitude: '25.5564',
+                longitude: '113.3458',
+                pitch: '27°',
+                azimuth: '62°',
+                color: '#00FF00',
+                path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+            },
+            fusionData: {
+                longitude: '113.3457',
+                latitude: '25.5563',
+                pitch: '26°',
+                azimuth: '61°',
+                distance: 2050,
+                speed: 245
+            }
+        }
+    ]
+
+    const aircraftData = ref(initialAircraftData)
+    const cachedSelectedAircraft = ref()
+
+// 维护一个自增的原子int
+    let idCounter = 1;
+
+// 计算融合数据的辅助函数
+    const calculateFusionData = (radarData, electronicData) => {
+        // 将角度字符串转换为数值进行计算
+        const parseAngle = (angleStr) => parseFloat(angleStr?.replace('°', '') || '0')
+        // 将字符串数值转换为数字进行计算
+        const parseNumber = (str) => parseFloat(str?.toString() || '0')
+
+        // 如果其中一个空，则直接返回另一个
+        if (radarData.longitude === '0' && radarData.latitude === '0') {
+            return {
+                longitude: electronicData.longitude,
+                latitude: electronicData.latitude,
+                pitch: electronicData.pitch,
+                azimuth: electronicData.azimuth,
+                distance: electronicData.distance,
+                speed: electronicData.speed
+            }
+        } else if (electronicData.longitude === '0' && electronicData.latitude === '0') {
+            return {
+                longitude: radarData.longitude,
+                latitude: radarData.latitude,
+                pitch: radarData.pitch,
+                azimuth: radarData.azimuth,
+                distance: radarData.distance,
+                speed: radarData.speed
+            }
+        } else {
+            return {
+                longitude: ((parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2).toFixed(4),
+                latitude: ((parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2).toFixed(4),
+                pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
+                azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
+                distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
+                speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0)
+            }
+        }
+    }
+
+// 创建一个单例来追踪是否已经启动了更新
+    let isUpdateStarted = false;
+    let updateTimer = null;
+    let radarTimer = null;
+
 
     // 采用 Haversine 公式计算两个经纬度之间的距离
     function haversine(lat1, lon1, lat2, lon2) {
@@ -216,7 +217,7 @@ export function useAircraftData() {
         const electricResponse = await axios.get('/api/v0/uavs')
         if (electricResponse.data != null && aircraftData.value[0].electronicData.updateTime === '2024-03-21 14:30:00') {
             // 清空
-            aircraftData.value = []
+            aircraftData.value.splice(0, aircraftData.value.length)
         }
         electricResponse.data.data.forEach(uavTarget => {
             const existingIndex = aircraftData.value.findIndex(aircraft =>
