@@ -102,7 +102,8 @@ export function useAircraftData() {
                 pitch: electronicData.pitch,
                 azimuth: electronicData.azimuth,
                 distance: electronicData.distance,
-                speed: electronicData.speed
+                speed: electronicData.speed,
+                altitude: electronicData.altitude
             }
         } else if (electronicData.longitude === '0' && electronicData.latitude === '0') {
             return {
@@ -111,7 +112,8 @@ export function useAircraftData() {
                 pitch: radarData.pitch,
                 azimuth: radarData.azimuth,
                 distance: radarData.distance,
-                speed: radarData.speed
+                speed: radarData.speed,
+                altitude: radarData.altitude
             }
         } else {
             return {
@@ -120,7 +122,8 @@ export function useAircraftData() {
                 pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
                 azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
                 distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
-                speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0)
+                speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0),
+                altitude: ((parseNumber(radarData.altitude) + parseNumber(electronicData.altitude)) / 2).toFixed(0)
             }
         }
     }
@@ -252,10 +255,12 @@ export function useAircraftData() {
                         pitch: '0°',
                         speed: '0',
                         longitude: '0',
-                        latitude: '0'
+                        latitude: '0',
+                        altitude: '0'
                     },
                     electronicData: newElectronicData,
                     fusionData: {
+                        altitude: uavTarget.altitude || 0,
                         longitude: uavTarget.lng?.toString() || '0',
                         latitude: uavTarget.lat?.toString() || '0',
                         pitch: `${uavTarget.pitchAngle || 0}°`,
@@ -269,6 +274,7 @@ export function useAircraftData() {
         const radarResponse = await axios.get('/api/v0/radar/targetList')
         radarResponse.data.data.forEach(radarTarget => {
             const newRadarData = {
+                altitude: radarTarget.altitude,
                 radarId: radarTarget.targetId,
                 distance: parseFloat(radarTarget.range).toFixed(0),
                 azimuth2: `${parseFloat(radarTarget.azimuth2).toFixed(1)}°`,
@@ -302,6 +308,7 @@ export function useAircraftData() {
                         path: []
                     },
                     fusionData: {
+                        altitude: radarTarget.altitude,
                         longitude: radarTarget.targetLon.toFixed(4),
                         latitude: radarTarget.targetLat.toFixed(4),
                         pitch: `${radarTarget.pitch.toFixed(1)}°`,
