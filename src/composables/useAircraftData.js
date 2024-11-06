@@ -1,92 +1,91 @@
 import { onUnmounted, ref } from 'vue'
 import axios from '@/api/index.js'
 
-
-export function useAircraftData() {
 // 初始化模拟数据
-    const initialAircraftData = [
-        {
-            id: 1,
-            radarData: {
-                radarId: 1,
-                distance: 1000,
-                azimuth: '50°',  //以转台0度为基准
-                azimuth2: '140°',  //以正北0度为基准
-                pitch: '30°',
-                speed: '300',
-                longitude: '113.2456',
-                latitude: '25.4562'
-            },
-            electronicData: {
-                electronicId: 1,
-                type: 'UAV',
-                name: 'Mavic3',
-                speed: '280',
-                altitude: 1200,
-                distance: '1100',
-                updateTime: '2024-03-21 14:30:00',
-                threadLevel: 'high',
-                latitude: '25.4564',
-                longitude: '113.2458',
-                pitch: '32°',
-                azimuth: '52°',
-                color: '#FF0000',
-                path: [[113.2458, 25.4564], [113.2459, 25.4565]]
-            },
-            fusionData: {
-                longitude: '113.2457',
-                latitude: '25.4563',
-                pitch: '31°',
-                azimuth: '51°',
-                distance: 1050,
-                speed: 290
-            }
+const initialAircraftData = [
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
         },
-        {
-            id: 2,
-            radarData: {
-                radarId: 2,
-                distance: 2000,
-                azimuth: '60°',
-                azimuth2: '150°',
-                pitch: '25°',
-                speed: '250',
-                longitude: '113.3456',
-                latitude: '25.5562'
-            },
-            electronicData: {
-                electronicId: 2,
-                type: 'UAV',
-                name: 'Phantom4',
-                speed: '240',
-                altitude: 800,
-                distance: '2100',
-                updateTime: '2024-03-21 14:30:00',
-                threadLevel: 'medium',
-                latitude: '25.5564',
-                longitude: '113.3458',
-                pitch: '27°',
-                azimuth: '62°',
-                color: '#00FF00',
-                path: [[113.3458, 25.5564], [113.3459, 25.5565]]
-            },
-            fusionData: {
-                longitude: '113.3457',
-                latitude: '25.5563',
-                pitch: '26°',
-                azimuth: '61°',
-                distance: 2050,
-                speed: 245
-            }
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
         }
-    ]
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    }
+]
 
-    const aircraftData = ref(initialAircraftData)
-    const cachedSelectedAircraft = ref()
+const aircraftData = ref(initialAircraftData)
+const cachedSelectedAircraft = ref()
 
 // 维护一个自增的原子int
-    let idCounter = 1;
+let idCounter = 1;
 
+export function useAircraftData() {
 // 计算融合数据的辅助函数
     const calculateFusionData = (radarData, electronicData) => {
         // 将角度字符串转换为数值进行计算
