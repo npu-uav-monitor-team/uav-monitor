@@ -202,13 +202,13 @@
             id: aircraft.id,
             type: aircraft.electronicData.type,
             name: aircraft.electronicData.name,
-            speed: aircraft.fusionData.speed,
-            altitude: aircraft.electronicData.altitude,
+            speed: parseFloat(aircraft.fusionData.speed),
+            altitude: parseFloat(aircraft.fusionData.altitude),
             distance: aircraft.fusionData.distance,
             updateTime: aircraft.electronicData.updateTime,
-            lat: parseFloat(aircraft.fusionData.latitude),
-            lng: parseFloat(aircraft.fusionData.longitude),
-            pitch: aircraft.fusionData.pitch,
+            lat: parseFloat(aircraft.fusionData.latitude).toFixed(4),
+            lng: parseFloat(aircraft.fusionData.longitude).toFixed(4),
+            pitch: parseFloat(aircraft.fusionData.pitch),
             color: aircraft.electronicData.color,
             path: aircraft.electronicData.path
         }));

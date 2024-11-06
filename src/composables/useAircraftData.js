@@ -189,9 +189,9 @@ export function useAircraftData() {
                 azimuth2: `${parseFloat(radarData.azimuth2).toFixed(1)}°`,
                 pitch: `${parseFloat(radarData.pitch).toFixed(1)}°`,
                 speed: parseFloat(radarData.speed).toFixed(0),
-                longitude: parseFloat(radarData.targetLon).toFixed(4),
-                latitude: parseFloat(radarData.targetLat).toFixed(4),
-                altitude: radarData.altitude,
+                longitude: parseFloat(radarData.targetLon),
+                latitude: parseFloat(radarData.targetLat),
+                altitude: parseFloat(radarData.altitude),
             }
             aircraftData[minIndex].fusionData = calculateFusionData(aircraftData[minIndex].radarData, aircraftData[minIndex].electronicData)
         }
@@ -281,8 +281,8 @@ export function useAircraftData() {
                 azimuth2: `${parseFloat(radarTarget.azimuth2).toFixed(1)}°`,
                 pitch: `${parseFloat(radarTarget.pitch).toFixed(1)}°`,
                 speed: parseFloat(radarTarget.speed).toFixed(0),
-                longitude: parseFloat(radarTarget.targetLon).toFixed(4),
-                latitude: parseFloat(radarTarget.targetLat).toFixed(4)
+                longitude: parseFloat(radarTarget.targetLon),
+                latitude: parseFloat(radarTarget.targetLat)
             }
 
             // 找id
@@ -317,8 +317,8 @@ export function useAircraftData() {
                     },
                     fusionData: {
                         altitude: radarTarget.altitude,
-                        longitude: radarTarget.targetLon.toFixed(4),
-                        latitude: radarTarget.targetLat.toFixed(4),
+                        longitude: parseFloat(radarTarget.targetLon),
+                        latitude: parseFloat(radarTarget.targetLat),
                         pitch: `${radarTarget.pitch.toFixed(1)}°`,
                         azimuth: `${radarTarget.azimuth2.toFixed(1)}°`,
                         distance: radarTarget.range.toFixed(0),
