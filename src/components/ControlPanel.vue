@@ -306,7 +306,7 @@
                 </div>
                 <div class="settings-footer">
                     <button @click="saveSettings">保存</button>
-                    <button @click="closeSettings">取消</button>
+                    <button @click="closeSettings">���</button>
                 </div>
             </div>
         </div>
@@ -319,6 +319,7 @@
     import { deceptionService } from "../service/deceptionService";
     import { actions } from "../composables/deceptionDataStore"
     import { useAircraftData } from '@/composables/useAircraftData'
+    import { useDeviceControl } from '../composables/useDeviceControl'
     
     const { cachedSelectedAircraft,aircraftData } = useAircraftData()
     

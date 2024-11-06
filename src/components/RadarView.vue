@@ -91,7 +91,9 @@
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
             <button @click="cancelGuide">取消引导</button>
-            <button @click="todofunction">通信干扰</button>
+            <button @click="todofunction">
+                {{ isInterferenceEnabled ? '取消通信干扰' : '通信干扰' }}
+            </button>
             <button @click="handlePointCapture"
                     :class="{active: deceptionOperateType === 'capture',
                      not_active: deceptionOperateType !== 'capture'}"
@@ -168,6 +170,7 @@
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
     import { getBootstrapFlag, getDriveAngle } from "../composables/deceptionDataStore"
+    import { useDeviceControl } from '../composables/useDeviceControl'
     
     const selectedStream = ref('1'); // 默认选择全景视频1
     const deceptionOperateType = ref('')
@@ -450,6 +453,12 @@
             deceptionOperateType.value = 'stopLaunch'
             alert('取消发射成功')
         }
+    }
+    
+    const { toggleAutoDefense, isInterferenceEnabled } = useDeviceControl()
+    
+    const todofunction = () => {
+        toggleAutoDefense()
     }
 </script>
 
