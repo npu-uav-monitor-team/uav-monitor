@@ -1,6 +1,7 @@
 /* 全局样式表 */
 html,body,#app{
     color: #fff;
+    width: 100%;
     height: 100vh;
     margin: 0 0;
     padding: 0;

@@ -1,6 +1,6 @@
 <template>
     <div class="full-screen-view">
-      <h2>光电设备视频</h2>
+      <h3>光电设备视频</h3>
       <div class="video-container" id="player-con">
         <video :id="`video-${selectedCamera}`" autoplay width="100%" height="100%"></video>
       </div>
@@ -74,15 +74,15 @@
         background-color: #001f3f;
         border-radius: 10px;
         padding: 15px;
-        height: 50%;
+        height: 40%;
         display: flex;
         flex-direction: column;
     }
     
-    h2 {
+    h3 {
         color: #00ffff;
         text-align: center;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
     }
     
     .video-container {

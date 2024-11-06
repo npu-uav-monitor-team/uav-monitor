@@ -164,7 +164,7 @@
                 </div>
                 
                 <div class="coordinates-section">
-                    <h4>待诱骗目标GPS位置</h4>
+                    <div style="font-size: 10px">待诱骗目标GPS位置</div>
                     <table class="gps-table">
                         <thead>
                         <tr>
@@ -184,7 +184,7 @@
                 </div>
                 
                 <div class="power-slider-section">
-                    <span>手动功率设置</span>
+                    <span style="font-size: 10px">手动功率设置</span>
                     <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
                     <button @click="setPower" class="power-confirm-btn">确定</button>
@@ -223,7 +223,6 @@
                                     <label>诱降位置经纬度</label>
                                     <input type="text" v-model="capturePositionData.latitude" @blur="updateCapture" placeholder="纬度">
                                     <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture" placeholder="经度">
-                                    <button class="icon-button"><i class="icon-target"></i></button>
                                 </div>
                                 <div class="ambiguity-input">
                                     <label>模糊度</label>
@@ -251,7 +250,9 @@
                                         就近发射
                                     </button>
                                 </div>
-                                <button @click="updateCapture" class="send-button">保存</button>
+                                <div style="display: flex; justify-content: center;">
+                                    <button @click="updateCapture" class="send-button">保存</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1100,7 +1101,7 @@
         color: #ffffff;
         display: flex;
         flex-direction: column;
-        height: 100%;
+        height: 40%;
         overflow: hidden;
         padding: 10px;
     }
@@ -1129,7 +1130,7 @@
     }
     
     .tab-content {
-        flex: 1;
+        width: 100%;
         display: flex;
         overflow: hidden;
         padding: 5px;
@@ -1137,7 +1138,8 @@
     }
     
     .control-content {
-        flex: 1;
+        height: 80%;
+        width: 100%;
         display: flex;
         flex-direction: column;
         gap: 5px;
@@ -1153,12 +1155,6 @@
         color: #00ffff;
         margin: 2px 0;
         font-size: 14px;
-    }
-    
-    .button-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
     }
     
     button {
@@ -1202,7 +1198,7 @@
     .status-row {
         display: flex;
         justify-content: space-between;
-        font-size: 12px;
+        font-size: 10px;
         padding: 5px 0;
     }
     
@@ -1516,20 +1512,22 @@
     }
     
     .coordinates-section {
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
     
     .gps-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 10px;
+        margin-bottom: 2px;
+        font-size: 10px;
     }
     
     .gps-table th, .gps-table td {
         border: 1px solid #00ffff;
-        padding: 5px;
+        padding: 2px;
         text-align: center;
         color: #00ffff;
+        line-height: 12px;
     }
     
     .power-slider-section {
@@ -1561,9 +1559,9 @@
     .small-tabs-content {
         border: 1px solid #00ffff;
         border-radius: 5px;
-        padding: 10px;
-        margin-top: 10px;
-        flex: 1;
+        padding: 5px;
+        margin-top: 5px;
+        height: 33%;
         display: flex;
         flex-direction: column;
     }
@@ -1576,6 +1574,7 @@
         display: flex;
         justify-content: space-between;
         gap: 5px;
+        font-size: 10px;
     }
     
     .small-tab {
@@ -1583,10 +1582,10 @@
         background-color: transparent;
         color: #ffffff;
         border: none;
-        padding: 8px;
+        padding: 5px;
         cursor: pointer;
         transition: background-color 0.3s, color 0.3s;
-        font-size: 14px;
+        font-size: 10px;
     }
     
     .small-tab.active {
@@ -1595,7 +1594,7 @@
     }
     
     .small-tab-content {
-        flex: 1;
+        height: 40%;
         background-color: rgba(0, 31, 63, 0.8);
         border-radius: 5px;
         padding: 10px;
@@ -1605,7 +1604,9 @@
     .drive-away-content, .interference-content, .defense-content, .capture-content {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
+        font-size: 8px;
+        margin-top: 0;
     }
     
     .coordinate-inputs {
@@ -1621,6 +1622,7 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
+        font-size: 8px;
     }
     
     .icon-button {
@@ -1645,22 +1647,26 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
+        font-size: 8px;
     }
     
     .operation-buttons {
         display: flex;
         gap: 5px;
+        justify-content: space-around;
     }
     
     .operation-button {
-        flex: 1;
+        height: 14px;
+        width: 30%;
         background-color: #003856;
         color: #ffffff;
         border: 1px solid #00ffff;
-        border-radius: 5px;
-        padding: 6px;
+        border-radius: 2px;
+        padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
+        font-size: 8px;
     }
     
     .operation-button.active {
@@ -1675,10 +1681,13 @@
         background-color: #007acc;
         color: #ffffff;
         border: none;
-        border-radius: 5px;
-        padding: 10px;
+        border-radius: 2px;
+        padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
+        font-size: 8px;
+        height: 14px;
+        width: 80%;
     }
     
     .send-button:hover {
@@ -1742,7 +1751,7 @@
         align-items: center;
         justify-content: center;
         height: 100%;
-        font-size: 18px;
+        font-size: 10px;
     }
 </style>
 

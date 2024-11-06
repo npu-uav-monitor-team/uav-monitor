@@ -203,7 +203,7 @@
             type: aircraft.electronicData.type,
             name: aircraft.electronicData.name,
             speed: parseFloat(aircraft.fusionData.speed),
-            altitude: parseFloat(aircraft.fusionData.altitude),
+            altitude: parseFloat(aircraft.fusionData.altitude).toFixed(1),
             distance: aircraft.fusionData.distance,
             updateTime: aircraft.electronicData.updateTime,
             lat: parseFloat(aircraft.fusionData.latitude).toFixed(4),
@@ -224,8 +224,8 @@
                 name: aircraft.electronicData.name,
                 level: aircraft.electronicData.threadLevel,
                 speed: aircraft.fusionData.speed,
-                altitude: aircraft.electronicData.altitude,
-                distance: aircraft.fusionData.distance,
+                altitude: parseFloat(aircraft.electronicData).toFixed(4),
+                distance: parseFloat(aircraft.fusionData.distance).toFixed(4),
                 updateTime: aircraft.electronicData.updateTime,
                 color: aircraft.electronicData.color
             }));
@@ -370,7 +370,7 @@
     const checkInternetConnection = async () => {
         try {
             // 尝试访问在线地图的一个瓦片来测试是否能访问互联网
-            const response = await fetch('https://a.tile.openstreetmap.org/1/1/1.png', {
+            await fetch('https://a.tile.openstreetmap.org/1/1/1.png', {
                 method: 'HEAD',
                 mode: 'no-cors',
                 // 设置较短的超时时间
@@ -384,7 +384,7 @@
     };
     
     const ONLINE_MAP_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    const OFFLINE_MAP_URL = '/public/tiles/{z}/{x}/{y}/tile.png';
+    const OFFLINE_MAP_URL = '/tiles/{z}/{x}/{y}/tile.png';
     
     const updateMapUrl = async () => {
         const hasInternet = await checkInternetConnection();

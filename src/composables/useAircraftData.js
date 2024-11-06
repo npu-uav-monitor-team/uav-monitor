@@ -76,7 +76,377 @@ const initialAircraftData = [
             distance: 2050,
             speed: 245
         }
-    }
+    },
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    },
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    },
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    },
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    },
+    {
+        id: 1,
+        radarData: {
+            radarId: 1,
+            distance: 1000,
+            azimuth: '50°',  //以转台0度为基准
+            azimuth2: '140°',  //以正北0度为基准
+            pitch: '30°',
+            speed: '300',
+            longitude: '113.2456',
+            latitude: '25.4562'
+        },
+        electronicData: {
+            electronicId: 1,
+            type: 'UAV',
+            name: 'Mavic3',
+            speed: '280',
+            altitude: 1200,
+            distance: '1100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'high',
+            latitude: '25.4564',
+            longitude: '113.2458',
+            pitch: '32°',
+            azimuth: '52°',
+            color: '#FF0000',
+            path: [[113.2458, 25.4564], [113.2459, 25.4565]]
+        },
+        fusionData: {
+            longitude: '113.2457',
+            latitude: '25.4563',
+            pitch: '31°',
+            azimuth: '51°',
+            distance: 1050,
+            speed: 290
+        }
+    },
+    {
+        id: 2,
+        radarData: {
+            radarId: 2,
+            distance: 2000,
+            azimuth: '60°',
+            azimuth2: '150°',
+            pitch: '25°',
+            speed: '250',
+            longitude: '113.3456',
+            latitude: '25.5562'
+        },
+        electronicData: {
+            electronicId: 2,
+            type: 'UAV',
+            name: 'Phantom4',
+            speed: '240',
+            altitude: 800,
+            distance: '2100',
+            updateTime: '2024-03-21 14:30:00',
+            threadLevel: 'medium',
+            latitude: '25.5564',
+            longitude: '113.3458',
+            pitch: '27°',
+            azimuth: '62°',
+            color: '#00FF00',
+            path: [[113.3458, 25.5564], [113.3459, 25.5565]]
+        },
+        fusionData: {
+            longitude: '113.3457',
+            latitude: '25.5563',
+            pitch: '26°',
+            azimuth: '61°',
+            distance: 2050,
+            speed: 245
+        }
+    },
 ]
 
 const aircraftData = ref(initialAircraftData)
@@ -116,13 +486,13 @@ export function useAircraftData() {
             }
         } else {
             return {
-                longitude: ((parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2).toFixed(4),
-                latitude: ((parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2).toFixed(4),
-                pitch: `${((parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2).toFixed(1)}°`,
-                azimuth: `${((parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2).toFixed(1)}°`,
-                distance: ((parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2).toFixed(0),
-                speed: ((parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2).toFixed(0),
-                altitude: ((parseNumber(radarData.altitude) + parseNumber(electronicData.altitude)) / 2).toFixed(0)
+                longitude: (parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2,
+                latitude: (parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2,
+                pitch: (parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2,
+                azimuth: (parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2,
+                distance: (parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2,
+                speed: (parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2,
+                altitude: (parseNumber(radarData.altitude) + parseNumber(electronicData.altitude)) / 2
             }
         }
     }
@@ -174,9 +544,9 @@ export function useAircraftData() {
             aircraftData[minIndex].radarData = {
                 radarId: radarData.targetId,
                 distance: parseFloat(radarData.range).toFixed(0),
-                azimuth2: `${parseFloat(radarData.azimuth2).toFixed(1)}°`,
-                pitch: `${parseFloat(radarData.pitch).toFixed(1)}°`,
-                speed: parseFloat(radarData.speed).toFixed(0),
+                azimuth2: parseFloat(radarData.azimuth2).toFixed(1),
+                pitch: parseFloat(radarData.pitch),
+                speed: parseFloat(radarData.speed),
                 longitude: parseFloat(radarData.targetLon),
                 latitude: parseFloat(radarData.targetLat),
                 altitude: parseFloat(radarData.altitude),
@@ -227,8 +597,8 @@ export function useAircraftData() {
                 threadLevel: uavTarget.threadLevel || 'low',
                 latitude: uavTarget.lat?.toString() || '0',
                 longitude: uavTarget.lng?.toString() || '0',
-                pitch: `${uavTarget.pitchAngle || 0}°`,
-                azimuth: `${uavTarget.azimuth || 0}°`,
+                pitch: uavTarget.pitchAngle || 0,
+                azimuth: uavTarget.azimuth || 0,
                 color: convertToHex(uavTarget.color) || '#FF0000',
                 path: uavTarget.path || []
             }
@@ -252,8 +622,8 @@ export function useAircraftData() {
                         altitude: uavTarget.altitude || 0,
                         longitude: uavTarget.lng?.toString() || '0',
                         latitude: uavTarget.lat?.toString() || '0',
-                        pitch: `${uavTarget.pitchAngle || 0}°`,
-                        azimuth: `${uavTarget.azimuth || 0}°`,
+                        pitch: uavTarget.pitchAngle || 0,
+                        azimuth: uavTarget.azimuth || 0,
                         distance: uavTarget.distance?.toString() || '0',
                         speed: uavTarget.speed?.toString() || '0'
                     }
@@ -265,10 +635,10 @@ export function useAircraftData() {
             const newRadarData = {
                 altitude: radarTarget.altitude,
                 radarId: radarTarget.targetId,
-                distance: parseFloat(radarTarget.range).toFixed(0),
-                azimuth2: `${parseFloat(radarTarget.azimuth2).toFixed(1)}°`,
-                pitch: `${parseFloat(radarTarget.pitch).toFixed(1)}°`,
-                speed: parseFloat(radarTarget.speed).toFixed(0),
+                distance: parseFloat(radarTarget.range),
+                azimuth2: parseFloat(radarTarget.azimuth2),
+                pitch: parseFloat(radarTarget.pitch),
+                speed: parseFloat(radarTarget.speed),
                 longitude: parseFloat(radarTarget.targetLon),
                 latitude: parseFloat(radarTarget.targetLat)
             }
@@ -307,10 +677,10 @@ export function useAircraftData() {
                         altitude: radarTarget.altitude,
                         longitude: parseFloat(radarTarget.targetLon),
                         latitude: parseFloat(radarTarget.targetLat),
-                        pitch: `${radarTarget.pitch.toFixed(1)}°`,
-                        azimuth: `${radarTarget.azimuth2.toFixed(1)}°`,
-                        distance: radarTarget.range.toFixed(0),
-                        speed: radarTarget.speed.toFixed(0)
+                        pitch: radarTarget.pitch,
+                        azimuth: radarTarget.azimuth2,
+                        distance: radarTarget.range,
+                        speed: radarTarget.speed
                     }
                 })
             }

@@ -43,21 +43,17 @@
     #home {
         padding: 10px;
         box-sizing: border-box;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow: auto;
     }
     
     .title-container {
         display: flex;
         justify-content: space-between;
         align-items: center;
-    }
-    
-    .main-title {
-        flex: 1;
-        text-align: center;
     }
     
     .main-button {
@@ -75,11 +71,12 @@
     }
     
     .main-title {
+        flex: 1;
         text-align: center;
+        font-size: 1.5rem;
         color: #ffffff;
         margin: 0;
         padding: 10px 0;
-        font-size: 2px;
         font-weight: bold;
     }
     
@@ -90,16 +87,18 @@
     }
     
     .left-panel {
-        flex: 3;
+        width: 60%;
         display: flex;
         flex-direction: column;
+        height: 80%;
     }
     
     .right-panel {
-        flex: 2;
+        width: 40%;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        height: 92.5%;
     }
     
     .left-panel, .right-panel > * {

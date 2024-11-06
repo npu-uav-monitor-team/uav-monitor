@@ -2,7 +2,7 @@
     <div class="radar-view">
         <div class="radar-content">
             <div class="screen-header">
-                <h2>全景视频</h2>
+                <h3>全景视频</h3>
                 <div class="device-selector">
                     <select v-model="selectedStream" @change="changeStream">
                         <option value="1">全景视频1</option>
@@ -18,17 +18,9 @@
                     <video id="radar-video" autoplay width="100%" height="100%"></video>
                 </div>
             </div>
-            <div class="device-controls">
-                <div class="controls-container">
-                    <!-- 雷制 -->
-                    
-                    <!-- 详细设置按钮 -->
-                
-                </div>
-            </div>
         </div>
         <div class="illegal-aircraft-list">
-            <h2>非法飞行物列表</h2>
+            <h3>非法飞行物列表</h3>
             <div class="table-container">
                 <table>
                     <thead>
@@ -69,10 +61,10 @@
                             {{ aircraft.id }}
                         </td>
                         <!-- 雷达数据 -->
-                        <td>{{ aircraft.radarData.distance }}</td>
-                        <td>{{ aircraft.radarData.azimuth2 }}</td>
-                        <td>{{ aircraft.radarData.pitch }}</td>
-                        <td>{{ aircraft.radarData.speed }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.distance).toFixed(1) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.azimuth2).toFixed(1) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.pitch).toFixed(1) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.speed).toFixed(1) }}</td>
                         <td>{{ parseFloat(aircraft.radarData.longitude).toFixed(4) }}</td>
                         <td>{{ parseFloat(aircraft.radarData.latitude).toFixed(4) }}</td>
                         
@@ -80,14 +72,14 @@
                         <td>{{ aircraft.electronicData.type }}</td>
                         <td>{{ aircraft.electronicData.name }}</td>
                         <td>{{ aircraft.electronicData.threadLevel }}</td>
-                        <td>{{ aircraft.electronicData.distance }}</td>
+                        <td>{{ parseFloat(aircraft.electronicData.distance).toFixed(1) }}</td>
                         <td>{{ parseFloat(aircraft.electronicData.longitude).toFixed(4) }}</td>
                         <td>{{ parseFloat(aircraft.electronicData.latitude).toFixed(4) }}</td>
                         
                         <!-- 融合数据 (只显示关键位置信息) -->
                         <td>{{ parseFloat(aircraft.fusionData.longitude).toFixed(4) }}</td>
                         <td>{{ parseFloat(aircraft.fusionData.latitude).toFixed(4) }}</td>
-                        <td>{{ aircraft.fusionData.azimuth }}</td>
+                        <td>{{ parseFloat(aircraft.fusionData.azimuth).toFixed(1) }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -340,8 +332,8 @@
             await useRGuide(
                 1,
                 parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.fusionData.azimuth.slice(0, -1)),
-                parseFloat(aircraft.fusionData.pitch.slice(0, -1))
+                parseFloat(aircraft.fusionData.azimuth),
+                parseFloat(aircraft.fusionData.pitch)
             );
             console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
@@ -469,8 +461,8 @@
     }
     
     .radar-content {
-        flex: 1;
         display: flex;
+        height: 45%;
         flex-direction: column;
         padding: 15px;
         background-color: rgba(0, 31, 63, 0.8);
@@ -479,9 +471,10 @@
     
     .screen-header {
         display: flex;
+        height: 3%;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
         padding-bottom: 10px;
         border-bottom: 1px solid #1e3a8a;
     }
@@ -527,57 +520,12 @@
     }
     
     .device-display {
-        flex-grow: 1;
+        display: flex;
+        height: 100%;
         position: relative;
         background-color: #0f172a;
         border-radius: 5px;
         overflow: hidden;
-    }
-    
-    .image-container {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .device-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-    
-    .device-label {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(15, 23, 42, 0.8);
-        color: #00ffff;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 0.9em;
-        z-index: 10;
-    }
-    
-    .device-controls {
-        margin-top: 20px;
-        padding: 0 15px;
-    }
-    
-    .controls-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 20px;
-    }
-    
-    .control-group {
-        flex: 1;
-        background-color: rgba(15, 23, 42, 0.8);
-        padding: 0 10px 10px 5px;
-        border-radius: 5px;
-        border: 1px solid rgba(0, 255, 255, 0.3);
     }
     
     .control-group h3 {
@@ -586,12 +534,6 @@
         padding: 2px 0;
         text-align: center;
         font-size: 1em;
-    }
-    
-    .control-row {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
     }
     
     .control-row button {
@@ -614,33 +556,23 @@
         border: none;
     }
     
-    .settings-btn {
-        height: 100%;
-        background-color: #003366;
-        color: #00ffff;
-        border: 1px solid #00ffff;
-        border-radius: 5px;
-        padding: 8px 15px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
     .control-row button:hover,
     .settings-btn:hover {
         background-color: #004080;
     }
     
     .illegal-aircraft-list {
-        flex: 1;
+        height: 70%;
         padding: 5px 10px;
         background-color: rgba(0, 31, 63, 0.8);
         border-radius: 0 0 10px 10px;
-        overflow-y: auto;
-        max-height: calc(100% - 200px); /* Adjust the height as needed */
     }
     
     .table-container {
         overflow-x: auto;
+        overflow-y: auto;
+        font-size: 12px;
+        max-height: 330px;
     }
     
     table {
@@ -654,6 +586,7 @@
         padding: 4px 8px;
         text-align: center;
         border: 1px solid rgba(0, 255, 255, 0.3);
+        line-height: 24px;
     }
     
     th {
@@ -762,21 +695,17 @@
         gap: 5px;
     }
     
-    .unit {
-        color: #00ffff;
-        margin-left: 5px;
-    }
-    
     .button-group {
         display: flex;
-        gap: 15px;
-        margin-top: 15px;
-        padding: 10px;
+        justify-content: space-around;
+        gap: 1px;
+        margin-top: 3px;
+        margin-bottom: 2%;
     }
     
     .button-group button {
-        flex: 1;
-        padding: 12px 20px;
+        width: 8%;
+        padding: 2px 2px; /* Reduced padding */
         background-color: rgba(0, 122, 204, 0.8);
         color: white;
         border: 2px solid #00ffff;
@@ -784,7 +713,7 @@
         cursor: pointer;
         transition: background-color 0.3s;
         white-space: nowrap;
-        font-size: 16px;
+        font-size: 8px; /* Reduced font size */
         font-weight: 500;
     }
     
@@ -823,18 +752,6 @@
         position: relative;
     }
     
-    .loading-spinner {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        border-top: 4px solid #00ffff;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-    }
-    
     @keyframes spin {
         0% {
             transform: rotate(0deg);
@@ -850,7 +767,7 @@
         object-fit: cover;
     }
     
-    h2 {
+    h3 {
         color: #00ffff;
         margin: 0;
         padding: 0 10px;
