@@ -187,7 +187,7 @@
                     <span>手动功率设置</span>
                     <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
-                    <button @click="sendCommand(4101)" class="power-confirm-btn">确定</button>
+                    <button @click="setPower" class="power-confirm-btn">确定</button>
                 </div>
                 
                 <div class="small-tabs-content">
@@ -213,43 +213,16 @@
                         <div v-if="activeSmallTab === 'driveAway'" class="centered-content">
                             <div class="drive-away-content">
                                 <label>角度</label>
-                                <input type="number" v-model="driveAwayAngle" placeholder="度">
+                                <input type="number" v-model="driveAwayAngle" @blur="sendDriveAwayCommand" placeholder="度">
                                 <button @click="sendDriveAwayCommand">保存</button>
-                            </div>
-                        </div>
-                        <div v-else-if="activeSmallTab === 'interference'" class="centered-content">
-                            <div class="interference-content">
-                                <div class="switch-container">
-                                    <span>无效</span>
-                                    <label class="switch">
-                                        <input type="checkbox" v-model="interferenceEnabled">
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span>使能</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else-if="activeSmallTab === 'noFly'" class="centered-content">
-                            <button @click="sendNoFlyCommand">发送</button>
-                        </div>
-                        <div v-else-if="activeSmallTab === 'defense'" class="centered-content">
-                            <div class="defense-content">
-                                <div class="switch-container">
-                                    <span>无效</span>
-                                    <label class="switch">
-                                        <input type="checkbox" v-model="defenseEnabled">
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span>使能</span>
-                                </div>
                             </div>
                         </div>
                         <div v-else-if="activeSmallTab === 'capture'">
                             <div class="capture-content">
                                 <div class="coordinate-inputs">
                                     <label>诱降位置经纬度</label>
-                                    <input type="text" v-model="capturePositionData.latitude" placeholder="纬度">
-                                    <input type="text" v-model="capturePositionData.longitude" placeholder="经度">
+                                    <input type="text" v-model="capturePositionData.latitude" @blur="updateCapture" placeholder="纬度">
+                                    <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture" placeholder="经度">
                                     <button class="icon-button"><i class="icon-target"></i></button>
                                 </div>
                                 <div class="ambiguity-input">
@@ -278,7 +251,7 @@
                                         就近发射
                                     </button>
                                 </div>
-                                <button class="send-button">保存</button>
+                                <button @click="updateCapture" class="send-button">保存</button>
                             </div>
                         </div>
                     </div>
@@ -343,6 +316,27 @@
     import { computed, onMounted, onUnmounted, ref } from "vue";
     import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
+    import { actions } from "../composables/deceptionDataStore"
+    import { useAircraftData } from '@/composables/useAircraftData'
+    
+    const { cachedSelectedAircraft,aircraftData } = useAircraftData()
+    
+    const gpsData = computed(() => {
+        try {
+            return {
+                longitude: cachedSelectedAircraft.value?.fusionData?.longitude ?? 0,
+                latitude: cachedSelectedAircraft.value?.fusionData?.latitude ?? 0,
+                altitude: cachedSelectedAircraft.value?.fusionData?.altitude ?? 0
+            };
+        } catch (e) {
+            // 捕获异常时仍然返回默认值
+            return {
+                longitude: 0,
+                latitude: 0,
+                altitude: 0
+            };
+        }
+    });
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
@@ -397,6 +391,14 @@
     const deviceNormal = ref(true);
     
     const bootStrapTimerId = ref(null);
+    
+    const driveAwayAngle = ref(0);
+    const capturePositionData = ref({
+        longitude: import.meta.env.VITE_DECEPTION_CAPTURE_LONGITUDE,
+        latitude: import.meta.env.VITE_DECEPTION_CAPTURE_LATITUDE,
+        altitude: 0.0000
+    })
+    
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
@@ -473,6 +475,10 @@
             optoelectronicDeviceNormal.value = false;
         }
     }
+
+    async function setPower() {
+        await deceptionService.sendCommand(4101, powerValue.value)
+    }
     
     // 在组件挂载时获取设备状态
     onMounted(async () => {
@@ -506,13 +512,16 @@
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         
-        await sendCommand(4101)
+        await setPower()
+        updateCapture()
         
         // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
         if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
         bootStrapTimerId.value = setInterval(() => {
-            if (activeTab.value === 'deception') sendCommand(8192)
-        }, 30000);
+            if(deceptionService.sendCommand(8192, gpsData)){
+                actions.setBootstrapFlag(true)
+            }
+        }, 5000);
         
         // todo 设置开启四个定位系统
         
@@ -1053,12 +1062,8 @@
     
     function sendDriveAwayCommand() {
         // TODO: 调用后端 API 发送驱离命令
+        actions.setDriveAngle(driveAwayAngle.value)
         console.log('保存驱离角度完成');
-    }
-    
-    function sendNoFlyCommand() {
-        // TODO: 调用后端 API 发送禁飞命令
-        console.log('发送禁飞命令');
     }
     
     const maxPower = ref(40)
@@ -1079,43 +1084,7 @@
             alert('红外开关操作失败，请检查网络连接');
         }
     }
-</script>
 
-<script>
-    import { deceptionService } from "../service/deceptionService";
-    import { computed, ref } from "vue";
-    
-    import { useAircraftData } from '@/composables/useAircraftData'
-    
-    const launchCaptureFlag = ref(false)
-    const driveAwayAngle = ref(0);
-    const capturePositionData = ref({
-        longitude: import.meta.env.VITE_DECEPTION_CAPTURE_LONGITUDE,
-        latitude: import.meta.env.VITE_DECEPTION_CAPTURE_LATITUDE,
-        altitude: 0.0000
-    })
-    
-    const {cachedSelectedAircraft} = useAircraftData()
-    
-    const gpsData = computed(() => {
-        try {
-            if (cachedSelectedAircraft.value.fusionData.longitude &&
-                cachedSelectedAircraft.value.fusionData.latitude &&
-                cachedSelectedAircraft.value.radarData.altitude) {
-                return {
-                    longitude: cachedSelectedAircraft.value.fusionData.longitude,
-                    latitude: cachedSelectedAircraft.value.fusionData.latitude,
-                    altitude: cachedSelectedAircraft.value.radarData.altitude
-                }
-            }
-        } catch (e) {
-            return {
-                longitude: 0,
-                latitude: 0,
-                altitude: 0
-            }
-        }
-    })
     const simulationLevel = ref(100);
     const powerValue = ref(30);
     
@@ -1124,122 +1093,17 @@
         if (simulationLevel.value < 50) {
             simulationLevel.value = 50;
         }
+        updateCapture()
     };
-    
-    async function sendCommand(cmdWord) {
-        let updateCommandRequestDto
-        if (cmdWord === 4352) {
-            if (!launchCaptureFlag.value) {
-                sendCommand(8192)
-            }
-            // todu: 注意更改position绑定的数据
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    Capture: {
-                        Position: {
-                            Latitude: capturePositionData.value.latitude,
-                            Longitude: capturePositionData.value.longitude,
-                            Altitude: capturePositionData.value.altitude
-                        },
-                        CaptureAmbiguity: simulationLevel.value,
-                        Operate: true
-                    }
-                }
-            }
-        } else if (cmdWord === 4097) {
-            updateCommandRequestDto = {
-                cmdWord: 4097,
-                commandDto: {
-                    driveAngle: driveAwayAngle.value
-                }
-            }
-        } else if (cmdWord === 8192) {
-            // 目标位置引导，在捕获之前需要发送一条这个
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    bootstrapPosition: {
-                        targetType: 0,
-                        Position: {
-                            Latitude: gpsData.latitude,
-                            Longitude: gpsData.longitude,
-                            Altitude: gpsData.altitude
-                        },
-                    }
-                }
-            }
-        } else if (cmdWord === 4100) {
-            // 防御
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    defense: true
-                }
-            }
-        } else if (cmdWord === 4098) {
-            // 干扰
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    IsInterferenceEmitted: true
-                }
-            }
-        } else if (cmdWord === 4099) {
-            // 禁飞
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    nofly: {
-                        state: true,
-                        Position: {
-                            Latitude: 0,
-                            Longitude: 0,
-                            Altitude: 0
-                        },
-                    }
-                }
-            }
-        } else if (cmdWord === 4101) {
-            // 手动功率设置
-            updateCommandRequestDto = {
-                CmdWord: cmdWord,
-                CommandDto: {
-                    transmitPower: {
-                        state: 1,
-                        power: powerValue.value,
-                        sinr: 10,
-                    }
-                }
-            }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            // 要求捕获命令前发送一条8192命令，通过flag判断捕获发送前有发送8192
-            // 如果发送了别的命令，先硬把flag置false
-            if (res.isSuccess) launchCaptureFlag.value = cmdWord == 8192
-            return res.isSuccess
-        }
-        
-        // // 更新数据
-        // await clickDeception()
+
+    const updateCapture = () => {
+        actions.setCapture({
+            latitude: capturePositionData.value.latitude,
+            longitude: capturePositionData.value.longitude,
+            altitude: capturePositionData.value.altitude,
+            simulationLevel: simulationLevel.value,
+        })
     }
-    
-    async function stopLaunch_1() {
-        let updateCommandRequestDto = {
-            cmdWord: 4096,
-            commandDto: {
-                category: 0
-            }
-        }
-        const res = await deceptionService.updateCommand(updateCommandRequestDto)
-        if (res) {
-            return true
-        }
-    }
-    
-    // 在这里导出需要的函数
-    export { sendCommand, stopLaunch_1 }
 </script>
 
 <style scoped>

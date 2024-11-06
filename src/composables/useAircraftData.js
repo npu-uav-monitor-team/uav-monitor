@@ -80,6 +80,7 @@ const initialAircraftData = [
 ]
 
 const aircraftData = ref(initialAircraftData)
+const cachedSelectedAircraft = ref()
 
 // 维护一个自增的原子int
 let idCounter = 1;
@@ -128,8 +129,6 @@ let updateTimer = null;
 let radarTimer = null;
 
 export function useAircraftData() {
-
-    const cachedSelectedAircraft = ref()
 
     // 采用 Haversine 公式计算两个经纬度之间的距离
     function haversine(lat1, lon1, lat2, lon2) {
