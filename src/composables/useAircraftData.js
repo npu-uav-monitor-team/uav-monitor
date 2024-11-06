@@ -150,53 +150,34 @@ export function useAircraftData() {
         return parseFloat(value);
     }
 
-    function matchAircraftAndRadar(aircraftData, radarResponse) {
-        const radarData = radarResponse.data;
-        const n = aircraftData.length;
-        const m = radarData.length;
+    function matchAircraftAndRadar(aircraftData, radarData) {
+        let minDistance = Number.MIN_VALUE
+        let minIndex = -1
 
-        // 构建距离矩阵
-        const dist = Array.from({length: n}, () => Array(m).fill(0));
-        for (let i = 0; i < n; i++) {
-            const electronicData = aircraftData[i];
-            const lat1 = parseNumber(electronicData.latitude);
-            const lon1 = parseNumber(electronicData.longitude);
-
-            for (let j = 0; j < m; j++) {
-                const radarTarget = radarData[j];
-                const lat2 = parseNumber(radarTarget.targetLat);
-                const lon2 = parseNumber(radarTarget.targetLon);
-                dist[i][j] = haversine(lat1, lon1, lat2, lon2);
+        for (let i = 0; i < aircraftData.length; i++) {
+            if (aircraftData[i].electronicData.latitude === '0' && aircraftData[i].electronicData.longitude === '0') {
+                continue
+            }
+            const distance = haversine(parseNumber(aircraftData[i].electronicData.latitude), parseNumber(aircraftData[i].electronicData.longitude),
+                radarData.targetLat, radarData.targetLon)
+            if (distance < minDistance) {
+                minDistance = distance
+                minIndex = i
             }
         }
 
-        // 动态规划表
-        const dp = Array.from({length: n + 1}, () => Array(m + 1).fill(Infinity));
-        dp[0][0] = 0; // 基本情况
-
-        for (let i = 1; i <= n; i++) {
-            for (let j = 1; j <= m; j++) {
-                // 匹配 i 和 j
-                dp[i][j] = Math.min(dp[i][j], dp[i - 1][j - 1] + dist[i - 1][j - 1]);
-                // 不匹配
-                dp[i][j] = Math.min(dp[i][j], dp[i - 1][j], dp[i][j - 1]);
+        if (minIndex !== -1) {
+            aircraftData[minIndex].radarData = {
+                radarId: radarData.targetId,
+                distance: radarData.range.toFixed(0),
+                azimuth: `${radarData.azimuth1.toFixed(1)}°`,
+                azimuth2: `${radarData.azimuth2.toFixed(1)}°`,
+                pitch: `${radarData.pitch.toFixed(1)}°`,
+                speed: radarData.speed.toFixed(0),
+                longitude: radarData.targetLon.toFixed(4),
+                latitude: radarData.targetLat.toFixed(4)
             }
-        }
-
-        // 恢复匹配结果并计算融合数据
-        let i = n, j = m;
-        while (i > 0 && j > 0) {
-            if (dp[i][j] === dp[i - 1][j - 1] + dist[i - 1][j - 1]) {
-                const singleData = aircraftData[i - 1];
-                // 将雷达数据添加到对应的 aircraftData
-                singleData.radarData = radarData[j - 1];
-                i--;
-                j--;
-            } else if (dp[i][j] === dp[i - 1][j]) {
-                i--;
-            } else {
-                j--;
-            }
+            aircraftData[minIndex].fusionData = calculateFusionData(aircraftData[minIndex].radarData, aircraftData[minIndex].electronicData)
         }
     }
 
@@ -292,7 +273,7 @@ export function useAircraftData() {
 
             // 平方和找最接近的
             if (aircraftData.value.length !== 0) {
-                matchAircraftAndRadar(aircraftData.value, radarResponse)
+                matchAircraftAndRadar(aircraftData.value, radarTarget)
             } else {
                 // 完全没有电侦数据 那就不匹配
                 aircraftData.value.push({
