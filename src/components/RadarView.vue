@@ -298,8 +298,8 @@
             await useRGuide(
                 2,
                 parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
-                parseFloat(aircraft.electronicData.pitch.slice(0, -1))
+                parseFloat(aircraft.electronicData.azimuth),
+                parseFloat(aircraft.electronicData.pitch)
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
@@ -318,8 +318,8 @@
             await useRGuide(
                 2,
                 parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.electronicData.azimuth.slice(0, -1)),
-                parseFloat(aircraft.electronicData.pitch.slice(0, -1))
+                parseFloat(aircraft.electronicData.azimuth),
+                parseFloat(aircraft.electronicData.pitch)
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION)
