@@ -1105,6 +1105,7 @@
         height: 40%;
         overflow: hidden;
         padding: 10px;
+        max-height: 500px;
     }
     
     .tabs {
@@ -1139,12 +1140,12 @@
     }
     
     .control-content {
-        height: 80%;
+        height: 82%;
         width: 100%;
         display: flex;
         flex-direction: column;
         gap: 5px;
-        overflow-y: auto;
+        overflow-y: hidden;
         padding-right: 5px;
     }
     
@@ -1562,7 +1563,7 @@
         border-radius: 5px;
         padding: 5px;
         margin-top: 5px;
-        height: 33%;
+        height: 40%;
         display: flex;
         flex-direction: column;
     }
@@ -1623,7 +1624,7 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
-        font-size: 8px;
+        font-size: 10px;
     }
     
     .icon-button {
@@ -1648,7 +1649,7 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
-        font-size: 8px;
+        font-size: 10px;
     }
     
     .operation-buttons {
@@ -1658,7 +1659,7 @@
     }
     
     .operation-button {
-        height: 14px;
+        height: 20px;
         width: 30%;
         background-color: #003856;
         color: #ffffff;
@@ -1667,7 +1668,7 @@
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
-        font-size: 8px;
+        font-size: 10px;
     }
     
     .operation-button.active {
@@ -1686,8 +1687,8 @@
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
-        font-size: 8px;
-        height: 14px;
+        font-size: 10px;
+        height: 20px;
         width: 80%;
     }
     

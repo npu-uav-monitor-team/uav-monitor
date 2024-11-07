@@ -65,8 +65,8 @@
                         <td>{{ parseFloat(aircraft.radarData.azimuth2).toFixed(1) }}</td>
                         <td>{{ parseFloat(aircraft.radarData.pitch).toFixed(1) }}</td>
                         <td>{{ parseFloat(aircraft.radarData.speed).toFixed(1) }}</td>
-                        <td>{{ parseFloat(aircraft.radarData.longitude).toFixed(4) }}</td>
-                        <td>{{ parseFloat(aircraft.radarData.latitude).toFixed(4) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.longitude).toFixed(6) }}</td>
+                        <td>{{ parseFloat(aircraft.radarData.latitude).toFixed(6) }}</td>
                         
                         <!-- 电侦数据 (只显示部分关键信息) -->
                         <td>{{ aircraft.electronicData.type }}</td>
@@ -87,6 +87,7 @@
         </div>
         <!-- 添加按钮 -->
         <div class="button-group">
+            <button @click="router.go(0)">刷新数据</button>
             <button @click="handleRadarGuide">雷达引导</button>
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
@@ -119,7 +120,7 @@
             not_active: deceptionOperateType !== 'interference'}"
             >导航干扰
             </button>
-            <button @click="stopLaunch" class="active">取消发射</button>
+            <button @click="stopLaunch">取消发射</button>
         </div>
         <!-- 设置弹窗 -->
         <div v-if="showSettings" class="settings-modal">
@@ -171,6 +172,7 @@
     import { deceptionService } from "../service/deceptionService";
     import { getBootstrapFlag, getDriveAngle } from "../composables/deceptionDataStore"
     import { useDeviceControl } from '../composables/useDeviceControl'
+    import router from "@/router/index.js";
     
     const selectedStream = ref('1'); // 默认选择全景视频1
     const deceptionOperateType = ref('')
@@ -471,7 +473,7 @@
     
     .radar-content {
         display: flex;
-        height: 45%;
+        height: 55%;
         flex-direction: column;
         padding: 15px;
         background-color: rgba(0, 31, 63, 0.8);
@@ -705,16 +707,15 @@
     }
     
     .button-group {
-        display: flex;
-        justify-content: space-around;
-        gap: 1px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); /* 第一行 6 列 */
+        gap: 8px 12px; /* 设置上下和左右间距 */
         margin-top: 3px;
         margin-bottom: 2%;
     }
     
     .button-group button {
-        width: 8%;
-        padding: 2px 2px; /* Reduced padding */
+        padding: 5px 8px;
         background-color: rgba(0, 122, 204, 0.8);
         color: white;
         border: 2px solid #00ffff;
@@ -722,9 +723,22 @@
         cursor: pointer;
         transition: background-color 0.3s;
         white-space: nowrap;
-        font-size: 8px; /* Reduced font size */
-        font-weight: 500;
+        font-size: 10px; /* 增加字体大小 */
+        font-weight: bold;
     }
+    
+    .button-group button:nth-child(n+7) {
+        grid-column: span 1; /* 第二行按钮 */
+    }
+    
+    .button-group button:nth-child(7) {
+        grid-column-start: 1; /* 第二行从第一列开始 */
+    }
+    
+    .button-group button:nth-child(7) ~ button {
+        grid-template-columns: repeat(6, 1fr); /* 第一行 6 列 */
+    }
+    
     
     .button-group button:hover {
         background-color: rgba(0, 144, 234, 0.8);

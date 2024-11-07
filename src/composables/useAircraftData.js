@@ -523,6 +523,47 @@ export function useAircraftData() {
         return parseFloat(value);
     }
 
+    function matchAircraftAndElectronic(aircraftData, uavTarget) {
+        console.log("matching....", aircraftData, uavTarget)
+        let minDistance = Number.MAX_VALUE
+        let minIndex = -1
+        for (let i = 0; i < aircraftData.length; i++) {
+            if ((aircraftData[i].radarData.longitude === '0' && aircraftData[i].radarData.latitude === '0') ||
+                (aircraftData.electronicData.latitude !== '0' && aircraftData[i].electronicData.longitude !== '0')
+            ) {
+                // 无雷达数据或者已有电侦数据
+                continue
+            }
+            const distance = haversine(parseNumber(aircraftData[i].radarData.latitude), parseNumber(aircraftData[i].radarData.longitude),
+                uavTarget.lat, uavTarget.lng)
+            if (distance < minDistance) {
+                minDistance = distance
+                minIndex = i
+            }
+            console.log("minInde")
+            if (minIndex !== -1) {
+                aircraftData[minIndex].electronicData = {
+                    electronicId: uavTarget.id,
+                    threatLevel: uavTarget.threadLevel || 'low', // 修正拼写错误
+                    type: uavTarget.type || 'UAV',
+                    name: uavTarget.name || 'Unknown',
+                    speed: uavTarget.speed?.toString() || '0',
+                    altitude: uavTarget.altitude || 0,
+                    distance: uavTarget.distance?.toString() || '0',
+                    updateTime: new Date().toLocaleString(),
+                    threadLevel: uavTarget.threadLevel || 'low',
+                    latitude: uavTarget.lat?.toString() || '0',
+                    longitude: uavTarget.lng?.toString() || '0',
+                    pitch: uavTarget.pitchAngle || 0,
+                    azimuth: uavTarget.azimuth || 0,
+                    color: convertToHex(uavTarget.color) || '#FF0000',
+                    path: uavTarget.path || []
+                }
+                aircraftData[minIndex].fusionData = calculateFusionData(aircraftData[minIndex].radarData, aircraftData[minIndex].electronicData)
+            }
+        }
+    }
+
     function matchAircraftAndRadar(aircraftData, radarData) {
         let minDistance = Number.MAX_VALUE
         let minIndex = -1
@@ -530,6 +571,7 @@ export function useAircraftData() {
         for (let i = 0; i < aircraftData.length; i++) {
             if ((aircraftData[i].electronicData.latitude === '0' && aircraftData[i].electronicData.longitude === '0') ||
                 (aircraftData[i].radarData.longitude !== '0' && aircraftData[i].radarData.latitude !== '0')) {
+                // 无电侦或者已有雷达数据
                 continue
             }
             const distance = haversine(parseNumber(aircraftData[i].electronicData.latitude), parseNumber(aircraftData[i].electronicData.longitude),
@@ -573,6 +615,24 @@ export function useAircraftData() {
         return null; // 如果格式不符合预期，返回 null
     }
 
+    const hasExtraRadarData = () => {
+        for (let i = 0; i < aircraftData.value.length; i++) {
+            if (aircraftData.value[i].radarData.longitude !== '0' && aircraftData.value[i].radarData.latitude !== '0') {
+                return true
+            }
+        }
+        return false
+    }
+
+    const hasExtraElectronicData = () => {
+        for (let i = 0; i < aircraftData.value.length; i++) {
+            if (aircraftData.value[i].electronicData.longitude !== '0' && aircraftData.value[i].electronicData.latitude !== '0') {
+                return true
+            }
+        }
+        return false
+    }
+
     // 1. 获取电侦数据 根据targetId塞进去
     // 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
     async function updateFusionData() {
@@ -604,8 +664,13 @@ export function useAircraftData() {
             }
 
             if (existingIndex !== -1) {
+                // 如果数据已经存在 直接更新
                 aircraftData.value[existingIndex].electronicData = newElectronicData
+            } else if (aircraftData.value.length !== 0 && hasExtraRadarData(aircraftData.value)) {
+                // 如果 则匹配 匹配的条件是有多余的未匹配的雷达数据
+                matchAircraftAndElectronic(aircraftData.value, uavTarget)
             } else {
+                // 新推数据
                 aircraftData.value.push({
                     id: idCounter++,
                     radarData: {
@@ -650,8 +715,8 @@ export function useAircraftData() {
 
             if (existingIndex !== -1) {
                 aircraftData.value[existingIndex].radarData = newRadarData
-            } else if (aircraftData.value.length !== 0) {
-                // 新数据 匹配
+            } else if (aircraftData.value.length !== 0 && hasExtraElectronicData(aircraftData.value)) {
+                // 新数据 匹配 如果有空的未匹配的电侦数据
                 matchAircraftAndRadar(aircraftData.value, radarTarget)
             } else {
                 // 完全没有电侦数据 那就不匹配

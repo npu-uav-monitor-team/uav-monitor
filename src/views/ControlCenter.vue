@@ -82,7 +82,6 @@
     
     .main-container {
         display: flex;
-        flex-grow: 1;
         gap: 10px;
     }
     
@@ -90,7 +89,6 @@
         width: 60%;
         display: flex;
         flex-direction: column;
-        height: 80%;
     }
     
     .right-panel {
@@ -98,12 +96,13 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        height: 92.5%;
+        overflow-y: hidden;
     }
     
     .left-panel, .right-panel > * {
         border: 1px solid #00ffff;
         border-radius: 10px;
+        flex: 1;
         box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     }
 </style>
