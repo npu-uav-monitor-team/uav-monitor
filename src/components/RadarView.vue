@@ -297,11 +297,11 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 2,
-                parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.electronicData.azimuth),
-                parseFloat(aircraft.electronicData.pitch)
+                parseInt(aircraft.radarData.distance),
+                parseFloat(aircraft.radarData.azimuth2),
+                parseFloat(aircraft.radarData.pitch)
             );
-            console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
+            console.log('执行雷达引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
     };
     

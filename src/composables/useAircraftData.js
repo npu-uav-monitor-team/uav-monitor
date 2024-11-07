@@ -459,7 +459,7 @@ export function useAircraftData() {
     // 计算融合数据的辅助函数
     const calculateFusionData = (radarData, electronicData) => {
         // 将角度字符串转换为数值进行计算
-        const parseAngle = (angleStr) => parseFloat(angleStr?.replace('°', '') || '0')
+        const parseAngle = (angleStr) => parseFloat(angleStr || '0')
         // 将字符串数值转换为数字进行计算
         const parseNumber = (str) => parseFloat(str?.toString() || '0')
 
@@ -529,7 +529,7 @@ export function useAircraftData() {
         let minIndex = -1
         for (let i = 0; i < aircraftData.length; i++) {
             if ((aircraftData[i].radarData.longitude === '0' && aircraftData[i].radarData.latitude === '0') ||
-                (aircraftData.electronicData.latitude !== '0' && aircraftData[i].electronicData.longitude !== '0')
+                (aircraftData[i].electronicData.latitude !== '0' && aircraftData[i].electronicData.longitude !== '0')
             ) {
                 // 无雷达数据或者已有电侦数据
                 continue
