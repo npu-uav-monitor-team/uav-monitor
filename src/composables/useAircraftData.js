@@ -458,8 +458,6 @@ let idCounter = 1;
 export function useAircraftData() {
     // 计算融合数据的辅助函数
     const calculateFusionData = (radarData, electronicData) => {
-        // 将角度字符串转换为数值进行计算
-        const parseAngle = (angleStr) => parseFloat(angleStr || '0')
         // 将字符串数值转换为数字进行计算
         const parseNumber = (str) => parseFloat(str?.toString() || '0')
 
@@ -488,8 +486,8 @@ export function useAircraftData() {
             return {
                 longitude: (parseNumber(radarData.longitude) + parseNumber(electronicData.longitude)) / 2,
                 latitude: (parseNumber(radarData.latitude) + parseNumber(electronicData.latitude)) / 2,
-                pitch: (parseAngle(radarData.pitch) + parseAngle(electronicData.pitch)) / 2,
-                azimuth: (parseAngle(radarData.azimuth) + parseAngle(electronicData.azimuth)) / 2,
+                pitch: (parseNumber(radarData.pitch) + parseNumber(electronicData.pitch)) / 2,
+                azimuth: (parseNumber(radarData.azimuth) + parseNumber(electronicData.azimuth)) / 2,
                 distance: (parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2,
                 speed: (parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2,
                 altitude: (parseNumber(radarData.altitude) + parseNumber(electronicData.altitude)) / 2
