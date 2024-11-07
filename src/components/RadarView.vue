@@ -296,7 +296,7 @@
         radarGuideTimer = setInterval(async () => {
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
-                2,
+                1,
                 parseInt(aircraft.radarData.distance),
                 parseFloat(aircraft.radarData.azimuth2),
                 parseFloat(aircraft.radarData.pitch)

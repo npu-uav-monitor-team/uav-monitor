@@ -617,7 +617,9 @@ export function useAircraftData() {
 
     const hasExtraRadarData = () => {
         for (let i = 0; i < aircraftData.value.length; i++) {
-            if (aircraftData.value[i].radarData.longitude !== '0' && aircraftData.value[i].radarData.latitude !== '0') {
+            if (parseInt(aircraftData.value[i].radarData.longitude) !== 0 && parseInt(aircraftData.value[i].radarData.latitude) !== 0 &&
+                parseInt(aircraftData.value[i].electronicData.longitude) === 0 && parseInt(aircraftData.value[i].electronicData.latitude) === 0
+            ) {
                 return true
             }
         }
@@ -626,7 +628,8 @@ export function useAircraftData() {
 
     const hasExtraElectronicData = () => {
         for (let i = 0; i < aircraftData.value.length; i++) {
-            if (aircraftData.value[i].electronicData.longitude !== '0' && aircraftData.value[i].electronicData.latitude !== '0') {
+            if (parseInt(aircraftData.value[i].electronicData.longitude) !== 0 && parseInt(aircraftData.value[i].electronicData.latitude) !== 0 &&
+                parseInt(aircraftData.value[i].radarData.longitude) === 0 && parseInt(aircraftData.value[i].radarData.latitude) === 0) {
                 return true
             }
         }
