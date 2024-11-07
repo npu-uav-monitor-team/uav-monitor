@@ -71,7 +71,7 @@
                         <!-- 电侦数据 (只显示部分关键信息) -->
                         <td>{{ aircraft.electronicData.type }}</td>
                         <td>{{ aircraft.electronicData.name }}</td>
-                        <td>{{ aircraft.electronicData.threadLevel }}</td>
+                        <td>{{ aircraft.electronicData.threatLevel }}</td>
                         <td>{{ parseFloat(aircraft.electronicData.distance).toFixed(1) }}</td>
                         <td>{{ parseFloat(aircraft.electronicData.longitude).toFixed(4) }}</td>
                         <td>{{ parseFloat(aircraft.electronicData.latitude).toFixed(4) }}</td>
@@ -297,9 +297,9 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 1,
-                parseInt(aircraft.radarData.distance),
-                parseFloat(aircraft.radarData.azimuth2),
-                parseFloat(aircraft.radarData.pitch)
+                parseInt(aircraft.radarData.distance) || 0,
+                parseFloat(aircraft.radarData.azimuth2)  || 0,
+                parseFloat(aircraft.radarData.pitch) || 0
             );
             console.log('执行雷达引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
@@ -317,9 +317,9 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 2,
-                parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.electronicData.azimuth),
-                parseFloat(aircraft.electronicData.pitch)
+                parseInt(aircraft.electronicData.distance)  || 0,
+                parseFloat(aircraft.electronicData.azimuth)  || 0,
+                parseFloat(aircraft.electronicData.pitch) || 0
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION)
@@ -336,9 +336,9 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 1,
-                parseInt(aircraft.electronicData.distance),
-                parseFloat(aircraft.fusionData.azimuth),
-                parseFloat(aircraft.fusionData.pitch)
+                parseInt(aircraft.electronicData.distance) || 0,
+                parseFloat(aircraft.fusionData.azimuth)  || 0,
+                parseFloat(aircraft.fusionData.pitch)  || 0
             );
             console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);

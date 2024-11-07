@@ -217,12 +217,12 @@
     // 电侦UAV列表
     const EDUavs = computed(() => {
         return aircraftData.value
-            .filter(aircraft => aircraft.electronicData.threadLevel !== 'low')
+            .filter(aircraft => aircraft.electronicData.threatLevel !== 'low')
             .map(aircraft => ({
                 id: aircraft.id,
                 type: aircraft.electronicData.type,
                 name: aircraft.electronicData.name,
-                level: aircraft.electronicData.threadLevel,
+                level: aircraft.electronicData.threatLevel,
                 speed: aircraft.fusionData.speed,
                 altitude: parseFloat(aircraft.electronicData).toFixed(4),
                 distance: parseFloat(aircraft.fusionData.distance).toFixed(4),

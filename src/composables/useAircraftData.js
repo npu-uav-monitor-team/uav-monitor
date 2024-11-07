@@ -23,7 +23,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -60,7 +60,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -97,7 +97,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -134,7 +134,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -171,7 +171,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -208,7 +208,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -245,7 +245,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -282,7 +282,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -319,7 +319,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -356,7 +356,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -393,7 +393,7 @@ const initialAircraftData = [
             altitude: 1200,
             distance: '1100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'high',
+            threatLevel: 'high',
             latitude: '25.4564',
             longitude: '113.2458',
             pitch: '32°',
@@ -430,7 +430,7 @@ const initialAircraftData = [
             altitude: 800,
             distance: '2100',
             updateTime: '2024-03-21 14:30:00',
-            threadLevel: 'medium',
+            threatLevel: 'medium',
             latitude: '25.5564',
             longitude: '113.3458',
             pitch: '27°',
@@ -459,10 +459,10 @@ export function useAircraftData() {
     // 计算融合数据的辅助函数
     const calculateFusionData = (radarData, electronicData) => {
         // 将字符串数值转换为数字进行计算
-        const parseNumber = (str) => parseFloat(str?.toString() || '0')
+        const parseNumber = (str) => parseFloat(str || 0)
 
         // 如果其中一个空，则直接返回另一个
-        if (radarData.longitude === '0' && radarData.latitude === '0') {
+        if (radarData.longitude === 0 && radarData.latitude === 0) {
             return {
                 longitude: electronicData.longitude,
                 latitude: electronicData.latitude,
@@ -472,7 +472,7 @@ export function useAircraftData() {
                 speed: electronicData.speed,
                 altitude: electronicData.altitude
             }
-        } else if (electronicData.longitude === '0' && electronicData.latitude === '0') {
+        } else if (electronicData.longitude === 0 && electronicData.latitude === 0) {
             return {
                 longitude: radarData.longitude,
                 latitude: radarData.latitude,
@@ -526,8 +526,8 @@ export function useAircraftData() {
         let minDistance = Number.MAX_VALUE
         let minIndex = -1
         for (let i = 0; i < aircraftData.length; i++) {
-            if ((aircraftData[i].radarData.longitude === '0' && aircraftData[i].radarData.latitude === '0') ||
-                (aircraftData[i].electronicData.latitude !== '0' && aircraftData[i].electronicData.longitude !== '0')
+            if ((aircraftData[i].radarData.longitude === 0 && aircraftData[i].radarData.latitude === 0) ||
+                (aircraftData[i].electronicData.latitude !== 0 && aircraftData[i].electronicData.longitude !== 0)
             ) {
                 // 无雷达数据或者已有电侦数据
                 continue
@@ -545,13 +545,12 @@ export function useAircraftData() {
                     threatLevel: uavTarget.threadLevel || 'low', // 修正拼写错误
                     type: uavTarget.type || 'UAV',
                     name: uavTarget.name || 'Unknown',
-                    speed: uavTarget.speed?.toString() || '0',
+                    speed: uavTarget.speed || 0,
                     altitude: uavTarget.altitude || 0,
-                    distance: uavTarget.distance?.toString() || '0',
+                    distance: uavTarget.distance || 0,
                     updateTime: new Date().toLocaleString(),
-                    threadLevel: uavTarget.threadLevel || 'low',
-                    latitude: uavTarget.lat?.toString() || '0',
-                    longitude: uavTarget.lng?.toString() || '0',
+                    latitude: uavTarget.lat || 0,
+                    longitude: uavTarget.lng || 0,
                     pitch: uavTarget.pitchAngle || 0,
                     azimuth: uavTarget.azimuth || 0,
                     color: convertToHex(uavTarget.color) || '#FF0000',
@@ -567,8 +566,8 @@ export function useAircraftData() {
         let minIndex = -1
 
         for (let i = 0; i < aircraftData.length; i++) {
-            if ((aircraftData[i].electronicData.latitude === '0' && aircraftData[i].electronicData.longitude === '0') ||
-                (aircraftData[i].radarData.longitude !== '0' && aircraftData[i].radarData.latitude !== '0')) {
+            if ((aircraftData[i].electronicData.latitude === 0 && aircraftData[i].electronicData.longitude === 0) ||
+                (aircraftData[i].radarData.longitude !== 0 && aircraftData[i].radarData.latitude !== 0)) {
                 // 无电侦或者已有雷达数据
                 continue
             }
@@ -583,8 +582,8 @@ export function useAircraftData() {
         if (minIndex !== -1) {
             aircraftData[minIndex].radarData = {
                 radarId: radarData.targetId,
-                distance: parseFloat(radarData.range).toFixed(0),
-                azimuth2: parseFloat(radarData.azimuth2).toFixed(1),
+                distance: parseFloat(radarData.range),
+                azimuth2: parseFloat(radarData.azimuth2),
                 pitch: parseFloat(radarData.pitch),
                 speed: parseFloat(radarData.speed),
                 longitude: parseFloat(radarData.targetLon),
@@ -651,13 +650,12 @@ export function useAircraftData() {
                 threatLevel: uavTarget.threadLevel || 'low', // 修正拼写错误
                 type: uavTarget.type || 'UAV',
                 name: uavTarget.name || 'Unknown',
-                speed: uavTarget.speed?.toString() || '0',
+                speed: uavTarget.speed || 0,
                 altitude: uavTarget.altitude || 0,
-                distance: uavTarget.distance?.toString() || '0',
+                distance: uavTarget.distance || 0,
                 updateTime: new Date().toLocaleString(),
-                threadLevel: uavTarget.threadLevel || 'low',
-                latitude: uavTarget.lat?.toString() || '0',
-                longitude: uavTarget.lng?.toString() || '0',
+                latitude: uavTarget.lat || 0,
+                longitude: uavTarget.lng || 0,
                 pitch: uavTarget.pitchAngle || 0,
                 azimuth: uavTarget.azimuth || 0,
                 color: convertToHex(uavTarget.color) || '#FF0000',
@@ -675,23 +673,23 @@ export function useAircraftData() {
                 aircraftData.value.push({
                     id: idCounter++,
                     radarData: {
-                        distance: '0',
-                        azimuth2: '0°',
-                        pitch: '0°',
-                        speed: '0',
-                        longitude: '0',
-                        latitude: '0',
-                        altitude: '0'
+                        distance: 0,
+                        azimuth2: 0,
+                        pitch: 0,
+                        speed: 0,
+                        longitude: 0,
+                        latitude: 0,
+                        altitude: 0
                     },
                     electronicData: newElectronicData,
                     fusionData: {
                         altitude: uavTarget.altitude || 0,
-                        longitude: uavTarget.lng?.toString() || '0',
-                        latitude: uavTarget.lat?.toString() || '0',
+                        longitude: uavTarget.lng || 0,
+                        latitude: uavTarget.lat || 0,
                         pitch: uavTarget.pitchAngle || 0,
                         azimuth: uavTarget.azimuth || 0,
-                        distance: uavTarget.distance?.toString() || '0',
-                        speed: uavTarget.speed?.toString() || '0'
+                        distance: uavTarget.distance || 0,
+                        speed: uavTarget.speed || 0
                     }
                 })
             }
@@ -727,15 +725,15 @@ export function useAircraftData() {
                     electronicData: {
                         type: 'Unknown',
                         name: 'Unknown',
-                        speed: '0',
+                        speed: 0,
                         altitude: 0,
-                        distance: '0',
+                        distance: 0,
                         updateTime: new Date().toLocaleString(),
-                        threadLevel: 'unknown',
-                        latitude: '0',
-                        longitude: '0',
-                        pitch: '0°',
-                        azimuth: '0°',
+                        threatLevel: 'unknown',
+                        latitude: 0,
+                        longitude: 0,
+                        pitch: 0,
+                        azimuth: 0,
                         color: '#808080',
                         path: []
                     },
