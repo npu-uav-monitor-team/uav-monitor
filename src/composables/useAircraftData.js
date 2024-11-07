@@ -760,6 +760,7 @@ export function useAircraftData() {
 
     // 添加启动和停止更新的方法
     const startUpdating = () => {
+        console.log('Started aircraft data updates');
         if (isUpdateStarted) return;
 
         isUpdateStarted = true;
@@ -773,6 +774,7 @@ export function useAircraftData() {
     };
 
     const stopUpdating = () => {
+        console.log('Stopped aircraft data updates');
         if (updateTimer) {
             clearInterval(updateTimer);
             updateTimer = null;
