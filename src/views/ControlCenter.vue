@@ -77,6 +77,7 @@
         color: #ffffff;
         margin: 0;
         padding: 10px 0;
+        font-size: 2px;
         font-weight: bold;
     }
     
