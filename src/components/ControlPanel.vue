@@ -390,7 +390,7 @@
     const deviceOnline = ref(true);
     const deviceNormal = ref(true);
     
-    const bootStrapTimerId = ref(null);
+    // const bootStrapTimerId = ref(null);
     
     const driveAwayAngle = ref(0);
     const capturePositionData = ref({
@@ -515,13 +515,13 @@
         await setPower()
         updateCapture()
         
-        // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
-        if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
-        bootStrapTimerId.value = setInterval(() => {
-            if (deceptionService.sendCommand(8192, gpsData)) {
-                actions.setBootstrapFlag(true)
-            }
-        }, 5000);
+        // // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
+        // if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
+        // bootStrapTimerId.value = setInterval(() => {
+        //     if (deceptionService.sendCommand(8192, gpsData)) {
+        //         actions.setBootstrapFlag(true)
+        //     }
+        // }, 5000);
         
         // todo 设置开启四个定位系统
         
@@ -1040,7 +1040,7 @@
     }
     
     const simulationLevel = ref(100);
-    const powerValue = ref(30);
+    const powerValue = ref(20);
     const captureType = ref(true)
     
     // 添加验证函数
