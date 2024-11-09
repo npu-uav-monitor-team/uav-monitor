@@ -34,6 +34,26 @@
                     :zIndex="10"
                 />
                 
+                <!-- 其他图层保持不变，但添加zIndex -->
+                <l-circle
+                    :lat-lng="warningZone.center"
+                    :radius="warningZone.radius"
+                    color="orange"
+                    fillColor="#FFA500"
+                    :fillOpacity="0.2"
+                    :zIndex="10"
+                />
+                
+                <!-- 其他图层保持不变，但添加zIndex -->
+                <l-circle
+                    :lat-lng="normalZone.center"
+                    :radius="normalZone.radius"
+                    color="blue"
+                    fillColor="#87CEFA"
+                    :fillOpacity="0.2"
+                    :zIndex="10"
+                />
+                
                 <l-polyline
                     v-for="(path, index) in flightPaths"
                     :key="index"
@@ -218,7 +238,7 @@
     // 电侦UAV列表
     const EDUavs = computed(() => {
         return aircraftData.value
-            .filter(aircraft => aircraft.electronicData.threatLevel !== 'low')
+            .filter(aircraft => aircraft.electronicData.name !== 'Unknown')
             .map(aircraft => ({
                 id: aircraft.id,
                 type: aircraft.electronicData.type,
@@ -235,8 +255,18 @@
     const selectedAircraft = ref(null);
     const infoPosition = ref({left: '0px', top: '0px'});
     const noFlyZone = ref({
-        center: [22.695519, 114.437709], // 禁飞区中心坐标
+        center: [22.70027800, 114.42769963], // 禁飞区中心坐标
         radius: 1000 // 禁飞区半径（米）
+    })
+    
+    const warningZone = ref({
+        center: [22.70027800, 114.42769963], // 禁飞区中心坐标
+        radius: 1100 // 禁飞区半径（米）
+    })
+    
+    const normalZone = ref({
+        center: [22.70027800, 114.42769963], // 禁飞区中心坐标
+        radius: 2500 // 禁飞区半径（米）
     })
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
@@ -407,7 +437,7 @@
     
     onMounted(async () => {
         noFlyZone.value = {
-            center: [22.695519, 114.437709],
+            center: [22.70027800, 114.42769963],
             radius: 500
         };
         

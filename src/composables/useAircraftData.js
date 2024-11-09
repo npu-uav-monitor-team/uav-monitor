@@ -481,7 +481,7 @@ export function useAircraftData() {
                 longitude: radarData.longitude,
                 latitude: radarData.latitude,
                 pitch: radarData.pitch,
-                azimuth: radarData.azimuth,
+                azimuth: radarData.azimuth2,
                 distance: radarData.distance,
                 speed: radarData.speed,
                 altitude: radarData.altitude
@@ -757,6 +757,12 @@ export function useAircraftData() {
             const aircraft = aircraftData.value[i]
             aircraft.fusionData = calculateFusionData(aircraft.radarData, aircraft.electronicData)
         }
+
+        // 按照融合数据对aircraftData重拍
+        aircraftData.value.sort(
+            (a, b) => {
+            return a.fusionData.distance - b.fusionData.distance
+        })
     }
 
     // 添加启动和停止更新的方法

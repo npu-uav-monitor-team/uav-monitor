@@ -170,7 +170,7 @@
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
-    import { getBootstrapFlag, getDriveAngle, getCapture, actions } from "../composables/deceptionDataStore"
+    import { getDriveAngle, getCapture } from "../composables/deceptionDataStore"
     import { useDeviceControl } from '../composables/useDeviceControl'
     import router from "@/router/index.js";
     
@@ -315,6 +315,7 @@
         }
         electronicGuideTimer = setInterval(async () => {
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
+            console.log(aircraft.electronicData)
             await useRGuide(
                 2,
                 parseInt(aircraft.electronicData.distance)  || 0,
@@ -336,7 +337,7 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 1,
-                parseInt(aircraft.electronicData.distance) || 0,
+                parseInt(aircraft.fusionData.distance) || 0,
                 parseFloat(aircraft.fusionData.azimuth)  || 0,
                 parseFloat(aircraft.fusionData.pitch)  || 0
             );
@@ -398,19 +399,15 @@
                 altitude: 0
             };
         }
-        console.log("发送捕获命令")
-        console.log(getCapture())
-        if(!getBootstrapFlag){
-            if(await deceptionService.sendCommand(8192, bootstrapData)){
-                actions.setBootstrapPosition(true)
-            }else{
-                console.log("引导命令失败！")
+        if(await deceptionService.sendCommand(8192, bootstrapData)){
+            if(await deceptionService.sendCommand(4352, getCapture())){
+                deceptionOperateType.value = 'capture'
+                console.log('执行定点捕获操作,目标ID:', selectedAircraftId.value);
             }
+        }else{
+            console.log("引导命令失败！")
         }
-        if(await deceptionService.sendCommand(4352, getCapture())){
-            deceptionOperateType.value = 'capture'
-            console.log('执行定点捕获操作,目标ID:', selectedAircraftId.value);
-        }
+        
     };
     
     const handleDriveAway = async () => {
