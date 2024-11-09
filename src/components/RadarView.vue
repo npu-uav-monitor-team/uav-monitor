@@ -170,7 +170,7 @@
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
-    import { getBootstrapFlag, getDriveAngle } from "../composables/deceptionDataStore"
+    import { getBootstrapFlag, getDriveAngle, getCapture, setBootstrapPosition } from "../composables/deceptionDataStore"
     import { useDeviceControl } from '../composables/useDeviceControl'
     import router from "@/router/index.js";
     
@@ -398,8 +398,16 @@
                 altitude: 0
             };
         }
-        
-        if (getBootstrapFlag() || (!getBootstrapFlag() && await deceptionService.sendCommand(8192, bootstrapData))) {
+        console.log("发送捕获命令")
+        console.log(getCapture())
+        if(!getBootstrapFlag){
+            if(await deceptionService.sendCommand(8192, bootstrapData)){
+                setBootstrapPosition(true)
+            }else{
+                console.log("引导命令失败！")
+            }
+        }
+        if(await deceptionService.sendCommand(4352, getCapture())){
             deceptionOperateType.value = 'capture'
             console.log('执行定点捕获操作,目标ID:', selectedAircraftId.value);
         }

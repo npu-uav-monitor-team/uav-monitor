@@ -61,7 +61,7 @@ export class deceptionService {
                     Altitude: data.altitude
                   },
                   CaptureAmbiguity: data.simulationLevel,
-                  Operate: true
+                  Operate: data.captureType
               }
           }
       }

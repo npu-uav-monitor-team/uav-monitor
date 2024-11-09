@@ -236,15 +236,15 @@
                                 </div>
                                 <div class="operation-buttons">
                                     <button
-                                        @click="emissionStatus = '停止'"
-                                        :class="{ active: emissionStatus === '停止' }"
+                                        @click="updateCaptureType(false)"
+                                        :class="{ active: captureType === false }"
                                         class="operation-button"
                                     >
                                         停止发射
                                     </button>
                                     <button
-                                        @click="emissionStatus = '就近'"
-                                        :class="{ active: emissionStatus === '就近' }"
+                                        @click="updateCaptureType(true)"
+                                        :class="{ active: captureType === true }"
                                         class="operation-button"
                                     >
                                         就近发射
@@ -342,9 +342,6 @@
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
-    const interferenceEnabled = ref(false);
-    const defenseEnabled = ref(false);
-    const emissionStatus = ref('停止');
     
     const activeBands = ref([]);
     const defenseDelay = ref(60);
@@ -1091,8 +1088,13 @@
             longitude: capturePositionData.value.longitude,
             altitude: capturePositionData.value.altitude,
             simulationLevel: simulationLevel.value,
-            state: captureType.value
+            captureType: captureType.value
         })
+    }
+
+    const updateCaptureType = (data) => {
+        captureType.value = data
+        updateCapture()
     }
 </script>
 
