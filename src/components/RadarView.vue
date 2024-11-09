@@ -92,7 +92,7 @@
             <button @click="handleElectronicGuide">电侦引导</button>
             <button @click="handleFusionGuide">融合引导</button>
             <button @click="cancelGuide">取消引导</button>
-            <button @click="todofunction">
+            <button @click="communicationInterference">
                 {{ isInterferenceEnabled ? '取消通信干扰' : '通信干扰' }}
             </button>
             <button @click="handlePointCapture"
@@ -467,7 +467,7 @@
     
     const { toggleAutoDefense, isInterferenceEnabled } = useDeviceControl()
     
-    const todofunction = () => {
+    const communicationInterference = () => {
         toggleAutoDefense()
     }
 </script>

@@ -526,7 +526,6 @@ export function useAircraftData() {
     }
 
     function matchAircraftAndElectronic(aircraftData, uavTarget) {
-        console.log("matching....", aircraftData, uavTarget)
         let minDistance = Number.MAX_VALUE
         let minIndex = -1
         for (let i = 0; i < aircraftData.length; i++) {
@@ -542,7 +541,6 @@ export function useAircraftData() {
                 minDistance = distance
                 minIndex = i
             }
-            console.log("minInde")
             if (minIndex !== -1) {
                 aircraftData[minIndex].electronicData = {
                     electronicId: uavTarget.id,

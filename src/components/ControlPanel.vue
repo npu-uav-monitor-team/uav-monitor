@@ -22,16 +22,16 @@
         </div>
         
         <div class="tab-content">
-            <div v-if="activeTab === 'control'" class="control-content"  style="font-size: 14px">
+            <div v-if="activeTab === 'control'" class="control-content" style="font-size: 14px">
                 <div class="status-section">
-                    <div class="status-row"  style="font-size: 14px">
+                    <div class="status-row" style="font-size: 14px">
                         <div class="status-item">
                             <span>设备状态：</span>
                             <span :class="['status-indicator', wirelessDeviceOnline ? 'online' : 'offline']">
                                 {{ wirelessDeviceOnline ? '在线' : '离线' }}
                             </span>
                         </div>
-                        <div class="status-item"  style="font-size: 14px">
+                        <div class="status-item" style="font-size: 14px">
                             <span>故障状态：</span>
                             <span :class="['status-badge', wirelessDeviceNormal ? 'normal' : 'abnormal']">
                                 {{ wirelessDeviceNormal ? '正常' : '异常' }}
@@ -175,9 +175,9 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td>{{  }}°</td>
-                            <td>{{  }}°</td>
-                            <td>{{  }}m</td>
+                            <td>{{ }}°</td>
+                            <td>{{ }}°</td>
+                            <td>{{ }}m</td>
                         </tr>
                         </tbody>
                     </table>
@@ -213,7 +213,8 @@
                         <div v-if="activeSmallTab === 'driveAway'" class="centered-content">
                             <div class="drive-away-content">
                                 <label>角度</label>
-                                <input type="number" v-model="driveAwayAngle" @blur="sendDriveAwayCommand" placeholder="度">
+                                <input type="number" v-model="driveAwayAngle" @blur="sendDriveAwayCommand"
+                                       placeholder="度">
                                 <button @click="sendDriveAwayCommand">保存</button>
                             </div>
                         </div>
@@ -221,8 +222,10 @@
                             <div class="capture-content">
                                 <div class="coordinate-inputs">
                                     <label>诱降位置经纬度</label>
-                                    <input type="text" v-model="capturePositionData.latitude" @blur="updateCapture" placeholder="纬度">
-                                    <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture" placeholder="经度">
+                                    <input type="text" v-model="capturePositionData.latitude" @blur="updateCapture"
+                                           placeholder="纬度">
+                                    <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture"
+                                           placeholder="经度">
                                 </div>
                                 <div class="ambiguity-input">
                                     <label>模糊度</label>
@@ -306,7 +309,7 @@
                 </div>
                 <div class="settings-footer">
                     <button @click="saveSettings">保存</button>
-                    <button @click="closeSettings">���</button>
+                    <button @click="closeSettings">取消</button>
                 </div>
             </div>
         </div>
@@ -322,6 +325,7 @@
     import { useDeviceControl } from '../composables/useDeviceControl'
     
     const { cachedSelectedAircraft } = useAircraftData()
+    const { device, devices, autoDefense, toggleAutoDefense } = useDeviceControl()
     
     const gpsData = computed(() => {
         try {
@@ -346,7 +350,6 @@
     const activeBands = ref([]);
     const defenseDelay = ref(60);
     const defenseDuration = ref(1);
-    const autoDefense = ref(false);
     
     // 新增的状态变量
     const wirelessDeviceOnline = ref(true);
@@ -373,8 +376,6 @@
     const laserStatus = ref(false);
     const frequency = ref(false);
     const showSettingsDialog = ref(false);
-    const devices = ref([])
-    const device = ref({});
     
     // 添加设置关的状态变量
     const settings = ref({
@@ -401,7 +402,6 @@
     
     // 预留的控制接口
     function updateWirelessDeviceStatus() {
-        // TODO: 调用后端 API 获取无线设备状态
         axios.get('/api/v0/getDeviceList')
             .then(response => {
                 if (response.data.code === 0 && response.data.data) {
@@ -474,7 +474,7 @@
             optoelectronicDeviceNormal.value = false;
         }
     }
-
+    
     async function setPower() {
         await deceptionService.sendCommand(4101, powerValue.value)
     }
@@ -518,7 +518,7 @@
         // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
         if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
         bootStrapTimerId.value = setInterval(() => {
-            if(deceptionService.sendCommand(8192, gpsData)){
+            if (deceptionService.sendCommand(8192, gpsData)) {
                 actions.setBootstrapFlag(true)
             }
         }, 5000);
@@ -572,21 +572,6 @@
             .catch(error => {
                 console.error('获取飞行器数据失败:', error);
                 
-            });
-    }
-    
-    // 切换自动防御
-    function toggleAutoDefense() {
-        axios.post('/api/v0/setAttackAuto?did=' + device.value.id + '&isCancel=' + autoDefense.value)
-            .then(response => {
-                if (response.data.code === 0) {
-                    console.log('自动防御设置成功')
-                } else {
-                    console.error('接口返回数据格式错误或出现错误:', response.data.msg);
-                }
-            })
-            .catch(error => {
-                console.error('获取飞行器数据失:', error);
             });
     }
     
@@ -1053,7 +1038,7 @@
             alert('红外开关操作失败，请检查网络连接');
         }
     }
-
+    
     const simulationLevel = ref(100);
     const powerValue = ref(30);
     const captureType = ref(true)
@@ -1065,7 +1050,7 @@
         }
         updateCapture()
     };
-
+    
     const updateCapture = () => {
         actions.setCapture({
             latitude: capturePositionData.value.latitude,
@@ -1075,7 +1060,7 @@
             captureType: captureType.value
         })
     }
-
+    
     const updateCaptureType = (data) => {
         captureType.value = data
         updateCapture()
