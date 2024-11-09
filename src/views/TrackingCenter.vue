@@ -183,8 +183,8 @@
     const map = ref()
     
     const zoom = ref(15) // 保持不变
-    const center = ref([22.695519, 114.437709]) // 更新为深圳的坐
-    const url = ref('/public/tiles/{z}/{x}/{y}/tile.png')  // 修改为相对路径
+    const center = ref([22.702891, 114.438705]) // 更新为深圳的坐
+    const url = ref('/tiles/{z}/{x}/{y}/tile.png')  // 修改为相对路径
     const fallbackUrl = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     const attribution = ref('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
     const mapOptions = ref({
@@ -355,7 +355,7 @@
         const x = Math.floor((center.value[1] + 180) * Math.pow(2, z) / 360);
         const y = Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, z - 1));
         
-        const testTileUrl = `/public/tiles/${z}/${x}/${y}/tile.png`;
+        const testTileUrl = `/tiles/${z}/${x}/${y}/tile.png`;
         console.log('Testing tile URL:', testTileUrl);
         
         fetch(testTileUrl)
@@ -416,7 +416,7 @@
         console.log('Initial zoom:', zoom.value);
         
         // 测试瓦片加载
-        const testTileUrl = `/public/tiles/15/${Math.floor((center.value[1] + 180) * Math.pow(2, 15) / 360)}/${Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, 15 - 1))}/tile.png`;
+        const testTileUrl = `/tiles/15/${Math.floor((center.value[1] + 180) * Math.pow(2, 15) / 360)}/${Math.floor((1 - Math.log(Math.tan(center.value[0] * Math.PI / 180) + 1 / Math.cos(center.value[0] * Math.PI / 180)) / Math.PI) * Math.pow(2, 15 - 1))}/tile.png`;
         fetch(testTileUrl)
             .then(response => {
                 if (!response.ok) {

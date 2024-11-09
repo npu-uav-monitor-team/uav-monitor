@@ -170,7 +170,7 @@
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
-    import { getBootstrapFlag, getDriveAngle, getCapture, setBootstrapPosition } from "../composables/deceptionDataStore"
+    import { getBootstrapFlag, getDriveAngle, getCapture, actions } from "../composables/deceptionDataStore"
     import { useDeviceControl } from '../composables/useDeviceControl'
     import router from "@/router/index.js";
     
@@ -402,7 +402,7 @@
         console.log(getCapture())
         if(!getBootstrapFlag){
             if(await deceptionService.sendCommand(8192, bootstrapData)){
-                setBootstrapPosition(true)
+                actions.setBootstrapPosition(true)
             }else{
                 console.log("引导命令失败！")
             }

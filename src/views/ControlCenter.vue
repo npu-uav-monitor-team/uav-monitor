@@ -73,17 +73,18 @@
     .main-title {
         flex: 1;
         text-align: center;
-        font-size: 1.5rem;
         color: #ffffff;
         margin: 0;
         padding: 10px 0;
-        font-size: 2px;
+        font-size: 20px;
         font-weight: bold;
     }
     
     .main-container {
         display: flex;
         gap: 10px;
+        font-size: 20px;
+        font-weight: bold;
     }
     
     .left-panel {

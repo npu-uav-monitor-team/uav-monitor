@@ -22,16 +22,16 @@
         </div>
         
         <div class="tab-content">
-            <div v-if="activeTab === 'control'" class="control-content">
+            <div v-if="activeTab === 'control'" class="control-content"  style="font-size: 14px">
                 <div class="status-section">
-                    <div class="status-row">
+                    <div class="status-row"  style="font-size: 14px">
                         <div class="status-item">
                             <span>设备状态：</span>
                             <span :class="['status-indicator', wirelessDeviceOnline ? 'online' : 'offline']">
                                 {{ wirelessDeviceOnline ? '在线' : '离线' }}
                             </span>
                         </div>
-                        <div class="status-item">
+                        <div class="status-item"  style="font-size: 14px">
                             <span>故障状态：</span>
                             <span :class="['status-badge', wirelessDeviceNormal ? 'normal' : 'abnormal']">
                                 {{ wirelessDeviceNormal ? '正常' : '异常' }}
@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div class="control-section defense-settings">
-                    <h4>Defense Settings</h4>
+                    <h4>电侦防御设置</h4>
                     <div class="input-group-container">
                         <div class="input-group">
                             <label>主动防御延迟 (秒)</label>
@@ -55,7 +55,7 @@
                     </div>
                 </div>
                 <div class="control-section">
-                    <h4>Sensors</h4>
+                    <h4>电侦传感器</h4>
                     <table class="sensor-info-table">
                         <thead>
                         <tr>
@@ -99,7 +99,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="control-section">
+                <div class="control-section" style="font-size: 14px">
                     <h4>目标信息</h4>
                     <table class="target-info-table">
                         <thead>
@@ -164,7 +164,7 @@
                 </div>
                 
                 <div class="coordinates-section">
-                    <div style="font-size: 10px">待诱骗目标GPS位置</div>
+                    <div>待诱骗目标GPS位置</div>
                     <table class="gps-table">
                         <thead>
                         <tr>
@@ -184,7 +184,7 @@
                 </div>
                 
                 <div class="power-slider-section">
-                    <span style="font-size: 10px">手动功率设置</span>
+                    <span>手动功率设置</span>
                     <input type="range" class="power-slider" v-model="powerValue" min="-90" :max="maxPower" step="1">
                     <span>{{ powerValue }}</span>
                     <button @click="setPower" class="power-confirm-btn">确定</button>
@@ -1029,22 +1029,6 @@
         }
     }
     
-    // 光电设备移动控制函数（预留接口）
-    function moveOptoelectronic(direction) {
-        // TODO: 实现光电设备移动控制
-        // 这里预留与后端API的接口
-        // const apiEndpoint = `/api/v0/photoelectrics/move/${currentPhotoelectricId.value}/${direction}`;
-        console.log(`光电设备${getDirectionText(direction)}移动`);
-    }
-    
-    // 添加状态控制变量
-    const isEmitting = ref(false); // 是否正在发射
-    const emissionType = ref(null); // 'deception' 或 'capture' 或 null
-    
-    // 计算属性控制按钮状态
-    const isDeceptionDisabled = computed(() => isEmitting.value && emissionType.value !== 'deception');
-    const isCaptureDisabled = computed(() => isEmitting.value && emissionType.value !== 'capture');
-    
     function sendDriveAwayCommand() {
         // TODO: 调用后端 API 发送驱离命令
         actions.setDriveAngle(driveAwayAngle.value)
@@ -1204,7 +1188,7 @@
     .status-row {
         display: flex;
         justify-content: space-between;
-        font-size: 10px;
+        font-size: 14px;
         padding: 5px 0;
     }
     
@@ -1500,6 +1484,10 @@
         font-size: 14px;
     }
     
+    .control-content {
+        font-size: 14px
+    }
+    
     .control-content::-webkit-scrollbar {
         width: 4px;
     }
@@ -1519,13 +1507,13 @@
     
     .coordinates-section {
         margin-bottom: 5px;
+        font-size: 14px;
     }
     
     .gps-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 2px;
-        font-size: 10px;
     }
     
     .gps-table th, .gps-table td {
@@ -1533,14 +1521,15 @@
         padding: 2px;
         text-align: center;
         color: #00ffff;
-        line-height: 12px;
+        line-height: 18px;
     }
     
     .power-slider-section {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+        font-size: 14px;
     }
     
     .power-slider {
@@ -1567,7 +1556,7 @@
         border-radius: 5px;
         padding: 5px;
         margin-top: 5px;
-        height: 40%;
+        height: 45%;
         display: flex;
         flex-direction: column;
     }
@@ -1580,7 +1569,7 @@
         display: flex;
         justify-content: space-between;
         gap: 5px;
-        font-size: 10px;
+        font-size: 14px;
     }
     
     .small-tab {
@@ -1591,7 +1580,7 @@
         padding: 5px;
         cursor: pointer;
         transition: background-color 0.3s, color 0.3s;
-        font-size: 10px;
+        font-size: 14px;
     }
     
     .small-tab.active {
@@ -1600,7 +1589,7 @@
     }
     
     .small-tab-content {
-        height: 40%;
+        height: 60%;
         background-color: rgba(0, 31, 63, 0.8);
         border-radius: 5px;
         padding: 10px;
@@ -1611,7 +1600,7 @@
         display: flex;
         flex-direction: column;
         gap: 5px;
-        font-size: 8px;
+        font-size: 14px;
         margin-top: 0;
     }
     
@@ -1663,16 +1652,16 @@
     }
     
     .operation-button {
-        height: 20px;
+        height: 24px;
         width: 30%;
         background-color: #003856;
         color: #ffffff;
         border: 1px solid #00ffff;
-        border-radius: 2px;
+        border-radius: 4px;
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
-        font-size: 10px;
+        font-size: 14px;
     }
     
     .operation-button.active {
@@ -1687,13 +1676,13 @@
         background-color: #007acc;
         color: #ffffff;
         border: none;
-        border-radius: 2px;
+        border-radius: 4px;
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
-        font-size: 10px;
-        height: 20px;
-        width: 80%;
+        font-size: 14px;
+        height: 24px;
+        width: 80.5%;
     }
     
     .send-button:hover {
@@ -1757,7 +1746,7 @@
         align-items: center;
         justify-content: center;
         height: 100%;
-        font-size: 10px;
+        font-size: 14px;
     }
 </style>
 
