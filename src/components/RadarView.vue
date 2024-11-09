@@ -209,7 +209,7 @@
     
     const changeSelectedAircraft = (aircraft) => {
         selectedAircraftId.value = aircraft.id
-        cachedSelectedAircraft.value = aircraft
+        cachedSelectedAircraft.value = aircraft.fusionData
     }
     
     const threatAirCraftList = computed(() =>
@@ -361,9 +361,9 @@
         let bootstrapData;
         try {
             bootstrapData = {
-                longitude: cachedSelectedAircraft.value?.fusionData?.longitude ?? 0,
-                latitude: cachedSelectedAircraft.value?.fusionData?.latitude ?? 0,
-                altitude: cachedSelectedAircraft.value?.fusionData?.altitude ?? 0
+                longitude: cachedSelectedAircraft.value?.longitude ?? 0,
+                latitude: cachedSelectedAircraft.value?.latitude ?? 0,
+                altitude: cachedSelectedAircraft.value?.altitude ?? 0
             };
         } catch (e) {
             // 捕获异常时仍然返回默认值

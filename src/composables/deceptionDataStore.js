@@ -6,6 +6,7 @@ const state = reactive({
     longitude: 0,
     altitude: 0,
     simulationLevel: 100,
+    state: true
   },
   driveAngle: 0,
   bootstrapPosition: {
@@ -22,6 +23,7 @@ const actions = {
     state.capture.longitude = data.longitude;
     state.capture.altitude = data.altitude;
     state.capture.simulationLevel = data.simulationLevel;
+    state.capture.state = data.state
   },
   setDriveAngle(data) {
     state.driveAngle = data;

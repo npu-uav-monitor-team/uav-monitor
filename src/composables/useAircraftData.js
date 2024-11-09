@@ -80,7 +80,11 @@ const initialAircraftData = [
 ]
 
 const aircraftData = ref(initialAircraftData)
-const cachedSelectedAircraft = ref()
+const cachedSelectedAircraft = ref({
+    longitude: 0,
+    latitude: 0,
+    altitude: 0
+})
 
 // 维护一个自增的原子int
 let idCounter = 1;
