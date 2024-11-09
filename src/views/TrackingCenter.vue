@@ -198,6 +198,7 @@
     const { aircraftData } = useAircraftData();
     
     const allAircraft = computed(() => {
+        console.log('Aircraft data:', aircraftData.value.map(a => a.electronicData.path));
         return aircraftData.value.map(aircraft => ({
             id: aircraft.id,
             type: aircraft.electronicData.type,
@@ -274,11 +275,12 @@
     }
     
     const flightPaths = computed(() => {
+        console.log('Flight paths:', flightPaths.value);
         return allAircraft.value.map(aircraft => ({
             id: aircraft.id,
-            points: aircraft.path || [],
+            points: (aircraft.path || []).map(point => [point[1], point[0]]), // 交换经纬度顺序
             color: aircraft.color
-        }));
+        })).filter(path => path.points && path.points.length > 1); // 只返回有效的路径
     });
     
     function getArrowIcon(aircraft) {
@@ -310,9 +312,9 @@
     }
     
     function calculateAngle(point1, point2) {
-        const dx = point2[1] - point1[1];
-        const dy = point2[0] - point1[0];
-        return Math.atan2(dy, dx) * 180 / Math.PI;
+        const dx = point2[0] - point1[0];
+        const dy = point2[1] - point1[1];
+        return (Math.atan2(dx, dy) * 180 / Math.PI + 180);
     }
     
     function toggleThreatList() {
@@ -692,7 +694,7 @@
         filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.5));
     }
     
-    /* 移除最���高度限制 */
+    /* 移除最高度限制 */
     .threat-list, .all-aircraft-list {
         max-height: none;
     }
