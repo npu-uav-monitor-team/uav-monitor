@@ -175,9 +175,9 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td>{{ gpsData.longitude.toFixed(6) }}°</td>
-                            <td>{{ gpsData.latitude.toFixed(6) }}°</td>
-                            <td>{{ gpsData.altitude.toFixed(6) || 0 }}m</td>
+                            <td>{{  }}°</td>
+                            <td>{{  }}°</td>
+                            <td>{{  }}m</td>
                         </tr>
                         </tbody>
                     </table>
@@ -321,14 +321,14 @@
     import { useAircraftData } from '@/composables/useAircraftData'
     import { useDeviceControl } from '../composables/useDeviceControl'
     
-    const { cachedSelectedAircraft,aircraftData } = useAircraftData()
+    const { cachedSelectedAircraft } = useAircraftData()
     
     const gpsData = computed(() => {
         try {
             return {
-                longitude: cachedSelectedAircraft.value?.fusionData?.longitude ?? 0,
-                latitude: cachedSelectedAircraft.value?.fusionData?.latitude ?? 0,
-                altitude: cachedSelectedAircraft.value?.fusionData?.altitude ?? 0
+                longitude: cachedSelectedAircraft?.value?.longitude ?? 0,
+                latitude: cachedSelectedAircraft?.value?.latitude ?? 0,
+                altitude: cachedSelectedAircraft?.value?.altitude ?? 0
             };
         } catch (e) {
             // 捕获异常时仍然返回默认值
@@ -1075,6 +1075,7 @@
 
     const simulationLevel = ref(100);
     const powerValue = ref(30);
+    const captureType = ref(true)
     
     // 添加验证函数
     const validateSimulationLevel = () => {
@@ -1090,6 +1091,7 @@
             longitude: capturePositionData.value.longitude,
             altitude: capturePositionData.value.altitude,
             simulationLevel: simulationLevel.value,
+            state: captureType.value
         })
     }
 </script>
