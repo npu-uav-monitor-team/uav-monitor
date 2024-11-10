@@ -110,6 +110,7 @@
                     not_active: deceptionOperateType !== 'defense'}"
             >金钟罩防御
             </button>
+            <!-- handleNoFly -->
             <button @click="handleNoFly"
                     :class="{active: deceptionOperateType === 'noFly',
                     not_active: deceptionOperateType !== 'noFly'}"
@@ -206,14 +207,13 @@
     
     const changeSelectedAircraft = (aircraft) => {
         selectedAircraftId.value = aircraft.id
-        cachedSelectedAircraft.value = aircraft.fusionData
+        cachedSelectedAircraft.value = aircraft.electronicData
     }
     
     const threatAirCraftList = computed(() => {
             if (!isRef(aircraftData)) {
                 console.log('[warning] aircraftData is not a ref')
             }
-            console.log(aircraftData.value)
             // 因为后端是写死了所以这里我们暂时不过筛 默认所有的都是威胁
             return aircraftData.value
         }
@@ -375,6 +375,9 @@
     };
     
     const handlePointCapture = async () => {
+        
+                deceptionOperateType.value = 'capture'
+                return
         // if (deceptionOperateType.value !== 'stopLaunch') {
         //     alert('请先取消发射');
         //     return;
@@ -391,13 +394,8 @@
                 altitude: cachedSelectedAircraft.value?.altitude ?? 0
             };
         } catch (error) {
-            console.log("caught error while computing capture guide", error)
-            // 捕获异常时仍然返回默认值
-            bootstrapData = {
-                longitude: 0,
-                latitude: 0,
-                altitude: 0
-            };
+            alert('未获取到正确的飞行目标');
+            return;
         }
         if(await deceptionService.sendCommand(8192, bootstrapData)){
             if(await deceptionService.sendCommand(4352, getCapture())){
@@ -405,9 +403,9 @@
                 console.log('执行定点捕获操作,目标ID:', selectedAircraftId.value);
             }
         }else{
-            console.log("引导命令失败！")
+            alert(`引导命令失败，检查参数:${bootstrapData.latitude}/${bootstrapData.longitude}/${bootstrapData.altitude}`);
+            return;
         }
-        
     };
     
     const handleDriveAway = async () => {
@@ -426,6 +424,9 @@
     };
     
     const handleNoFly = async () => {
+        
+            deceptionOperateType.value = 'noFly'
+            return
         if (deceptionOperateType.value !== 'stopLaunch') {
             alert('请先取消发射');
             return;
@@ -438,6 +439,8 @@
             deceptionOperateType.value = 'noFly'
             console.log('执行禁飞操作,目标ID:', selectedAircraftId.value);
         }
+
+
     };
     
     const handleDefense = async () => {

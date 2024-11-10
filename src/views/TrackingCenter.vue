@@ -215,20 +215,76 @@
         attributionControl: false,
     })
     
-    const { aircraftData } = useAircraftData();
+    const {aircraftData} = useAircraftData();
+    
+    // 造一个aircraft 从22.68384 114.373296到22.702891 114.438705 每隔一秒新增一个路径上的随机path 最终10秒时到达终点 起定时任务 十秒结束
+    const sampleAircraft = ref({
+        id: 'sample',
+        electronicData: {
+            electronicId: 'sample',
+            threatLevel: 'LOW',
+            type: 'UAV',
+            name: 'Test Flight',
+            speed: 10,
+            altitude: 100,
+            distance: 0,
+            updateTime: new Date().toLocaleString(),
+            latitude: 22.68384,
+            longitude: 114.373296,
+            pitch: 0,
+            azimuth: 0,
+            color: 'green',
+            path: [[22.68384, 114.373296]]
+        },
+        radarData: {
+            distance: 0,
+            azimuth2: 0,
+            pitch: 0,
+            speed: 0,
+            longitude: 0,
+            latitude: 0,
+            altitude: 0
+        }
+    })
+    
+    const addSamplePath = () => {
+        // 生成随机路径点
+        const lat = sampleAircraft.value.electronicData.latitude
+        const lng = sampleAircraft.value.electronicData.longitude
+        // 随机正负
+        const latDelta = Math.random() * 0.002 + Math.random() > 0.2 ? 0.001 : -0.001
+        const lngDelta = Math.random() * 0.002 + Math.random() > 0.2 ? 0.001 : -0.001
+        sampleAircraft.value.electronicData.latitude = lat + latDelta
+        sampleAircraft.value.electronicData.longitude = lng + lngDelta
+        sampleAircraft.value.electronicData.path.push([sampleAircraft.value.electronicData.latitude, sampleAircraft.value.electronicData.longitude])
+    }
+    
+    const addSamplePathTimer = setInterval(() => {
+        addSamplePath()
+    }, 1000)
+    
+    // 十秒之后到达目标点兵结束
+    setTimeout(() => {
+        // 设置最终位置
+        sampleAircraft.value.electronicData.latitude = 22.699232
+        sampleAircraft.value.electronicData.longitude = 114.420453
+        sampleAircraft.value.electronicData.path.push([22.699232, 114.420453])
+        clearInterval(addSamplePathTimer)
+    }, 60000)
+    
     
     const allAircraft = computed(() => {
-        console.log('Aircraft data:', aircraftData.value.map(a => a.electronicData.path));
+        console.log('All aircraft:', aircraftData.value);
         return aircraftData.value.map(aircraft => ({
             id: aircraft.id,
             type: aircraft.electronicData.type,
             name: aircraft.electronicData.name,
             speed: parseFloat(aircraft.fusionData.speed),
-            altitude: parseFloat(aircraft.fusionData.altitude).toFixed(1),
+            altitude: parseFloat(aircraft.fusionData.altitude),
             distance: aircraft.fusionData.distance,
             updateTime: aircraft.electronicData.updateTime,
-            lat: parseFloat(aircraft.fusionData.latitude).toFixed(4),
-            lng: parseFloat(aircraft.fusionData.longitude).toFixed(4),
+            lat: parseFloat(aircraft.electronicData.latitude) === 0 ? parseFloat(aircraft.fusionData.latitude) : parseFloat(aircraft.electronicData.latitude),
+            lng: parseFloat(aircraft.electronicData.longitude) === 0 ? parseFloat(aircraft.fusionData.longitude) : parseFloat(aircraft.electronicData.longitude),
             pitch: parseFloat(aircraft.fusionData.pitch),
             color: aircraft.electronicData.color,
             path: aircraft.electronicData.path
@@ -261,12 +317,12 @@
     
     const warningZone = ref({
         center: [22.70027800, 114.42769963], // 禁飞区中心坐标
-        radius: 1100 // 禁飞区半径（米）
+        radius: 3000 // 禁飞区半径（米）
     })
     
     const normalZone = ref({
         center: [22.70027800, 114.42769963], // 禁飞区中心坐标
-        radius: 2500 // 禁飞区半径（米）
+        radius: 5000 // 禁飞区半径（米）
     })
     const showThreatList = ref(true)
     const showAllAircraftList = ref(true)
@@ -305,10 +361,9 @@
     }
     
     const flightPaths = computed(() => {
-        console.log('Flight paths:', flightPaths.value);
         return allAircraft.value.map(aircraft => ({
             id: aircraft.id,
-            points: (aircraft.path || []).map(point => [point[1], point[0]]), // 交换经纬度顺序
+            points: aircraft.path || [], // 交换经纬度顺序
             color: aircraft.color
         })).filter(path => path.points && path.points.length > 1); // 只返回有效的路径
     });
@@ -436,6 +491,10 @@
     });
     
     onMounted(async () => {
+        aircraftData.value.push(sampleAircraft.value);
+        
+        console.log('All aircraft:', aircraftData.value);
+        
         noFlyZone.value = {
             center: [22.70027800, 114.42769963],
             radius: 500

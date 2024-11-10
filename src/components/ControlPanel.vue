@@ -390,7 +390,7 @@
     const deviceOnline = ref(true);
     const deviceNormal = ref(true);
     
-    // const bootStrapTimerId = ref(null);
+    const bootStrapTimerId = ref(null);
     
     const driveAwayAngle = ref(0);
     const capturePositionData = ref({
@@ -516,12 +516,18 @@
         updateCapture()
         
         // // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
-        // if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
-        // bootStrapTimerId.value = setInterval(() => {
-        //     if (deceptionService.sendCommand(8192, gpsData)) {
-        //         actions.setBootstrapFlag(true)
-        //     }
-        // }, 5000);
+        if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
+        bootStrapTimerId.value = setInterval(() => {
+            console.log(cachedSelectedAircraft.value)
+            const requireData = {
+                longitude: cachedSelectedAircraft.value?.longitude ?? 0,
+                latitude: cachedSelectedAircraft.value?.latitude ?? 0,
+                altitude: cachedSelectedAircraft.value?.altitude ?? 0
+            }
+            if (deceptionService.sendCommand(8192, requireData)) {
+                actions.setBootstrapFlag(true)
+            }
+        }, 2000);
         
         // todo 设置开启四个定位系统
         
@@ -531,6 +537,7 @@
     onUnmounted(() => {
         clearInterval(statusInterval);
         clearInterval(emissionStatusInterval);
+        clearInterval(bootStrapTimerId.value)
         
         // 移除键盘事件监听
         window.removeEventListener('keydown', handleKeyDown);

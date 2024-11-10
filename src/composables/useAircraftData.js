@@ -494,7 +494,7 @@ export function useAircraftData() {
                 azimuth: (parseNumber(radarData.azimuth) + parseNumber(electronicData.azimuth)) / 2,
                 distance: (parseNumber(radarData.distance) + parseNumber(electronicData.distance)) / 2,
                 speed: (parseNumber(radarData.speed) + parseNumber(electronicData.speed)) / 2,
-                altitude: (parseNumber(radarData.altitude) + parseNumber(electronicData.altitude)) / 2
+                altitude: parseNumber(electronicData.altitude)
             }
         }
     }
