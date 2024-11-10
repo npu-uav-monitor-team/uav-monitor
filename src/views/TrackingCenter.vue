@@ -38,8 +38,8 @@
                 <l-circle
                     :lat-lng="warningZone.center"
                     :radius="warningZone.radius"
-                    color="orange"
-                    fillColor="#FFA500"
+                    color="blue"
+                    fillColor="#87CEFA"
                     :fillOpacity="0.2"
                     :zIndex="10"
                 />
@@ -48,8 +48,8 @@
                 <l-circle
                     :lat-lng="normalZone.center"
                     :radius="normalZone.radius"
-                    color="blue"
-                    fillColor="#87CEFA"
+                    color="green"
+                    fillColor="#008000"
                     :fillOpacity="0.2"
                     :zIndex="10"
                 />
@@ -216,36 +216,6 @@
     })
     
     const {aircraftData} = useAircraftData();
-    
-    // 造一个aircraft 从22.68384 114.373296到22.702891 114.438705 每隔一秒新增一个路径上的随机path 最终10秒时到达终点 起定时任务 十秒结束
-    const sampleAircraft = ref({
-        id: 'sample',
-        electronicData: {
-            electronicId: 'sample',
-            threatLevel: 'LOW',
-            type: 'UAV',
-            name: 'Test Flight',
-            speed: 10,
-            altitude: 100,
-            distance: 0,
-            updateTime: new Date().toLocaleString(),
-            latitude: 22.68384,
-            longitude: 114.373296,
-            pitch: 0,
-            azimuth: 0,
-            color: 'green',
-            path: [[22.68384, 114.373296]]
-        },
-        radarData: {
-            distance: 0,
-            azimuth2: 0,
-            pitch: 0,
-            speed: 0,
-            longitude: 0,
-            latitude: 0,
-            altitude: 0
-        }
-    })
     
     const allAircraft = computed(() => {
         console.log('All aircraft:', aircraftData.value);
@@ -465,8 +435,6 @@
     });
     
     onMounted(async () => {
-        aircraftData.value.push(sampleAircraft.value);
-        
         console.log('All aircraft:', aircraftData.value);
         
         noFlyZone.value = {

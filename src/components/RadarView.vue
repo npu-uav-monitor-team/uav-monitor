@@ -207,7 +207,7 @@
     
     const changeSelectedAircraft = (aircraft) => {
         selectedAircraftId.value = aircraft.id
-        cachedSelectedAircraft.value = aircraft.electronicData
+        cachedSelectedAircraft.value = aircraft.radarData
     }
     
     const threatAirCraftList = computed(() => {
@@ -215,7 +215,12 @@
                 console.log('[warning] aircraftData is not a ref')
             }
             // 因为后端是写死了所以这里我们暂时不过筛 默认所有的都是威胁
-            return aircraftData.value
+            // 保留 radarData.updateTime 字段在4秒内的或 radarData.longitude === 0 且 radarData.latitude === 0 数据
+            return aircraftData.value.filter(aircraft => {
+                return aircraft.radarData.updateTime >= Date.now() - 5000 ||
+                    (aircraft.radarData.longitude === 0 && aircraft.radarData.latitude === 0 &&
+                        aircraft.electronicData.longitude !== 0 && aircraft.electronicData.latitude !== 0)
+            })
         }
     );
     
@@ -363,6 +368,10 @@
             alert('请先取消发射');
             return;
         }
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
         if (await deceptionService.sendCommand(4098)) {
             deceptionOperateType.value = 'interference'
             console.log('执行干扰操作,目标ID:', selectedAircraftId.value);
@@ -406,6 +415,10 @@
             alert('请先取消发射');
             return;
         }
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
+            return;
+        }
         if (await deceptionService.sendCommand(4097, getDriveAngle())) {
             deceptionOperateType.value = 'driveAway'
             console.log('执行驱离操作,目标ID:', selectedAircraftId.value);
@@ -415,6 +428,10 @@
     const handleNoFly = async () => {
         if (deceptionOperateType.value !== 'stopLaunch') {
             alert('请先取消发射');
+            return;
+        }
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
             return;
         }
         if (await deceptionService.sendCommand(4099)) {
@@ -428,6 +445,10 @@
     const handleDefense = async () => {
         if (deceptionOperateType.value !== 'stopLaunch') {
             alert('请先取消发射');
+            return;
+        }
+        if (!selectedAircraftId.value) {
+            alert('请先选择一个目标');
             return;
         }
         if (await deceptionService.sendCommand(4100)) {

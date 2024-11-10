@@ -591,6 +591,7 @@ export function useAircraftData() {
                 longitude: parseFloat(radarData.targetLon),
                 latitude: parseFloat(radarData.targetLat),
                 altitude: parseFloat(radarData.altitude),
+                updateTime: new Date()
             }
             aircraftData[minIndex].fusionData = calculateFusionData(aircraftData[minIndex].radarData, aircraftData[minIndex].electronicData)
         }
@@ -681,7 +682,8 @@ export function useAircraftData() {
                         speed: 0,
                         longitude: 0,
                         latitude: 0,
-                        altitude: 0
+                        altitude: 0,
+                        updateTime: new Date()
                     },
                     electronicData: newElectronicData,
                     fusionData: {
@@ -706,7 +708,8 @@ export function useAircraftData() {
                 pitch: parseFloat(radarTarget.pitch),
                 speed: parseFloat(radarTarget.speed),
                 longitude: parseFloat(radarTarget.targetLon),
-                latitude: parseFloat(radarTarget.targetLat)
+                latitude: parseFloat(radarTarget.targetLat),
+                updateTime: new Date()
             }
 
             // 找id
