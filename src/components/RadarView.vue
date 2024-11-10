@@ -363,10 +363,6 @@
             alert('请先取消发射');
             return;
         }
-        if (!selectedAircraftId.value) {
-            alert('请先选择一个目标');
-            return;
-        }
         if (await deceptionService.sendCommand(4098)) {
             deceptionOperateType.value = 'interference'
             console.log('执行干扰操作,目标ID:', selectedAircraftId.value);
@@ -375,9 +371,6 @@
     };
     
     const handlePointCapture = async () => {
-        
-                deceptionOperateType.value = 'capture'
-                return
         // if (deceptionOperateType.value !== 'stopLaunch') {
         //     alert('请先取消发射');
         //     return;
@@ -413,10 +406,6 @@
             alert('请先取消发射');
             return;
         }
-        if (!selectedAircraftId.value) {
-            alert('请先选择一个目标');
-            return;
-        }
         if (await deceptionService.sendCommand(4097, getDriveAngle())) {
             deceptionOperateType.value = 'driveAway'
             console.log('执行驱离操作,目标ID:', selectedAircraftId.value);
@@ -424,15 +413,8 @@
     };
     
     const handleNoFly = async () => {
-        
-            deceptionOperateType.value = 'noFly'
-            return
         if (deceptionOperateType.value !== 'stopLaunch') {
             alert('请先取消发射');
-            return;
-        }
-        if (!selectedAircraftId.value) {
-            alert('请先选择一个目标');
             return;
         }
         if (await deceptionService.sendCommand(4099)) {
@@ -446,10 +428,6 @@
     const handleDefense = async () => {
         if (deceptionOperateType.value !== 'stopLaunch') {
             alert('请先取消发射');
-            return;
-        }
-        if (!selectedAircraftId.value) {
-            alert('请先选择一个目标');
             return;
         }
         if (await deceptionService.sendCommand(4100)) {

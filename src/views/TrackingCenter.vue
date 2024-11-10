@@ -247,32 +247,6 @@
         }
     })
     
-    const addSamplePath = () => {
-        // 生成随机路径点
-        const lat = sampleAircraft.value.electronicData.latitude
-        const lng = sampleAircraft.value.electronicData.longitude
-        // 随机正负
-        const latDelta = Math.random() * 0.002 + Math.random() > 0.2 ? 0.001 : -0.001
-        const lngDelta = Math.random() * 0.002 + Math.random() > 0.2 ? 0.001 : -0.001
-        sampleAircraft.value.electronicData.latitude = lat + latDelta
-        sampleAircraft.value.electronicData.longitude = lng + lngDelta
-        sampleAircraft.value.electronicData.path.push([sampleAircraft.value.electronicData.latitude, sampleAircraft.value.electronicData.longitude])
-    }
-    
-    const addSamplePathTimer = setInterval(() => {
-        addSamplePath()
-    }, 1000)
-    
-    // 十秒之后到达目标点兵结束
-    setTimeout(() => {
-        // 设置最终位置
-        sampleAircraft.value.electronicData.latitude = 22.699232
-        sampleAircraft.value.electronicData.longitude = 114.420453
-        sampleAircraft.value.electronicData.path.push([22.699232, 114.420453])
-        clearInterval(addSamplePathTimer)
-    }, 60000)
-    
-    
     const allAircraft = computed(() => {
         console.log('All aircraft:', aircraftData.value);
         return aircraftData.value.map(aircraft => ({
@@ -317,7 +291,7 @@
     
     const warningZone = ref({
         center: [22.70027800, 114.42769963], // 禁飞区中心坐标
-        radius: 3000 // 禁飞区半径（米）
+        radius: 2500 // 禁飞区半径（米）
     })
     
     const normalZone = ref({

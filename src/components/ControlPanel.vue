@@ -524,7 +524,7 @@
                 latitude: cachedSelectedAircraft.value?.latitude ?? 0,
                 altitude: cachedSelectedAircraft.value?.altitude ?? 0
             }
-            if (deceptionService.sendCommand(8192, requireData)) {
+            if (requireData.longitude !== 0 && requireData.latitude !== 0 && deceptionService.sendCommand(8192, requireData)) {
                 actions.setBootstrapFlag(true)
             }
         }, 2000);
