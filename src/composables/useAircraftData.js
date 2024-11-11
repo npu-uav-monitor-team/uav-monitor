@@ -637,8 +637,7 @@ export function useAircraftData() {
     }
 
     // 1. 获取电侦数据 根据targetId塞进去
-    // 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
-    async function updateFusionData() {
+    async function updateElectricData() {
         const electricResponse = await axios.get('/api/v0/uavs')
         if (electricResponse.data != null && aircraftData.value[0].electronicData.updateTime === '2024-03-21 14:30:00') {
             // 清空
@@ -698,6 +697,9 @@ export function useAircraftData() {
                 })
             }
         })
+    }
+
+    async function updateRadarData() {
         const radarResponse = await axios.get('/api/v0/radar/targetList')
         radarResponse.data.data.forEach(radarTarget => {
             const newRadarData = {
@@ -754,6 +756,12 @@ export function useAircraftData() {
                 })
             }
         })
+    }
+
+// 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
+    async function updateFusionData() {
+        await updateElectricData();
+        await updateRadarData();
 
         // 重新计算融合数据
         for (let i = 0; i < aircraftData.value.length; i++) {

@@ -243,14 +243,14 @@
                                         :class="{ active: captureType === false }"
                                         class="operation-button"
                                     >
-                                        停止发射
+                                        捕获后停止
                                     </button>
                                     <button
                                         @click="updateCaptureType(true)"
                                         :class="{ active: captureType === true }"
                                         class="operation-button"
                                     >
-                                        就近发射
+                                        标记最近禁飞区
                                     </button>
                                 </div>
                                 <div style="display: flex; justify-content: center;">

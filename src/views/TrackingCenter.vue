@@ -108,12 +108,12 @@
                     <thead>
                     <tr>
                         <th>目标ID</th>
-                        <th>型号</th>
-                        <th>来源</th>
-                        <th>告类型</th>
-                        <th>链接目标ID</th>
-                        <th>探测</th>
-                        <th>停留时长（分:秒）</th>
+                        <th>图标颜色</th>
+                        <th>名称</th>
+                        <th>类型</th>
+                        <th>威胁等级</th>
+                        <th>速度</th>
+                        <th>距离</th>
                         <th>最近一次定向</th>
                     </tr>
                     </thead>
@@ -128,7 +128,6 @@
                         <td>{{ edUav.type }}</td>
                         <td :class="'threat-level-' + edUav.level">{{ edUav.level }}</td>
                         <td>{{ edUav.speed }}</td>
-                        <td>{{ edUav.altitude }}</td>
                         <td>{{ edUav.distance }}</td>
                         <td>{{ edUav.updateTime }}</td>
                     </tr>
