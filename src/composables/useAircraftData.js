@@ -455,6 +455,7 @@ const cachedSelectedAircraft = ref({
     latitude: 0,
     altitude: 0
 })
+const selectedAircraftId_repeat = ref(0)
 
 // 维护一个自增的原子int
 let idCounter = 1;
@@ -770,10 +771,14 @@ export function useAircraftData() {
         }
 
         // 按照融合数据对aircraftData重拍
-        aircraftData.value.sort(
-            (a, b) => {
-            return a.fusionData.distance - b.fusionData.distance
-        })
+        aircraftData.value = aircraftData.value
+            .sort(
+                (a, b) => {
+                    return a.fusionData.distance - b.fusionData.distance
+                })
+            .filter(aircraft => {
+                return aircraft.radarData.updateTime >= Date.now() - 5000
+            })
     }
 
     // 添加启动和停止更新的方法
@@ -813,6 +818,7 @@ export function useAircraftData() {
 
     return {
         cachedSelectedAircraft,
+        selectedAircraftId_repeat,
         aircraftData,
         updateFusionData,
         startUpdating,

@@ -48,7 +48,7 @@
                             <button @click="confirmDefenseDelay">确认</button>
                         </div>
                         <div class="input-group">
-                            <label>主动防御间隔 (分钟)</label>
+                            <label>主动防御间隔 (分)</label>
                             <input type="number" v-model="defenseDuration">
                             <button @click="confirmDefenseDuration">确认</button>
                         </div>
@@ -99,42 +99,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="control-section" style="font-size: 14px">
-                    <h4>目标信息</h4>
-                    <table class="target-info-table">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>类型</th>
-                            <th>距离 (KM)</th>
-                            <th>方位角 (°)</th>
-                            <th>仰角 (°)</th>
-                            <th>速度 (km/h)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>{{ currentTarget.id || 'N/A' }}</td>
-                            <td>{{ currentTarget.type || 'N/A' }}</td>
-                            <td>{{ currentTarget.distance || 'N/A' }}</td>
-                            <td>{{ currentTarget.azimuth || 'N/A' }}</td>
-                            <td>{{ currentTarget.elevation || 'N/A' }}</td>
-                            <td>{{ currentTarget.speed || 'N/A' }}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
                 <div class="control-section">
                     <div class="button-grid">
                         <button @click="toggleServo">{{ servoStatus ? '伺服关机' : '伺服开机' }}</button>
                         <button @click="toggleChannel">{{ channelType ? '红外通道' : '电视通道' }}</button>
                         <button @click="resetOptoelectronic">归零</button>
                         <button @click="toggleTargetColor">{{ targetColor ? '目标白' : '目标黑' }}</button>
-                        <button @click="toggleTrackingMode">{{ trackingMode ? '自动' : '人工' }}</button>
+                        <button @click="toggleTrackingMode">{{ trackingMode ? '自动操作' : '人工操作' }}</button>
                         <button @click="toggleInfrared">{{ infraredStatus ? '红外关机' : '红外开机' }}</button>
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
-                        <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
+                        <button @click="toggleFrequency">{{ frequency ? '5  Hz' : '12.5  Hz' }}</button>
                         <button @click="handleCapture">{{ captureStatus === 2 ? '待机' : '捕获' }}</button>
                         <button @click="handleTracking">{{ trackingStatus === 2 ? '停止跟踪' : '跟踪' }}</button>
                         <button @click="handleLaserEmission">{{
@@ -163,25 +138,25 @@
                     </div>
                 </div>
                 
-<!--                <div class="coordinates-section">-->
-<!--                    <div>待诱骗目标GPS位置</div>-->
-<!--                    <table class="gps-table">-->
-<!--                        <thead>-->
-<!--                        <tr>-->
-<!--                            <th>经度</th>-->
-<!--                            <th>纬度</th>-->
-<!--                            <th>高度</th>-->
-<!--                        </tr>-->
-<!--                        </thead>-->
-<!--                        <tbody>-->
-<!--                        <tr>-->
-<!--                            <td>{{ }}°</td>-->
-<!--                            <td>{{ }}°</td>-->
-<!--                            <td>{{ }}m</td>-->
-<!--                        </tr>-->
-<!--                        </tbody>-->
-<!--                    </table>-->
-<!--                </div>-->
+                <!--                <div class="coordinates-section">-->
+                <!--                    <div>待诱骗目标GPS位置</div>-->
+                <!--                    <table class="gps-table">-->
+                <!--                        <thead>-->
+                <!--                        <tr>-->
+                <!--                            <th>经度</th>-->
+                <!--                            <th>纬度</th>-->
+                <!--                            <th>高度</th>-->
+                <!--                        </tr>-->
+                <!--                        </thead>-->
+                <!--                        <tbody>-->
+                <!--                        <tr>-->
+                <!--                            <td>{{ }}°</td>-->
+                <!--                            <td>{{ }}°</td>-->
+                <!--                            <td>{{ }}m</td>-->
+                <!--                        </tr>-->
+                <!--                        </tbody>-->
+                <!--                    </table>-->
+                <!--                </div>-->
                 
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
@@ -226,10 +201,13 @@
                                            placeholder="纬度">
                                     <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture"
                                            placeholder="经度">
+                                </div>
+                                <div class="coordinate-inputs">
+                                    <label>诱降高度</label>
                                     <input type="text" v-model="capturePositionData.altitude" @blur="updateCapture"
                                            placeholder="高度">
                                 </div>
-                                <div class="ambiguity-input">
+                                <div class="coordinate-inputs">
                                     <label>模糊度</label>
                                     <input
                                         type="number"
@@ -254,8 +232,6 @@
                                     >
                                         就近禁飞
                                     </button>
-                                </div>
-                                <div style="display: flex; justify-content: center;">
                                     <button @click="updateCapture" class="send-button">保存</button>
                                 </div>
                             </div>
@@ -319,37 +295,18 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, onUnmounted, ref } from "vue";
+    import { onMounted, onUnmounted, ref } from "vue";
     import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     import { actions } from "../composables/deceptionDataStore"
     import { useAircraftData } from '@/composables/useAircraftData'
     import { useDeviceControl } from '../composables/useDeviceControl'
     
-    const { cachedSelectedAircraft } = useAircraftData()
-    const { device, devices, autoDefense, toggleAutoDefense } = useDeviceControl()
-    
-    const gpsData = computed(() => {
-        try {
-            return {
-                longitude: cachedSelectedAircraft?.value?.longitude ?? 0,
-                latitude: cachedSelectedAircraft?.value?.latitude ?? 0,
-                altitude: cachedSelectedAircraft?.value?.altitude ?? 0
-            };
-        } catch (e) {
-            // 捕获异常时仍然返回默认值
-            return {
-                longitude: 0,
-                latitude: 0,
-                altitude: 0
-            };
-        }
-    });
+    const {aircraftData, selectedAircraftId_repeat } = useAircraftData()
+    const {device, devices, autoDefense, toggleAutoDefense} = useDeviceControl()
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
-    
-    const activeBands = ref([]);
     const defenseDelay = ref(60);
     const defenseDuration = ref(1);
     
@@ -520,16 +477,17 @@
         // // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
         if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
         bootStrapTimerId.value = setInterval(() => {
-            console.log(cachedSelectedAircraft.value)
+            let useData = aircraftData.value.find(item => item.id === selectedAircraftId_repeat.value)?.radarData
             const requireData = {
-                longitude: cachedSelectedAircraft.value?.longitude ?? 0,
-                latitude: cachedSelectedAircraft.value?.latitude ?? 0,
-                altitude: cachedSelectedAircraft.value?.altitude ?? 0
+                longitude: useData?.longitude ?? 0,
+                latitude: useData?.latitude ?? 0,
+                altitude: useData?.altitude ?? 0
             }
+            console.log(requireData)
             if (requireData.longitude !== 0 && requireData.latitude !== 0 && deceptionService.sendCommand(8192, requireData)) {
                 actions.setBootstrapFlag(true)
             }
-        }, 2000);
+        }, 2500);
         
         // todo 设置开启四个定位系统
         
@@ -1049,7 +1007,7 @@
     
     const simulationLevel = ref(100);
     const powerValue = ref(20);
-    const captureType = ref(true)
+    const captureType = ref(false)
     
     // 添加验证函数
     const validateSimulationLevel = () => {
@@ -1286,34 +1244,12 @@
         gap: 10px;
         align-items: center;
         justify-items: center;
+        margin-top: 30px;
     }
     
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    .action-btn {
-        flex: 1;
-        padding: 8px;
-        background: #003366;
-        color: #00ffff;
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    .action-btn:hover {
-        background: #004080;
-    }
-    
-    .drive-away-section {
-        margin-top: 10px;
-        border-top: 1px solid rgba(0, 255, 255, 0.3);
-        padding-top: 10px;
+    .button-grid button {
+        width: 150px;
+        height: 40px;
     }
     
     .modal-overlay {
@@ -1549,7 +1485,7 @@
         border-radius: 5px;
         padding: 5px;
         margin-top: 5px;
-        height: 45%;
+        height: 80%;
         display: flex;
         flex-direction: column;
     }
@@ -1601,6 +1537,11 @@
         display: flex;
         align-items: center;
         gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .coordinate-inputs label {
+        width: 150px;
     }
     
     .coordinate-inputs input {
@@ -1610,38 +1551,14 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
-        font-size: 10px;
-    }
-    
-    .icon-button {
-        background-color: #007acc;
-        border: none;
-        border-radius: 3px;
-        padding: 5px;
-        cursor: pointer;
-        color: #ffffff;
-    }
-    
-    .ambiguity-input {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .ambiguity-input input {
-        width: 100px;
-        padding: 5px;
-        border: 1px solid #00ffff;
-        border-radius: 3px;
-        background-color: #333;
-        color: #ffffff;
-        font-size: 10px;
+        font-size: 14px;
     }
     
     .operation-buttons {
         display: flex;
         gap: 5px;
-        justify-content: space-around;
+        justify-content: space-between;
+        margin-top: 10px;
     }
     
     .operation-button {
@@ -1666,16 +1583,16 @@
     }
     
     .send-button {
+        height: 24px;
+        width: 30%;
         background-color: #007acc;
         color: #ffffff;
-        border: none;
+        border: 1px solid #00ffff;
         border-radius: 4px;
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
         font-size: 14px;
-        height: 24px;
-        width: 80.5%;
     }
     
     .send-button:hover {
