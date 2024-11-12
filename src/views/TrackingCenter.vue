@@ -217,7 +217,6 @@
     const {aircraftData} = useAircraftData();
     
     const allAircraft = computed(() => {
-        console.log('All aircraft:', aircraftData.value);
         return aircraftData.value.map(aircraft => ({
             id: aircraft.id,
             type: aircraft.electronicData.type,
@@ -306,7 +305,8 @@
     const flightPaths = computed(() => {
         return allAircraft.value.map(aircraft => ({
             id: aircraft.id,
-            points: aircraft.path || [], // 交换经纬度顺序
+            // 删除[0,0]
+            points: aircraft.path.filter(point => parseFloat(point[0]) !== 0 && parseFloat(point[1])  !== 0) || [],
             color: aircraft.color
         })).filter(path => path.points && path.points.length > 1); // 只返回有效的路径
     });
@@ -434,7 +434,6 @@
     });
     
     onMounted(async () => {
-        console.log('All aircraft:', aircraftData.value);
         
         noFlyZone.value = {
             center: [22.70027800, 114.42769963],

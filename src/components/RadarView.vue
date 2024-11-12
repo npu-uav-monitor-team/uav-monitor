@@ -218,8 +218,8 @@
             // 保留 radarData.updateTime 字段在4秒内的或 radarData.longitude === 0 且 radarData.latitude === 0 数据
             return aircraftData.value.filter(aircraft => {
                 return aircraft.radarData.updateTime >= Date.now() - 5000 ||
-                    (aircraft.radarData.longitude === 0 && aircraft.radarData.latitude === 0 &&
-                        aircraft.electronicData.longitude !== 0 && aircraft.electronicData.latitude !== 0)
+                    (parseFloat(aircraft.radarData.longitude) === 0 && parseFloat(aircraft.radarData.latitude) === 0 &&
+                        parseFloat(aircraft.electronicData.longitude) !== 0 && parseFloat(aircraft.electronicData.latitude) !== 0)
             })
         }
     );
@@ -320,7 +320,6 @@
         }
         electronicGuideTimer = setInterval(async () => {
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
-            console.log(aircraft.electronicData)
             await useRGuide(
                 2,
                 parseInt(aircraft.electronicData.distance)  || 0,
@@ -352,13 +351,13 @@
     
     const cancelGuide = async () => {
         if (radarGuideTimer) {
-            window.clearInterval(radarGuideTimer);
+            clearInterval(radarGuideTimer);
         }
         if (electronicGuideTimer) {
-            window.clearInterval(electronicGuideTimer);
+            clearInterval(electronicGuideTimer);
         }
         if (fusionGuideTimer) {
-            window.clearInterval(fusionGuideTimer);
+            clearInterval(fusionGuideTimer);
         }
         await axios.post('/api/v0/photoelectrics/radarAndElectricCancel')
     }

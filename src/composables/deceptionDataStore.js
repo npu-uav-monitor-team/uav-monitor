@@ -19,9 +19,9 @@ const state = reactive({
 
 const actions = {
   setCapture(data) {
-    state.capture.latitude = data.latitude;
-    state.capture.longitude = data.longitude;
-    state.capture.altitude = data.altitude;
+    state.capture.latitude = parseFloat(data.latitude);
+    state.capture.longitude = parseFloat(data.longitude);
+    state.capture.altitude = 50;
     state.capture.simulationLevel = data.simulationLevel;
     state.capture.captureType = data.captureType
   },

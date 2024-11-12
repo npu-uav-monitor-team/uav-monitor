@@ -163,25 +163,25 @@
                     </div>
                 </div>
                 
-                <div class="coordinates-section">
-                    <div>待诱骗目标GPS位置</div>
-                    <table class="gps-table">
-                        <thead>
-                        <tr>
-                            <th>经度</th>
-                            <th>纬度</th>
-                            <th>高度</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>{{ }}°</td>
-                            <td>{{ }}°</td>
-                            <td>{{ }}m</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+<!--                <div class="coordinates-section">-->
+<!--                    <div>待诱骗目标GPS位置</div>-->
+<!--                    <table class="gps-table">-->
+<!--                        <thead>-->
+<!--                        <tr>-->
+<!--                            <th>经度</th>-->
+<!--                            <th>纬度</th>-->
+<!--                            <th>高度</th>-->
+<!--                        </tr>-->
+<!--                        </thead>-->
+<!--                        <tbody>-->
+<!--                        <tr>-->
+<!--                            <td>{{ }}°</td>-->
+<!--                            <td>{{ }}°</td>-->
+<!--                            <td>{{ }}m</td>-->
+<!--                        </tr>-->
+<!--                        </tbody>-->
+<!--                    </table>-->
+<!--                </div>-->
                 
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
@@ -243,14 +243,14 @@
                                         :class="{ active: captureType === false }"
                                         class="operation-button"
                                     >
-                                        捕获后停止
+                                        停止发射
                                     </button>
                                     <button
                                         @click="updateCaptureType(true)"
                                         :class="{ active: captureType === true }"
                                         class="operation-button"
                                     >
-                                        标记最近禁飞区
+                                        就近禁飞
                                     </button>
                                 </div>
                                 <div style="display: flex; justify-content: center;">
@@ -843,7 +843,6 @@
             devicePort: import.meta.env.VITE_UAV_CONTROL_DEVICE_PORT,
         }
         const connectRes = await deceptionService.updateConnectSetting(udpSettingsDto)
-        console.log(connectRes)
         if (connectRes.isSuccess) {
             if (connectRes.data?.data?.maxRadPower) maxPower.value = connectRes.data.data.maxRadPower;
         }
