@@ -201,10 +201,13 @@
                                            placeholder="纬度">
                                     <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture"
                                            placeholder="经度">
+                                </div>
+                                <div class="coordinate-inputs">
+                                    <label>诱降高度</label>
                                     <input type="text" v-model="capturePositionData.altitude" @blur="updateCapture"
                                            placeholder="高度">
                                 </div>
-                                <div class="ambiguity-input">
+                                <div class="coordinate-inputs">
                                     <label>模糊度</label>
                                     <input
                                         type="number"
@@ -229,8 +232,6 @@
                                     >
                                         就近禁飞
                                     </button>
-                                </div>
-                                <div style="display: flex; justify-content: center;">
                                     <button @click="updateCapture" class="send-button">保存</button>
                                 </div>
                             </div>
@@ -301,7 +302,7 @@
     import { useAircraftData } from '@/composables/useAircraftData'
     import { useDeviceControl } from '../composables/useDeviceControl'
     
-    const {cachedSelectedAircraft} = useAircraftData()
+    const {aircraftData, selectedAircraftId_repeat } = useAircraftData()
     const {device, devices, autoDefense, toggleAutoDefense} = useDeviceControl()
     
     const activeTab = ref('control');
@@ -476,12 +477,13 @@
         // // 每3秒发送一次这个指令，捕获指令发送前需要这个发送这个指令
         if (bootStrapTimerId.value) clearInterval(bootStrapTimerId.value);
         bootStrapTimerId.value = setInterval(() => {
-            console.log(cachedSelectedAircraft.value)
+            let useData = aircraftData.value.find(item => item.id === selectedAircraftId_repeat.value)?.radarData
             const requireData = {
-                longitude: cachedSelectedAircraft.value?.longitude ?? 0,
-                latitude: cachedSelectedAircraft.value?.latitude ?? 0,
-                altitude: cachedSelectedAircraft.value?.altitude ?? 0
+                longitude: useData?.longitude ?? 0,
+                latitude: useData?.latitude ?? 0,
+                altitude: useData?.altitude ?? 0
             }
+            console.log(requireData)
             if (requireData.longitude !== 0 && requireData.latitude !== 0 && deceptionService.sendCommand(8192, requireData)) {
                 actions.setBootstrapFlag(true)
             }
@@ -1242,34 +1244,12 @@
         gap: 10px;
         align-items: center;
         justify-items: center;
+        margin-top: 30px;
     }
     
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    .action-btn {
-        flex: 1;
-        padding: 8px;
-        background: #003366;
-        color: #00ffff;
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    .action-btn:hover {
-        background: #004080;
-    }
-    
-    .drive-away-section {
-        margin-top: 10px;
-        border-top: 1px solid rgba(0, 255, 255, 0.3);
-        padding-top: 10px;
+    .button-grid button {
+        width: 150px;
+        height: 40px;
     }
     
     .modal-overlay {
@@ -1505,7 +1485,7 @@
         border-radius: 5px;
         padding: 5px;
         margin-top: 5px;
-        height: 45%;
+        height: 80%;
         display: flex;
         flex-direction: column;
     }
@@ -1557,6 +1537,11 @@
         display: flex;
         align-items: center;
         gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .coordinate-inputs label {
+        width: 150px;
     }
     
     .coordinate-inputs input {
@@ -1566,38 +1551,14 @@
         border-radius: 3px;
         background-color: #333;
         color: #ffffff;
-        font-size: 10px;
-    }
-    
-    .icon-button {
-        background-color: #007acc;
-        border: none;
-        border-radius: 3px;
-        padding: 5px;
-        cursor: pointer;
-        color: #ffffff;
-    }
-    
-    .ambiguity-input {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .ambiguity-input input {
-        width: 100px;
-        padding: 5px;
-        border: 1px solid #00ffff;
-        border-radius: 3px;
-        background-color: #333;
-        color: #ffffff;
-        font-size: 10px;
+        font-size: 14px;
     }
     
     .operation-buttons {
         display: flex;
         gap: 5px;
-        justify-content: space-around;
+        justify-content: space-between;
+        margin-top: 10px;
     }
     
     .operation-button {
@@ -1622,16 +1583,16 @@
     }
     
     .send-button {
+        height: 24px;
+        width: 30%;
         background-color: #007acc;
         color: #ffffff;
-        border: none;
+        border: 1px solid #00ffff;
         border-radius: 4px;
         padding: 2px;
         cursor: pointer;
         transition: background-color 0.3s;
         font-size: 14px;
-        height: 24px;
-        width: 80.5%;
     }
     
     .send-button:hover {

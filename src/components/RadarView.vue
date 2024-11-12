@@ -171,7 +171,7 @@
     import { useRGuide } from "@/api/radar.js";
     import { useAircraftData } from '@/composables/useAircraftData'
     import { deceptionService } from "../service/deceptionService";
-    import { getDriveAngle, getCapture } from "../composables/deceptionDataStore"
+    import { getDriveAngle, getCapture, actions } from "../composables/deceptionDataStore"
     import { useDeviceControl } from '../composables/useDeviceControl'
     import router from "@/router/index.js";
     
@@ -203,11 +203,12 @@
     };
     
     const {aircraftData} = useAircraftData()
-    const {cachedSelectedAircraft} = useAircraftData()
+    const {cachedSelectedAircraft, selectedAircraftId_repeat} = useAircraftData()
     
     const changeSelectedAircraft = (aircraft) => {
         selectedAircraftId.value = aircraft.id
         cachedSelectedAircraft.value = aircraft.radarData
+        selectedAircraftId_repeat.value = aircraft.id
     }
     
     const threatAirCraftList = computed(() => {
@@ -383,12 +384,15 @@
             return;
         }
         let bootstrapData;
+        
+        
         try {
+            let useData = aircraftData.value.find(item => item.id === selectedAircraftId_repeat.value)?.radarData
             bootstrapData = {
-                longitude: cachedSelectedAircraft.value?.longitude ?? 0,
-                latitude: cachedSelectedAircraft.value?.latitude ?? 0,
-                altitude: cachedSelectedAircraft.value?.altitude ?? 0
-            };
+                longitude: useData?.longitude ?? 0,
+                latitude: useData?.latitude ?? 0,
+                altitude: useData?.altitude ?? 0
+            }
         } catch (error) {
             alert('未获取到正确的飞行目标');
             return;

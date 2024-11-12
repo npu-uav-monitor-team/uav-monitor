@@ -455,6 +455,7 @@ const cachedSelectedAircraft = ref({
     latitude: 0,
     altitude: 0
 })
+const selectedAircraftId_repeat = ref(0)
 
 // 维护一个自增的原子int
 let idCounter = 1;
@@ -817,6 +818,7 @@ export function useAircraftData() {
 
     return {
         cachedSelectedAircraft,
+        selectedAircraftId_repeat,
         aircraftData,
         updateFusionData,
         startUpdating,
