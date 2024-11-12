@@ -226,6 +226,8 @@
                                            placeholder="纬度">
                                     <input type="text" v-model="capturePositionData.longitude" @blur="updateCapture"
                                            placeholder="经度">
+                                    <input type="text" v-model="capturePositionData.altitude" @blur="updateCapture"
+                                           placeholder="高度">
                                 </div>
                                 <div class="ambiguity-input">
                                     <label>模糊度</label>
@@ -396,7 +398,7 @@
     const capturePositionData = ref({
         longitude: import.meta.env.VITE_DECEPTION_CAPTURE_LONGITUDE,
         latitude: import.meta.env.VITE_DECEPTION_CAPTURE_LATITUDE,
-        altitude: 0.0000
+        altitude: import.meta.env.VITE_DECEPTION_CAPTURE_ALTITUDE
     })
     
     

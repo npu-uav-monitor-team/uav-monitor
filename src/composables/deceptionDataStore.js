@@ -21,7 +21,7 @@ const actions = {
   setCapture(data) {
     state.capture.latitude = parseFloat(data.latitude);
     state.capture.longitude = parseFloat(data.longitude);
-    state.capture.altitude = 50;
+    state.capture.altitude = parseInt(data.altitude);
     state.capture.simulationLevel = data.simulationLevel;
     state.capture.captureType = data.captureType
   },
