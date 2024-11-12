@@ -31,8 +31,8 @@ export function useDeviceControl() {
             .then(response => {
                 if (response.data.code === 0) {
                     console.log('自动防御设置成功')
-                    autoDefense.value = !autoDefense.value
-                    isInterferenceEnabled.value = autoDefense.value
+                    // autoDefense.value = !autoDefense.value
+                    // isInterferenceEnabled.value = autoDefense.value
                 } else {
                     console.error('接口返回数据格式错误或出现错误:', response.data.msg)
                 }
@@ -50,4 +50,4 @@ export function useDeviceControl() {
         updateDeviceStatus,
         toggleAutoDefense
     }
-} 
+}

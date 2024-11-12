@@ -48,7 +48,7 @@
                             <button @click="confirmDefenseDelay">确认</button>
                         </div>
                         <div class="input-group">
-                            <label>主动防御间隔 (分钟)</label>
+                            <label>主动防御间隔 (分)</label>
                             <input type="number" v-model="defenseDuration">
                             <button @click="confirmDefenseDuration">确认</button>
                         </div>
@@ -99,42 +99,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="control-section" style="font-size: 14px">
-                    <h4>目标信息</h4>
-                    <table class="target-info-table">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>类型</th>
-                            <th>距离 (KM)</th>
-                            <th>方位角 (°)</th>
-                            <th>仰角 (°)</th>
-                            <th>速度 (km/h)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>{{ currentTarget.id || 'N/A' }}</td>
-                            <td>{{ currentTarget.type || 'N/A' }}</td>
-                            <td>{{ currentTarget.distance || 'N/A' }}</td>
-                            <td>{{ currentTarget.azimuth || 'N/A' }}</td>
-                            <td>{{ currentTarget.elevation || 'N/A' }}</td>
-                            <td>{{ currentTarget.speed || 'N/A' }}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
                 <div class="control-section">
                     <div class="button-grid">
                         <button @click="toggleServo">{{ servoStatus ? '伺服关机' : '伺服开机' }}</button>
                         <button @click="toggleChannel">{{ channelType ? '红外通道' : '电视通道' }}</button>
                         <button @click="resetOptoelectronic">归零</button>
                         <button @click="toggleTargetColor">{{ targetColor ? '目标白' : '目标黑' }}</button>
-                        <button @click="toggleTrackingMode">{{ trackingMode ? '自动' : '人工' }}</button>
+                        <button @click="toggleTrackingMode">{{ trackingMode ? '自动操作' : '人工操作' }}</button>
                         <button @click="toggleInfrared">{{ infraredStatus ? '红外关机' : '红外开机' }}</button>
                         <button @click="toggleInfraredColor">{{ infraredColor ? '红外热黑' : '红外热白' }}</button>
                         <button @click="toggleLaser">{{ laserStatus ? '激光关' : '激光开' }}</button>
-                        <button @click="toggleFrequency">{{ frequency ? '5Hz' : '12.5Hz' }}</button>
+                        <button @click="toggleFrequency">{{ frequency ? '5  Hz' : '12.5  Hz' }}</button>
                         <button @click="handleCapture">{{ captureStatus === 2 ? '待机' : '捕获' }}</button>
                         <button @click="handleTracking">{{ trackingStatus === 2 ? '停止跟踪' : '跟踪' }}</button>
                         <button @click="handleLaserEmission">{{
@@ -163,25 +138,25 @@
                     </div>
                 </div>
                 
-<!--                <div class="coordinates-section">-->
-<!--                    <div>待诱骗目标GPS位置</div>-->
-<!--                    <table class="gps-table">-->
-<!--                        <thead>-->
-<!--                        <tr>-->
-<!--                            <th>经度</th>-->
-<!--                            <th>纬度</th>-->
-<!--                            <th>高度</th>-->
-<!--                        </tr>-->
-<!--                        </thead>-->
-<!--                        <tbody>-->
-<!--                        <tr>-->
-<!--                            <td>{{ }}°</td>-->
-<!--                            <td>{{ }}°</td>-->
-<!--                            <td>{{ }}m</td>-->
-<!--                        </tr>-->
-<!--                        </tbody>-->
-<!--                    </table>-->
-<!--                </div>-->
+                <!--                <div class="coordinates-section">-->
+                <!--                    <div>待诱骗目标GPS位置</div>-->
+                <!--                    <table class="gps-table">-->
+                <!--                        <thead>-->
+                <!--                        <tr>-->
+                <!--                            <th>经度</th>-->
+                <!--                            <th>纬度</th>-->
+                <!--                            <th>高度</th>-->
+                <!--                        </tr>-->
+                <!--                        </thead>-->
+                <!--                        <tbody>-->
+                <!--                        <tr>-->
+                <!--                            <td>{{ }}°</td>-->
+                <!--                            <td>{{ }}°</td>-->
+                <!--                            <td>{{ }}m</td>-->
+                <!--                        </tr>-->
+                <!--                        </tbody>-->
+                <!--                    </table>-->
+                <!--                </div>-->
                 
                 <div class="power-slider-section">
                     <span>手动功率设置</span>
@@ -319,37 +294,18 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, onUnmounted, ref } from "vue";
+    import { onMounted, onUnmounted, ref } from "vue";
     import axios from "@/api/index.js";
     import { deceptionService } from "../service/deceptionService";
     import { actions } from "../composables/deceptionDataStore"
     import { useAircraftData } from '@/composables/useAircraftData'
     import { useDeviceControl } from '../composables/useDeviceControl'
     
-    const { cachedSelectedAircraft } = useAircraftData()
-    const { device, devices, autoDefense, toggleAutoDefense } = useDeviceControl()
-    
-    const gpsData = computed(() => {
-        try {
-            return {
-                longitude: cachedSelectedAircraft?.value?.longitude ?? 0,
-                latitude: cachedSelectedAircraft?.value?.latitude ?? 0,
-                altitude: cachedSelectedAircraft?.value?.altitude ?? 0
-            };
-        } catch (e) {
-            // 捕获异常时仍然返回默认值
-            return {
-                longitude: 0,
-                latitude: 0,
-                altitude: 0
-            };
-        }
-    });
+    const {cachedSelectedAircraft} = useAircraftData()
+    const {device, devices, autoDefense, toggleAutoDefense} = useDeviceControl()
     
     const activeTab = ref('control');
     const activeSmallTab = ref('driveAway');
-    
-    const activeBands = ref([]);
     const defenseDelay = ref(60);
     const defenseDuration = ref(1);
     
@@ -529,7 +485,7 @@
             if (requireData.longitude !== 0 && requireData.latitude !== 0 && deceptionService.sendCommand(8192, requireData)) {
                 actions.setBootstrapFlag(true)
             }
-        }, 2000);
+        }, 2500);
         
         // todo 设置开启四个定位系统
         
@@ -1049,7 +1005,7 @@
     
     const simulationLevel = ref(100);
     const powerValue = ref(20);
-    const captureType = ref(true)
+    const captureType = ref(false)
     
     // 添加验证函数
     const validateSimulationLevel = () => {

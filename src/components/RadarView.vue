@@ -211,18 +211,13 @@
     }
     
     const threatAirCraftList = computed(() => {
-            if (!isRef(aircraftData)) {
-                console.log('[warning] aircraftData is not a ref')
-            }
-            // 因为后端是写死了所以这里我们暂时不过筛 默认所有的都是威胁
-            // 保留 radarData.updateTime 字段在4秒内的或 radarData.longitude === 0 且 radarData.latitude === 0 数据
-            return aircraftData.value.filter(aircraft => {
-                return aircraft.radarData.updateTime >= Date.now() - 5000 ||
-                    (parseFloat(aircraft.radarData.longitude) === 0 && parseFloat(aircraft.radarData.latitude) === 0 &&
-                        parseFloat(aircraft.electronicData.longitude) !== 0 && parseFloat(aircraft.electronicData.latitude) !== 0)
-            })
+        if (!isRef(aircraftData)) {
+            console.log('[warning] aircraftData is not a ref')
         }
-    );
+        // 因为后端是写死了所以这里我们暂时不过筛 默认所有的都是威胁
+        // 保留 radarData.updateTime 字段在4秒内的或 radarData.longitude === 0 且 radarData.latitude === 0 数据
+        return aircraftData.value
+    });
     
     onMounted(() => {
         refreshVideo();
@@ -303,7 +298,7 @@
             await useRGuide(
                 1,
                 parseInt(aircraft.radarData.distance) || 0,
-                parseFloat(aircraft.radarData.azimuth2)  || 0,
+                parseFloat(aircraft.radarData.azimuth2) || 0,
                 parseFloat(aircraft.radarData.pitch) || 0
             );
             console.log('执行雷达引导操作,目标ID:', selectedAircraftId.value);
@@ -322,8 +317,8 @@
             const aircraft = aircraftData.value.find(item => item.id === selectedAircraftId.value);
             await useRGuide(
                 2,
-                parseInt(aircraft.electronicData.distance)  || 0,
-                parseFloat(aircraft.electronicData.azimuth)  || 0,
+                parseInt(aircraft.electronicData.distance) || 0,
+                parseFloat(aircraft.electronicData.azimuth) || 0,
                 parseFloat(aircraft.electronicData.pitch) || 0
             );
             console.log('执行电侦引导操作,目标ID:', selectedAircraftId.value);
@@ -342,8 +337,8 @@
             await useRGuide(
                 1,
                 parseInt(aircraft.fusionData.distance) || 0,
-                parseFloat(aircraft.fusionData.azimuth)  || 0,
-                parseFloat(aircraft.fusionData.pitch)  || 0
+                parseFloat(aircraft.fusionData.azimuth) || 0,
+                parseFloat(aircraft.fusionData.pitch) || 0
             );
             console.log('执行融合引导操作,目标ID:', selectedAircraftId.value);
         }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
@@ -463,7 +458,7 @@
         }
     }
     
-    const { toggleAutoDefense, isInterferenceEnabled } = useDeviceControl()
+    const {toggleAutoDefense, isInterferenceEnabled} = useDeviceControl()
     
     const communicationInterference = () => {
         toggleAutoDefense()
@@ -586,10 +581,11 @@
     }
     
     .table-container {
+        margin-top: 20px;
         overflow-x: auto;
         overflow-y: auto;
         font-size: 12px;
-        max-height: 330px;
+        max-height: 350px;
     }
     
     table {
@@ -716,8 +712,7 @@
         display: grid;
         grid-template-columns: repeat(6, 1fr); /* 第一行 6 列 */
         gap: 8px 12px; /* 设置上下和左右间距 */
-        margin-top: 3px;
-        margin-bottom: 2%;
+        margin: 3px 3px 1% 3px;
     }
     
     .button-group button {
