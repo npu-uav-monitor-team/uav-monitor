@@ -761,8 +761,16 @@ export function useAircraftData() {
 
 // 2. 获取雷达数据 根据经纬度进行匹配 轮询每个电侦数据对象 取经纬度平方和取最相近的雷达数据放到radarData里
     async function updateFusionData() {
-        await updateElectricData();
-        await updateRadarData();
+        try {
+            await updateElectricData();
+        } catch (e) {
+            console.error('Failed to update electronic data:', e);
+        }
+        try {
+            await updateRadarData();
+        } catch (e) {
+            console.error('Failed to update radar data:', e);
+        }
 
         // 重新计算融合数据
         for (let i = 0; i < aircraftData.value.length; i++) {

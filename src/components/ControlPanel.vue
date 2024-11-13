@@ -487,7 +487,7 @@
             if (requireData.longitude !== 0 && requireData.latitude !== 0 && deceptionService.sendCommand(8192, requireData)) {
                 actions.setBootstrapFlag(true)
             }
-        }, 2500);
+        }, import.meta.env.VITE_REQUEST_REFRESH_DURATION);
         
         // todo 设置开启四个定位系统
         
@@ -981,7 +981,6 @@
     }
     
     function sendDriveAwayCommand() {
-        // TODO: 调用后端 API 发送驱离命令
         actions.setDriveAngle(driveAwayAngle.value)
         console.log('保存驱离角度完成');
     }
@@ -1007,7 +1006,7 @@
     
     const simulationLevel = ref(100);
     const powerValue = ref(20);
-    const captureType = ref(false)
+    const captureType = ref(true)
     
     // 添加验证函数
     const validateSimulationLevel = () => {

@@ -98,7 +98,7 @@
             <button @click="handlePointCapture"
                     :class="{active: deceptionOperateType === 'capture',
                      not_active: deceptionOperateType !== 'capture'}"
-            >定点诱降
+            >区域捕获
             </button>
             <button @click="handleDriveAway"
                     :class="{active: deceptionOperateType === 'driveAway',
